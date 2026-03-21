@@ -18,7 +18,8 @@
       "Bash(ls:*)",
       "Bash(python3:*)",
       "Bash(git status:*)",
-      "Bash(sort:*)"
+      "Bash(sort:*)",
+      "Bash(git:*)"
     ]
   }
 }

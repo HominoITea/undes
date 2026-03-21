@@ -4472,3 +4472,24 @@ Notes:
 - Kept the explicit `--skip-enhance` path intact; the new branch is a safe fallback-on-match, not a replacement for manual operator control
 - Reused preprocess artifacts are copied into the current run archive and checkpointed as the current run's `preprocess` output, so resume semantics stay consistent
 - Verification passed: targeted `generate-context.contract` and `prompt-content` suites green, and full `npm run ai:test` green (`504` tests, `503` pass, `0` fail, `1` skipped)
+
+## [2026-03-21 23:20:00 UTC] - Project: ai-hub-coding
+Planned Change: Live validation of the landed pipeline cost stack on `plta-document-flow`.
+Owner Model: Codex (GPT-5)
+Priority: P1
+Status: DONE
+Target Files:
+- `ai/scripts/generate-context.js`
+- `ai/design/features/PIPELINE_COST_OPTIMIZATION.md`
+- `ai/ROADMAP.md`
+- `UNIFIED_MODEL_CHANGE_LOG.md`
+- `PROJECT_PLANNED_CHANGES.md`
+Notes:
+- Fixed the fresh validation regression by restoring the missing `CALIBRATED_FORECAST_HISTORY_LIMIT` import in `generate-context.js`
+- Re-ran the same `plta-document-flow` prompt after the fix and confirmed live behavior from the current cost stack:
+  - preprocess reuse activated from archived run `run-1773595607454`
+  - complexity routing classified the task as `standard`
+  - the pipeline advanced into proposal-time file reading instead of failing early
+- The rerun did not complete cleanly because `reviewer` hit `Google API error: Request timed out after 120000ms` (`2026-03-21 15:16:37 UTC` in the target project's `.ai/logs/AI_ERROR_LOG.md`), so final metrics were not written
+- Outcome: partial live validation succeeded; the next step is a stable-provider rerun to measure completed-run savings before adding more optimization knobs
+- Verification passed: `node --test --test-isolation=none ai/scripts/__tests__/generate-context.contract.test.js` and `npm run ai:test` (`504` tests, `503` pass, `0` fail, `1` skipped)

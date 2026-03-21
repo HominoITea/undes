@@ -86,6 +86,7 @@ const {
   saveMetricsFiles,
 } = require('./domain/metrics-tracking');
 const {
+  CALIBRATED_FORECAST_HISTORY_LIMIT,
   buildOperationalSignalsSnapshot: buildOperationalSignalsSnapshotBase,
   findRecentRunFlowsWithSignals,
   loadRecentOperationalSignalRuns,

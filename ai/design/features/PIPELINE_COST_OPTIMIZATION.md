@@ -31,7 +31,27 @@ Already landed in code:
   landed under adjacent tracks
 
 Still open under this track:
-- fresh live validation to confirm the cost savings stack in real runs
+- complete live validation to confirm the cost savings stack in full reruns
+  without provider instability obscuring the results
+
+Fresh live validation signal on 2026-03-21 (`plta-document-flow`, same prompt as
+the 2026-03-15 workflow bug run):
+- confirmed: bounded rerun preprocess reuse activated
+  - console: `PRE-PROCESS PHASE (reused)`
+  - console: `Reused prompt analysis from run-1773595607454`
+- confirmed: complexity routing classified the task as `standard`
+- confirmed: the pipeline continued into proposal-time file reading with the
+  reused preprocess result instead of failing early
+- blocker: the run did not reach a clean final metrics snapshot because
+  `reviewer` hit a Google provider timeout (`Request timed out after 120000ms`,
+  logged at `2026-03-21 15:16:37 UTC` in the target project's
+  `.ai/logs/AI_ERROR_LOG.md`)
+
+Current conclusion:
+- the landed cost stack is active in live conditions
+- the remaining validation gap is no longer "does rerun reuse/routing execute?"
+- the remaining gap is "can we observe full-run savings cleanly without provider
+  timeout noise?"
 
 ## Pipeline Snapshot (2026-03-15)
 
@@ -229,9 +249,9 @@ after this decomposition.
 
 ## Recommended Implementation Order (after Lever 3)
 
-1. Fresh live validation of the landed cost stack (P1) — confirm real savings
-   in full runs, not only unit behavior
-2. Any further routing tuning only after fresh live validation data
+1. Repeat live validation on a stable-provider rerun path (P1) — confirm final
+   savings in completed runs, not only partial live behavior
+2. Any further routing tuning only after completed live-validation data
 
 ## MVP Risk Debt
 

@@ -4710,3 +4710,28 @@ Notes:
   - `node --test --test-isolation=none ai/scripts/__tests__/generate-context.contract.test.js`
   - `node --test --test-isolation=none ai/scripts/__tests__/prompt-content.test.js`
   - `npm run ai:test` -> `504` tests, `503` pass, `0` fail, `1` skipped
+
+## [2026-03-21 23:20:00 UTC] - Model: Codex (GPT-5)
+Project: ai-hub-coding
+Path: /home/kair/ai_agents_coding/ai-hub-coding
+Task ID: live-cost-stack-validation-plta-20260321
+Task Summary: Fix the fresh live-validation regression and record the partial live validation outcome for the landed cost stack
+Request: погнали
+Changes:
+- `ai/scripts/generate-context.js` — restored the missing `CALIBRATED_FORECAST_HISTORY_LIMIT` import from `domain/operational-signals-snapshot`, fixing the runtime `ReferenceError` that aborted the first `plta-document-flow` validation attempt on `2026-03-21 15:10:09 UTC`
+- `ai/design/features/PIPELINE_COST_OPTIMIZATION.md` — recorded the 2026-03-21 `plta-document-flow` live-validation result as a partial confirmation: rerun preprocess reuse and bounded complexity routing both activated in a real rerun, but the run did not finish cleanly because `reviewer` hit a Google provider timeout
+- `ai/ROADMAP.md` — synchronized the cost-optimization row with the partial live-validation outcome and clarified that the next step is a stable-provider rerun, not another optimization knob
+- `UNIFIED_MODEL_CHANGE_LOG.md` — this entry
+- `PROJECT_PLANNED_CHANGES.md` — recorded the validation outcome and follow-up direction
+Status: COMPLETED
+Notes:
+- First live validation attempt failed immediately with `ReferenceError: CALIBRATED_FORECAST_HISTORY_LIMIT is not defined`; after the import fix, the rerun progressed and printed:
+  - `PRE-PROCESS PHASE (reused)`
+  - `Reused prompt analysis from run-1773595607454`
+  - `Task complexity: standard`
+- The rerun advanced into proposal-time file reading, which confirms the landed rerun reuse path and bounded routing path are active in real execution
+- The run did not reach final metrics because `reviewer` hit `Google API error: Request timed out after 120000ms` (logged in the target project's `.ai/logs/AI_ERROR_LOG.md` at `2026-03-21 15:16:37 UTC`)
+- Validation conclusion: the remaining uncertainty is provider stability during a full rerun, not whether the landed cost stack is wired into the runtime
+- Verification passed:
+  - `node --test --test-isolation=none ai/scripts/__tests__/generate-context.contract.test.js`
+  - `npm run ai:test` -> `504` tests, `503` pass, `0` fail, `1` skipped
