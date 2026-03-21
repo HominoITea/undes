@@ -1,0 +1,6 @@
+{
+  "success": true,
+  "verdict": "NEEDS_REVISION",
+  "score": 4,
+  "summary": "Решение правильно локализует основные проблемные швы, но не подтверждает reset-path, finalize/path completion, current_step и тестовый план."
+}

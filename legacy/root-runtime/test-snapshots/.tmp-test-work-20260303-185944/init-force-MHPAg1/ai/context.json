@@ -1,0 +1,7 @@
+{
+  "fullFiles": [
+    "package.json"
+  ],
+  "lightFiles": [],
+  "exclude": "find . -maxdepth 4 -type f -not -path \"./node_modules/*\" -not -path \"./.git/*\""
+}

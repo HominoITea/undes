@@ -1,0 +1,24 @@
+{
+  "targets": [
+    "rust-cli/src",
+    "src"
+  ],
+  "extensions": [
+    ".rs"
+  ],
+  "ignoreDirNames": [
+    ".git",
+    "node_modules",
+    "target"
+  ],
+  "ignorePathParts": [
+    "/generated/",
+    "/vendor/"
+  ],
+  "maxLines": 200,
+  "maxFunctions": 12,
+  "maxExports": 8,
+  "maxImplBlocks": 8,
+  "maxConcernBuckets": 3,
+  "godModuleFunctionThreshold": 8
+}

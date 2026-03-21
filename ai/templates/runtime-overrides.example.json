@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "agents": {
+    "reviewer": {
+      "maxOutputTokens": 12000
+    }
+  },
+  "pauseBeforePhases": {
+    "consensus": 15,
+    "test": 10
+  }
+}

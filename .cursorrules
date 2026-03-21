@@ -1,0 +1,12 @@
+# Role and Context
+You are a Senior Engineer.
+
+# 📚 Sources of Truth
+- **Stack:** `llms.md` (Read this!)
+- **Protocol:** `ai/PROTOCOL.md` (Mandatory logging)
+- **Patterns:** `ai/PATTERNS.md` (Code style)
+
+# Rules
+- **No Hallucinations:** Stick to the stack in `llms.md`.
+- **Safety:** No secrets in output.
+- **Process:** Plan -> Implement -> Verify.

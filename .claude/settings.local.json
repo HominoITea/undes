@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "Bash(npm run:*)",
+      "Bash(cat:*)",
+      "WebFetch(domain:habr.com)",
+      "WebSearch",
+      "WebFetch(domain:www.braintools.ru)",
+      "Bash(npm test:*)",
+      "Bash(git log:*)",
+      "Bash(echo ast-grep not installed:*)",
+      "Bash(echo \"\" >> /home/kair/ai_agents_coding/ai-hub-coding/PROJECT_PLANNED_CHANGES.md && cat >> /home/kair/ai_agents_coding/ai-hub-coding/PROJECT_PLANNED_CHANGES.md << 'ENDOFENTRY'\n\n### [2026-03-14] Expand structural extraction window \\(conservative bias fix\\)\n\nPlanned Change: Widen ast-grep extraction keyhole to include parent class\nfields, constructor, imports, and interface signatures alongside matched\nmethods. Addresses the \"conservative bias\" root cause identified by cross-model\ndiagnosis \\(Gemini CLI + Claude Opus 4.6\\).\n\nOwner Model: TBD \\(implementation\\)\nDecision By: Claude Opus 4.6 + Gemini CLI \\(cross-model diagnosis\\), approved by operator\nPriority: P0\nStatus: PLANNED\nTarget Files:\n- `ai/scripts/structural-search.js`\n- `ai/scripts/generate-context.js` \\(Context Pack integration\\)\n\nValidation:\n- 2-3 reruns on `plta-document-flow`\n- Success: `substantive-assumptions` removed from `groundingGapCategories`\n\nNotes:\n- Cross-model diagnosis concluded that the remaining `substantive-assumptions`\n  blocker is caused by conservative bias, not retrieval failure or debate\n  behavior.\n- Lever 3 \\(critique-driven expansion\\) deferred — try keyhole widening first.\n- Full decision record in `ai/design/features/ANSWER_DEPTH_IMPROVEMENT.md`.\nENDOFENTRY)",
+      "Bash(done)",
+      "Bash(node:*)",
+      "Bash(DEBUG_ENV=1 node:*)",
+      "Bash(echo Cache structure check:*)",
+      "Bash(ls:*)",
+      "Bash(python3:*)",
+      "Bash(git status:*)",
+      "Bash(sort:*)"
+    ]
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "limits": {
+    "maxFiles": 300,
+    "maxTreeFilesWhenPacked": 120,
+    "maxFileSize": 50000,
+    "maxTotalSize": 250000
+  },
+  "codeIndex": {
+    "enabled": true,
+    "outputPath": ".code_index.json",
+    "maxDepth": 2,
+    "maxPackBytes": 32000,
+    "maxGraphEdges": 80,
+    "maxSnippets": 24,
+    "maxListedSymbols": 18,
+    "snippetContextLines": 4,
+    "structuralSearchBackend": "ast-grep",
+    "fallbackToFullContext": true,
+    "indexMode": "auto",
+    "ignorePatterns": ["*.test.*", "*.spec.*", "*.stories.*"]
+  },
+  "promptGate": {
+    "enabled": true,
+    "warnThreshold": 3,
+    "blockThreshold": 0
+  },
+  "responseValidation": {
+    "enabled": true,
+    "minLength": 100,
+    "checkRefusal": true,
+    "checkFileRefs": false,
+    "minConfidence": null,
+    "retryOnFailure": false
+  },
+  "deltaContext": {
+    "enabled": true
+  },
+  "logWindow": {
+    "enabled": true,
+    "maxEntries": 10,
+    "maxBytes": 9000
+  },
+  "memoryWindow": {
+    "maxEntries": 8,
+    "maxBytes": 6000,
+    "sectionMaxBytes": 2000
+  },
+  "priority": {
+    "explicit": 1000,
+    "recentDays": 7,
+    "keyPatterns": ["schema", "types", "config", "index", "route", "api"]
+  },
+  "fullFiles": [
+    "ai/llms.md",
+    "ai/PROTOCOL.md",
+    "ai/PATTERNS.md",
+    "ai/KNOWLEDGE_BASE.md",
+    "package.json"
+  ],
+  "lightFiles": [
+    "ai/llms.md",
+    "ai/PATTERNS.md",
+    "package.json"
+  ],
+  "exclude": "find . -maxdepth 4 -type f -not -path \"./node_modules/*\" -not -path \"./.git/*\" -not -path \"./bin/*\" -not -path \"./obj/*\""
+}

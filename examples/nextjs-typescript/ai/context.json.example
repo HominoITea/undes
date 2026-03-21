@@ -1,0 +1,77 @@
+{
+  "indexMode": "auto",
+  "codeIndex": {
+    "includeComments": false,
+    "maxFileSizeBytes": 180000,
+    "structuralSearchBackend": "ast-grep",
+    "ignorePatterns": [
+      "/(^|\\/)(?:__tests__|__mocks__|fixtures)(\\/|$)/",
+      "/(?:^|\\/)(?:dist|build|coverage|\\.next|out|public\\/assets)(?:\\/|$)/",
+      "/\\.d\\.ts$/",
+      "/\\.(spec|test)\\.(ts|tsx|js|jsx)$/"
+    ]
+  },
+  "contextPack": {
+    "enabled": true,
+    "selection": {
+      "maxFiles": 24,
+      "maxTotalBytes": 280000,
+      "weights": {
+        "entry": 3.0,
+        "exported": 1.8,
+        "recent": 1.2
+      }
+    }
+  },
+  "logWindow": {
+    "maxEntries": 10,
+    "maxBytes": 12000
+  },
+  "memoryWindow": {
+    "maxEntries": 8,
+    "maxBytes": 12000,
+    "sectionMaxBytes": 4000
+  },
+  "fullFiles": [
+    "README.md",
+    "package.json",
+    "tsconfig.json",
+    "next.config.js",
+    "app/layout.tsx",
+    "app/page.tsx",
+    "app/error.tsx",
+    "app/loading.tsx",
+    "app/api/auth/[...nextauth]/route.ts",
+    "app/api/projects/route.ts",
+    "app/api/projects/[id]/route.ts",
+    "components/layout/AppShell.tsx",
+    "components/ui/Button.tsx",
+    "components/ui/Modal.tsx",
+    "features/auth/components/LoginForm.tsx",
+    "features/auth/server/auth.service.ts",
+    "features/projects/components/ProjectList.tsx",
+    "features/projects/components/ProjectCard.tsx",
+    "features/projects/server/projects.service.ts",
+    "features/projects/server/projects.repository.ts",
+    "features/projects/schemas/project.schema.ts",
+    "lib/api/client.ts",
+    "lib/logger.ts",
+    "server/db/prisma.ts",
+    "types/project.ts",
+    "types/api.ts",
+    "ai/llms.md",
+    ".cursorrules",
+    "CLAUDE.md"
+  ],
+  "lightFiles": [
+    "README.md",
+    "package.json",
+    "tsconfig.json",
+    "app/layout.tsx",
+    "app/page.tsx",
+    "features/projects/server/projects.service.ts",
+    "lib/api/client.ts",
+    "ai/llms.md"
+  ],
+  "exclude": "find . -maxdepth 5 -type f -not -path \"./node_modules/*\" -not -path \"./.git/*\" -not -path \"./.next/*\" -not -path \"./out/*\" -not -path \"./dist/*\" -not -path \"./build/*\" -not -path \"./coverage/*\" -not -path \"./public/assets/*\""
+}

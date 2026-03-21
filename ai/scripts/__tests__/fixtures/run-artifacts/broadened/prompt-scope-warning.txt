@@ -1,0 +1,12 @@
+# Prompt Scope Warning
+
+SCOPE_RISK: narrow-starting-seams
+MANUAL_REVIEW_RECOMMENDED: YES
+NOTE: Prompt names narrow starting seams that may bias retrieval toward a too-local slice.
+
+Details:
+- Промпт называет конкретные методы в `ApproverFacadeImpl`, что удобно как стартовая точка, но может спровоцировать слишком локальный фикс, если исполнитель проигнорирует upstream/downstream.
+- Так как пользователь прямо требует пройти до создания маршрута и до всех мест реального изменения состояний, задачу нельзя качественно закрыть изменениями только в фасаде.
+
+Suggested broadened prompt: .ai/prompts/runs/run-1773579198240/suggested-broadened-prompt.txt
+Use the broader prompt only with user approval.

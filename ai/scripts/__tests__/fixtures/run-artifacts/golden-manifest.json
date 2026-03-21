@@ -1,0 +1,125 @@
+{
+  "cases": [
+    {
+      "id": "narrow",
+      "label": "Narrow starting seams pilot run",
+      "runDir": "narrow",
+      "resultWarningPath": "narrow/result-warning.txt",
+      "expect": {
+        "artifactState": "complete",
+        "promptScope": {
+          "scopeRisk": "narrow-starting-seams"
+        },
+        "tester": {
+          "verdict": "NEEDS_REVISION",
+          "score": 4
+        },
+        "resultWarning": {
+          "resultMode": "DIAGNOSTIC",
+          "groundingGapCount": 1,
+          "groundingGapCategories": [
+            "substantive-assumptions"
+          ]
+        }
+      }
+    },
+    {
+      "id": "broadened",
+      "label": "Broadened prompt pilot run",
+      "runDir": "broadened",
+      "resultWarningPath": "broadened/result-warning.txt",
+      "expect": {
+        "artifactState": "complete",
+        "promptScope": {
+          "scopeRisk": "narrow-starting-seams"
+        },
+        "tester": {
+          "verdict": "NEEDS_REVISION",
+          "score": 6
+        },
+        "resultWarning": {
+          "resultMode": "DIAGNOSTIC",
+          "groundingGapCount": 1,
+          "groundingGapCategories": [
+            "substantive-assumptions"
+          ]
+        }
+      }
+    },
+    {
+      "id": "targeted-length",
+      "label": "Targeted workflow seams run aborted by provider length limit",
+      "runDir": "targeted-length",
+      "runFlowPath": "targeted-length/run-flow.json",
+      "expect": {
+        "artifactState": "partial",
+        "promptScope": {
+          "scopeRisk": "narrow-starting-seams"
+        },
+        "tester": {
+          "verdict": "",
+          "score": 0
+        },
+        "runFlow": {
+          "status": "failed",
+          "failureReason": "provider_length",
+          "lastFailedAgent": "developer",
+          "lastFailedStage": "proposal"
+        }
+      }
+    },
+    {
+      "id": "targeted-quota",
+      "label": "Targeted workflow seams run aborted by provider quota",
+      "runDir": "targeted-quota",
+      "runFlowPath": "targeted-quota/run-flow.json",
+      "expect": {
+        "artifactState": "partial",
+        "promptScope": {
+          "scopeRisk": "narrow-starting-seams"
+        },
+        "tester": {
+          "verdict": "",
+          "score": 0
+        },
+        "runFlow": {
+          "status": "failed",
+          "failureReason": "quota_exhausted",
+          "lastFailedAgent": "developer",
+          "lastFailedStage": "approval-2"
+        }
+      }
+    },
+    {
+      "id": "lifecycle-sync-baseline",
+      "label": "Second validation case: Java lifecycle-sync (pending live run)",
+      "runDir": "lifecycle-sync",
+      "resultWarningPath": "lifecycle-sync/result-warning.txt",
+      "status": "pending",
+      "expect": {
+        "artifactState": "complete",
+        "promptScope": {
+          "scopeRisk": "narrow-starting-seams"
+        },
+        "tester": {
+          "verdict": "PASS",
+          "score": 8
+        },
+        "resultWarning": {
+          "resultMode": "PATCH_SAFE",
+          "groundingGapCount": 0,
+          "groundingGapCategories": []
+        }
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "id": "broadened-improves-over-narrow",
+      "left": "broadened",
+      "right": "narrow",
+      "path": "tester.score",
+      "operator": "gt"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-03-04T05-52-07-537Z",
+  "projectType": "node",
+  "treeFiles": [
+    "ai/context.json",
+    "package.json"
+  ],
+  "keyFiles": [
+    "package.json"
+  ],
+  "bootstrapAgent": null,
+  "rawResponse": "",
+  "validationErrors": []
+}

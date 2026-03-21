@@ -1,0 +1,1 @@
+{"targets":["src"],"extensions":[".rs"],"ignoreDirNames":[".git","node_modules","target"],"ignorePathParts":["/generated/"],"maxLines":10,"maxFunctions":12,"maxExports":8,"maxImplBlocks":8,"maxConcernBuckets":3,"godModuleFunctionThreshold":8}

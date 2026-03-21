@@ -1,0 +1,13 @@
+# Prompt Scope Warning
+
+SCOPE_RISK: narrow-starting-seams
+MANUAL_REVIEW_RECOMMENDED: YES
+NOTE: Prompt names narrow starting seams that may bias retrieval toward a too-local slice.
+
+Details:
+- Промпт правильно называет starting seams, но из-за большого акцента на ApproverFacadeImpl исполнитель может все равно недочитать upstream route creation, entity/repository write/read sites и order-specific lifecycle.
+- Есть риск локального hotfix в approve-path без исправления route creation или reset semantics; enhancedPrompt явно запрещает это.
+- Есть риск, что current_step будет описан предположительно. Поэтому в enhancedPrompt добавлено требование перечислить все read/write sites или явно доказать отсутствие поля.
+
+Suggested broadened prompt: .ai/prompts/runs/run-1773595607454/suggested-broadened-prompt.txt
+Use the broader prompt only with user approval.

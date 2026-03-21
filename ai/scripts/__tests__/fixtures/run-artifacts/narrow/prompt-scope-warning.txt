@@ -1,0 +1,12 @@
+# Prompt Scope Warning
+
+SCOPE_RISK: narrow-starting-seams
+MANUAL_REVIEW_RECOMMENDED: YES
+NOTE: Prompt names narrow starting seams that may bias retrieval toward a too-local slice.
+
+Details:
+- Промпт называет конкретные методы, но корень дефекта, вероятно, частично находится upstream в генерации ApprovalInstance и downstream в EDS/simple approve-path.
+- Если команда воспримет перечисленные методы как жесткий scope, можно починить симптом в approve endpoint, но оставить источник проблемы в построении маршрута.
+
+Suggested broadened prompt: .ai/prompts/runs/run-1773573644857/suggested-broadened-prompt.txt
+Use the broader prompt only with user approval.

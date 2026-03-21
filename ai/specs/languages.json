@@ -1,0 +1,278 @@
+{
+  "version": 1,
+  "languages": [
+    {
+      "id": "typescript",
+      "label": "TypeScript",
+      "extensions": [".ts", ".tsx"],
+      "symbolPatterns": [
+        {
+          "type": "function",
+          "regex": "\\bfunction\\s+([A-Za-z_$][\\w$]*)\\s*\\(",
+          "flags": "g"
+        },
+        {
+          "type": "class",
+          "regex": "\\bclass\\s+([A-Za-z_$][\\w$]*)\\b",
+          "flags": "g"
+        },
+        {
+          "type": "interface",
+          "regex": "\\binterface\\s+([A-Za-z_$][\\w$]*)\\b",
+          "flags": "g"
+        },
+        {
+          "type": "type",
+          "regex": "\\btype\\s+([A-Za-z_$][\\w$]*)\\s*=",
+          "flags": "g"
+        },
+        {
+          "type": "method",
+          "regex": "\\b(?:public|private|protected)?\\s*([A-Za-z_$][\\w$]*)\\s*\\([^)]*\\)\\s*\\{",
+          "flags": "g"
+        }
+      ],
+      "ignorePatterns": [
+        "**/*.d.ts"
+      ]
+    },
+    {
+      "id": "javascript",
+      "label": "JavaScript",
+      "extensions": [".js", ".jsx", ".mjs", ".cjs"],
+      "symbolPatterns": [
+        {
+          "type": "function",
+          "regex": "\\bfunction\\s+([A-Za-z_$][\\w$]*)\\s*\\(",
+          "flags": "g"
+        },
+        {
+          "type": "class",
+          "regex": "\\bclass\\s+([A-Za-z_$][\\w$]*)\\b",
+          "flags": "g"
+        },
+        {
+          "type": "const-fn",
+          "regex": "\\bconst\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*\\([^)]*\\)\\s*=>",
+          "flags": "g"
+        }
+      ],
+      "ignorePatterns": []
+    },
+    {
+      "id": "python",
+      "label": "Python",
+      "extensions": [".py"],
+      "symbolPatterns": [
+        {
+          "type": "class",
+          "regex": "^\\s*class\\s+([A-Za-z_][\\w]*)\\s*(?:\\(|:)",
+          "flags": "gm"
+        },
+        {
+          "type": "function",
+          "regex": "^\\s*def\\s+([A-Za-z_][\\w]*)\\s*\\(",
+          "flags": "gm"
+        }
+      ],
+      "ignorePatterns": [
+        "**/__pycache__/**"
+      ]
+    },
+    {
+      "id": "java",
+      "label": "Java",
+      "extensions": [".java"],
+      "symbolPatterns": [
+        {
+          "type": "class",
+          "regex": "\\bclass\\s+([A-Za-z_][\\w]*)\\b",
+          "flags": "g"
+        },
+        {
+          "type": "method",
+          "regex": "\\b(?:public|private|protected)?\\s*(?:static\\s+)?[\\w<>\\[\\]]+\\s+([A-Za-z_][\\w]*)\\s*\\([^)]*\\)\\s*\\{",
+          "flags": "g"
+        }
+      ],
+      "ignorePatterns": []
+    },
+    {
+      "id": "csharp",
+      "label": "C#",
+      "extensions": [".cs"],
+      "symbolPatterns": [
+        {
+          "type": "class",
+          "regex": "\\bclass\\s+([A-Za-z_][\\w]*)\\b",
+          "flags": "g"
+        },
+        {
+          "type": "method",
+          "regex": "\\b(?:public|private|protected|internal)?\\s*(?:static\\s+)?[\\w<>\\[\\],?]+\\s+([A-Za-z_][\\w]*)\\s*\\([^)]*\\)\\s*\\{",
+          "flags": "g"
+        }
+      ],
+      "ignorePatterns": []
+    },
+    {
+      "id": "go",
+      "label": "Go",
+      "extensions": [".go"],
+      "symbolPatterns": [
+        {
+          "type": "function",
+          "regex": "\\bfunc\\s+([A-Za-z_][\\w]*)\\s*\\(",
+          "flags": "g"
+        },
+        {
+          "type": "method",
+          "regex": "\\bfunc\\s*\\([^)]*\\)\\s*([A-Za-z_][\\w]*)\\s*\\(",
+          "flags": "g"
+        },
+        {
+          "type": "struct",
+          "regex": "\\btype\\s+([A-Za-z_][\\w]*)\\s+struct\\b",
+          "flags": "g"
+        }
+      ],
+      "ignorePatterns": [
+        "**/*_test.go"
+      ]
+    },
+    {
+      "id": "php",
+      "label": "PHP",
+      "extensions": [".php"],
+      "symbolPatterns": [
+        {
+          "type": "function",
+          "regex": "\\bfunction\\s+([A-Za-z_][\\w]*)\\s*\\(",
+          "flags": "g"
+        },
+        {
+          "type": "class",
+          "regex": "\\bclass\\s+([A-Za-z_][\\w]*)\\b",
+          "flags": "g"
+        },
+        {
+          "type": "method",
+          "regex": "\\b(?:public|private|protected)?\\s*function\\s+([A-Za-z_][\\w]*)\\s*\\(",
+          "flags": "g"
+        }
+      ],
+      "ignorePatterns": []
+    },
+    {
+      "id": "rust",
+      "label": "Rust",
+      "extensions": [".rs"],
+      "symbolPatterns": [
+        {
+          "type": "function",
+          "regex": "\\bfn\\s+([A-Za-z_][\\w]*)\\s*[<(]",
+          "flags": "g"
+        },
+        {
+          "type": "class",
+          "regex": "\\bstruct\\s+([A-Za-z_][\\w]*)\\b",
+          "flags": "g"
+        },
+        {
+          "type": "class",
+          "regex": "\\benum\\s+([A-Za-z_][\\w]*)\\b",
+          "flags": "g"
+        },
+        {
+          "type": "interface",
+          "regex": "\\btrait\\s+([A-Za-z_][\\w]*)\\b",
+          "flags": "g"
+        },
+        {
+          "type": "type",
+          "regex": "\\btype\\s+([A-Za-z_][\\w]*)\\s*=",
+          "flags": "g"
+        }
+      ],
+      "ignorePatterns": [
+        "**/target/**"
+      ]
+    },
+    {
+      "id": "c",
+      "label": "C",
+      "extensions": [".c", ".h"],
+      "symbolPatterns": [
+        {
+          "type": "function",
+          "regex": "^[A-Za-z_][\\w\\s*]+\\s+([A-Za-z_][\\w]*)\\s*\\([^)]*\\)\\s*\\{",
+          "flags": "gm"
+        },
+        {
+          "type": "class",
+          "regex": "\\bstruct\\s+([A-Za-z_][\\w]*)\\b",
+          "flags": "g"
+        },
+        {
+          "type": "class",
+          "regex": "\\benum\\s+([A-Za-z_][\\w]*)\\b",
+          "flags": "g"
+        },
+        {
+          "type": "type",
+          "regex": "\\btypedef\\s+[^;]+\\s+([A-Za-z_][\\w]*)\\s*;",
+          "flags": "g"
+        }
+      ],
+      "ignorePatterns": []
+    },
+    {
+      "id": "cpp",
+      "label": "C++",
+      "extensions": [".cpp", ".cc", ".cxx", ".hpp"],
+      "symbolPatterns": [
+        {
+          "type": "class",
+          "regex": "\\bclass\\s+([A-Za-z_][\\w]*)\\b",
+          "flags": "g"
+        },
+        {
+          "type": "class",
+          "regex": "\\bstruct\\s+([A-Za-z_][\\w]*)\\b",
+          "flags": "g"
+        },
+        {
+          "type": "function",
+          "regex": "^[A-Za-z_][\\w\\s*:&<>]+\\s+([A-Za-z_][\\w]*)\\s*\\([^)]*\\)\\s*(?:const\\s*)?\\{",
+          "flags": "gm"
+        }
+      ],
+      "ignorePatterns": [
+        "**/build/**"
+      ]
+    },
+    {
+      "id": "ruby",
+      "label": "Ruby",
+      "extensions": [".rb"],
+      "symbolPatterns": [
+        {
+          "type": "class",
+          "regex": "\\bclass\\s+([A-Za-z_][\\w]*)\\b",
+          "flags": "g"
+        },
+        {
+          "type": "function",
+          "regex": "\\bdef\\s+([A-Za-z_][\\w?!]*)\\b",
+          "flags": "g"
+        },
+        {
+          "type": "class",
+          "regex": "\\bmodule\\s+([A-Za-z_][\\w]*)\\b",
+          "flags": "g"
+        }
+      ],
+      "ignorePatterns": []
+    }
+  ]
+}

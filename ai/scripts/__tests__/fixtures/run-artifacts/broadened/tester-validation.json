@@ -1,0 +1,6 @@
+{
+  "success": true,
+  "verdict": "NEEDS_REVISION",
+  "score": 6,
+  "summary": "Предложение правильно локализует общий lifecycle seam, но upstream route creation, current_step и полный approve-path все еще не дочитаны до конца."
+}

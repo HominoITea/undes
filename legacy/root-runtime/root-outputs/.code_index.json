@@ -1,0 +1,1481 @@
+{
+  "version": 2,
+  "mode": "ast",
+  "generatedAt": "2026-02-24T18:06:48.303Z",
+  "symbols": [
+    {
+      "id": "./ai/scripts/context-index.js:resolveIndexConfig:82",
+      "name": "resolveIndexConfig",
+      "type": "function",
+      "file": "./ai/scripts/context-index.js",
+      "startLine": 82,
+      "endLine": 95,
+      "signature": "function resolveIndexConfig(contextConfig = {"
+    },
+    {
+      "id": "./ai/scripts/context-index.js:resolveMode:97",
+      "name": "resolveMode",
+      "type": "function",
+      "file": "./ai/scripts/context-index.js",
+      "startLine": 97,
+      "endLine": 107,
+      "signature": "function resolveMode(configMode) {"
+    },
+    {
+      "id": "./ai/scripts/context-index.js:compileIgnorePatterns:113",
+      "name": "compileIgnorePatterns",
+      "type": "function",
+      "file": "./ai/scripts/context-index.js",
+      "startLine": 113,
+      "endLine": 125,
+      "signature": "function compileIgnorePatterns(patterns) {"
+    },
+    {
+      "id": "./ai/scripts/context-index.js:matchesIgnorePattern:127",
+      "name": "matchesIgnorePattern",
+      "type": "function",
+      "file": "./ai/scripts/context-index.js",
+      "startLine": 127,
+      "endLine": 132,
+      "signature": "function matchesIgnorePattern(filePath, compiledPatterns) {"
+    },
+    {
+      "id": "./ai/scripts/context-index.js:safeRegexExec:138",
+      "name": "safeRegexExec",
+      "type": "function",
+      "file": "./ai/scripts/context-index.js",
+      "startLine": 138,
+      "endLine": 157,
+      "signature": "function safeRegexExec(regex, content, timeoutMs = 5000) {"
+    },
+    {
+      "id": "./ai/scripts/context-index.js:extToLang:163",
+      "name": "extToLang",
+      "type": "function",
+      "file": "./ai/scripts/context-index.js",
+      "startLine": 163,
+      "endLine": 177,
+      "signature": "function extToLang(filePath) {"
+    },
+    {
+      "id": "./ai/scripts/context-index.js:lineOfOffset:179",
+      "name": "lineOfOffset",
+      "type": "function",
+      "file": "./ai/scripts/context-index.js",
+      "startLine": 179,
+      "endLine": 181,
+      "signature": "function lineOfOffset(text, offset) {"
+    },
+    {
+      "id": "./ai/scripts/context-index.js:signatureLine:183",
+      "name": "signatureLine",
+      "type": "function",
+      "file": "./ai/scripts/context-index.js",
+      "startLine": 183,
+      "endLine": 192,
+      "signature": "function signatureLine(text, lineNum) {"
+    },
+    {
+      "id": "./ai/scripts/context-index.js:estimateEndLine:194",
+      "name": "estimateEndLine",
+      "type": "function",
+      "file": "./ai/scripts/context-index.js",
+      "startLine": 194,
+      "endLine": 214,
+      "signature": "function estimateEndLine(content, startLine) {"
+    },
+    {
+      "id": "./ai/scripts/context-index.js:extractSymbols:220",
+      "name": "extractSymbols",
+      "type": "function",
+      "file": "./ai/scripts/context-index.js",
+      "startLine": 220,
+      "endLine": 245,
+      "signature": "function extractSymbols(filePath, content) {"
+    },
+    {
+      "id": "./ai/scripts/context-index.js:shouldIgnoreEdgeSymbol:251",
+      "name": "shouldIgnoreEdgeSymbol",
+      "type": "function",
+      "file": "./ai/scripts/context-index.js",
+      "startLine": 251,
+      "endLine": 254,
+      "signature": "function shouldIgnoreEdgeSymbol(symName) {"
+    },
+    {
+      "id": "./ai/scripts/context-index.js:extractEdges:256",
+      "name": "extractEdges",
+      "type": "function",
+      "file": "./ai/scripts/context-index.js",
+      "startLine": 256,
+      "endLine": 269,
+      "signature": "function extractEdges(filePath, content, knownNames, definedInFile) {"
+    },
+    {
+      "id": "./ai/scripts/context-index.js:hashContent:275",
+      "name": "hashContent",
+      "type": "function",
+      "file": "./ai/scripts/context-index.js",
+      "startLine": 275,
+      "endLine": 277,
+      "signature": "function hashContent(s) {"
+    },
+    {
+      "id": "./ai/scripts/context-index.js:buildCodeIndex:282",
+      "name": "buildCodeIndex",
+      "type": "function",
+      "file": "./ai/scripts/context-index.js",
+      "startLine": 282,
+      "endLine": 370,
+      "signature": "function buildCodeIndex({"
+    },
+    {
+      "id": "./ai/scripts/context-index.js:loadCodeIndex:376",
+      "name": "loadCodeIndex",
+      "type": "function",
+      "file": "./ai/scripts/context-index.js",
+      "startLine": 376,
+      "endLine": 385,
+      "signature": "function loadCodeIndex(indexPath) {"
+    },
+    {
+      "id": "./ai/scripts/context-index.js:saveCodeIndex:387",
+      "name": "saveCodeIndex",
+      "type": "function",
+      "file": "./ai/scripts/context-index.js",
+      "startLine": 387,
+      "endLine": 391,
+      "signature": "function saveCodeIndex(indexPath, index) {"
+    },
+    {
+      "id": "./ai/scripts/cleanup.js:cleanup:7",
+      "name": "cleanup",
+      "type": "function",
+      "file": "./ai/scripts/cleanup.js",
+      "startLine": 7,
+      "endLine": 35,
+      "signature": "function cleanup() {"
+    },
+    {
+      "id": "./ai/scripts/architecture-check.js:toArray:29",
+      "name": "toArray",
+      "type": "function",
+      "file": "./ai/scripts/architecture-check.js",
+      "startLine": 29,
+      "endLine": 31,
+      "signature": "function toArray(value, fallback) {"
+    },
+    {
+      "id": "./ai/scripts/architecture-check.js:toInt:33",
+      "name": "toInt",
+      "type": "function",
+      "file": "./ai/scripts/architecture-check.js",
+      "startLine": 33,
+      "endLine": 36,
+      "signature": "function toInt(value, fallback) {"
+    },
+    {
+      "id": "./ai/scripts/architecture-check.js:parseArgs:38",
+      "name": "parseArgs",
+      "type": "function",
+      "file": "./ai/scripts/architecture-check.js",
+      "startLine": 38,
+      "endLine": 59,
+      "signature": "function parseArgs(argv) {"
+    },
+    {
+      "id": "./ai/scripts/architecture-check.js:loadRules:61",
+      "name": "loadRules",
+      "type": "function",
+      "file": "./ai/scripts/architecture-check.js",
+      "startLine": 61,
+      "endLine": 87,
+      "signature": "function loadRules(options) {"
+    },
+    {
+      "id": "./ai/scripts/architecture-check.js:normPath:89",
+      "name": "normPath",
+      "type": "function",
+      "file": "./ai/scripts/architecture-check.js",
+      "startLine": 89,
+      "endLine": 91,
+      "signature": "function normPath(value) {"
+    },
+    {
+      "id": "./ai/scripts/architecture-check.js:isIgnored:93",
+      "name": "isIgnored",
+      "type": "function",
+      "file": "./ai/scripts/architecture-check.js",
+      "startLine": 93,
+      "endLine": 96,
+      "signature": "function isIgnored(relPath, rules) {"
+    },
+    {
+      "id": "./ai/scripts/architecture-check.js:walk:98",
+      "name": "walk",
+      "type": "function",
+      "file": "./ai/scripts/architecture-check.js",
+      "startLine": 98,
+      "endLine": 113,
+      "signature": "function walk(absDir, rules, files) {"
+    },
+    {
+      "id": "./ai/scripts/architecture-check.js:collectFiles:115",
+      "name": "collectFiles",
+      "type": "function",
+      "file": "./ai/scripts/architecture-check.js",
+      "startLine": 115,
+      "endLine": 124,
+      "signature": "function collectFiles(rules) {"
+    },
+    {
+      "id": "./ai/scripts/architecture-check.js:count:126",
+      "name": "count",
+      "type": "function",
+      "file": "./ai/scripts/architecture-check.js",
+      "startLine": 126,
+      "endLine": 129,
+      "signature": "function count(content, regex) {"
+    },
+    {
+      "id": "./ai/scripts/architecture-check.js:detectConcerns:131",
+      "name": "detectConcerns",
+      "type": "function",
+      "file": "./ai/scripts/architecture-check.js",
+      "startLine": 131,
+      "endLine": 133,
+      "signature": "function detectConcerns(content) {"
+    },
+    {
+      "id": "./ai/scripts/architecture-check.js:analyze:135",
+      "name": "analyze",
+      "type": "function",
+      "file": "./ai/scripts/architecture-check.js",
+      "startLine": 135,
+      "endLine": 153,
+      "signature": "function analyze(file, rules) {"
+    },
+    {
+      "id": "./ai/scripts/architecture-check.js:printHelp:155",
+      "name": "printHelp",
+      "type": "function",
+      "file": "./ai/scripts/architecture-check.js",
+      "startLine": 155,
+      "endLine": 158,
+      "signature": "function printHelp() {"
+    },
+    {
+      "id": "./ai/scripts/architecture-check.js:main:160",
+      "name": "main",
+      "type": "function",
+      "file": "./ai/scripts/architecture-check.js",
+      "startLine": 160,
+      "endLine": 185,
+      "signature": "function main() {"
+    },
+    {
+      "id": "./ai/scripts/context-index-treesitter.js:isTreeSitterAvailable:48",
+      "name": "isTreeSitterAvailable",
+      "type": "function",
+      "file": "./ai/scripts/context-index-treesitter.js",
+      "startLine": 48,
+      "endLine": 51,
+      "signature": "function isTreeSitterAvailable() {"
+    },
+    {
+      "id": "./ai/scripts/context-index-treesitter.js:_init:53",
+      "name": "_init",
+      "type": "function",
+      "file": "./ai/scripts/context-index-treesitter.js",
+      "startLine": 53,
+      "endLine": 61,
+      "signature": "function _init() {"
+    },
+    {
+      "id": "./ai/scripts/context-index-treesitter.js:_getParser:63",
+      "name": "_getParser",
+      "type": "function",
+      "file": "./ai/scripts/context-index-treesitter.js",
+      "startLine": 63,
+      "endLine": 87,
+      "signature": "function _getParser(ext) {"
+    },
+    {
+      "id": "./ai/scripts/context-index-treesitter.js:signatureFromNode:94",
+      "name": "signatureFromNode",
+      "type": "function",
+      "file": "./ai/scripts/context-index-treesitter.js",
+      "startLine": 94,
+      "endLine": 104,
+      "signature": "function signatureFromNode(node, content) {"
+    },
+    {
+      "id": "./ai/scripts/context-index-treesitter.js:_walkJsTs:121",
+      "name": "_walkJsTs",
+      "type": "function",
+      "file": "./ai/scripts/context-index-treesitter.js",
+      "startLine": 121,
+      "endLine": 169,
+      "signature": "function _walkJsTs(rootNode, filePath, content) {"
+    },
+    {
+      "id": "./ai/scripts/context-index-treesitter.js:_walkPython:178",
+      "name": "_walkPython",
+      "type": "function",
+      "file": "./ai/scripts/context-index-treesitter.js",
+      "startLine": 178,
+      "endLine": 207,
+      "signature": "function _walkPython(rootNode, filePath, content) {"
+    },
+    {
+      "id": "./ai/scripts/context-index-treesitter.js:_walkRust:220",
+      "name": "_walkRust",
+      "type": "function",
+      "file": "./ai/scripts/context-index-treesitter.js",
+      "startLine": 220,
+      "endLine": 249,
+      "signature": "function _walkRust(rootNode, filePath, content) {"
+    },
+    {
+      "id": "./ai/scripts/context-index-treesitter.js:_walkCCpp:261",
+      "name": "_walkCCpp",
+      "type": "function",
+      "file": "./ai/scripts/context-index-treesitter.js",
+      "startLine": 261,
+      "endLine": 312,
+      "signature": "function _walkCCpp(rootNode, filePath, content) {"
+    },
+    {
+      "id": "./ai/scripts/context-index-treesitter.js:_walkGo:316",
+      "name": "_walkGo",
+      "type": "function",
+      "file": "./ai/scripts/context-index-treesitter.js",
+      "startLine": 316,
+      "endLine": 381,
+      "signature": "function _walkGo(rootNode, filePath, content) {"
+    },
+    {
+      "id": "./ai/scripts/context-index-treesitter.js:_walkPhp:385",
+      "name": "_walkPhp",
+      "type": "function",
+      "file": "./ai/scripts/context-index-treesitter.js",
+      "startLine": 385,
+      "endLine": 442,
+      "signature": "function _walkPhp(rootNode, filePath, content) {"
+    },
+    {
+      "id": "./ai/scripts/context-index-treesitter.js:_walkJava:446",
+      "name": "_walkJava",
+      "type": "function",
+      "file": "./ai/scripts/context-index-treesitter.js",
+      "startLine": 446,
+      "endLine": 491,
+      "signature": "function _walkJava(rootNode, filePath, content) {"
+    },
+    {
+      "id": "./ai/scripts/context-index-treesitter.js:_walkCSharp:495",
+      "name": "_walkCSharp",
+      "type": "function",
+      "file": "./ai/scripts/context-index-treesitter.js",
+      "startLine": 495,
+      "endLine": 541,
+      "signature": "function _walkCSharp(rootNode, filePath, content) {"
+    },
+    {
+      "id": "./ai/scripts/context-index-treesitter.js:_walkRuby:545",
+      "name": "_walkRuby",
+      "type": "function",
+      "file": "./ai/scripts/context-index-treesitter.js",
+      "startLine": 545,
+      "endLine": 602,
+      "signature": "function _walkRuby(rootNode, filePath, content) {"
+    },
+    {
+      "id": "./ai/scripts/context-index-treesitter.js:_extractImportsJsTs:626",
+      "name": "_extractImportsJsTs",
+      "type": "function",
+      "file": "./ai/scripts/context-index-treesitter.js",
+      "startLine": 626,
+      "endLine": 673,
+      "signature": "function _extractImportsJsTs(rootNode) {"
+    },
+    {
+      "id": "./ai/scripts/context-index-treesitter.js:_collectImportClauseNames:675",
+      "name": "_collectImportClauseNames",
+      "type": "function",
+      "file": "./ai/scripts/context-index-treesitter.js",
+      "startLine": 675,
+      "endLine": 694,
+      "signature": "function _collectImportClauseNames(importClause, out) {"
+    },
+    {
+      "id": "./ai/scripts/context-index-treesitter.js:_collectObjectPatternNames:696",
+      "name": "_collectObjectPatternNames",
+      "type": "function",
+      "file": "./ai/scripts/context-index-treesitter.js",
+      "startLine": 696,
+      "endLine": 706,
+      "signature": "function _collectObjectPatternNames(objectPattern, out) {"
+    },
+    {
+      "id": "./ai/scripts/context-index-treesitter.js:_extractImportsPython:708",
+      "name": "_extractImportsPython",
+      "type": "function",
+      "file": "./ai/scripts/context-index-treesitter.js",
+      "startLine": 708,
+      "endLine": 751,
+      "signature": "function _extractImportsPython(rootNode) {"
+    },
+    {
+      "id": "./ai/scripts/context-index-treesitter.js:_extractImportsGo:753",
+      "name": "_extractImportsGo",
+      "type": "function",
+      "file": "./ai/scripts/context-index-treesitter.js",
+      "startLine": 753,
+      "endLine": 793,
+      "signature": "function _extractImportsGo(rootNode) {"
+    },
+    {
+      "id": "./ai/scripts/context-index-treesitter.js:_extractImportsRust:795",
+      "name": "_extractImportsRust",
+      "type": "function",
+      "file": "./ai/scripts/context-index-treesitter.js",
+      "startLine": 795,
+      "endLine": 814,
+      "signature": "function _extractImportsRust(rootNode) {"
+    },
+    {
+      "id": "./ai/scripts/context-index-treesitter.js:_collectUseNames:816",
+      "name": "_collectUseNames",
+      "type": "function",
+      "file": "./ai/scripts/context-index-treesitter.js",
+      "startLine": 816,
+      "endLine": 837,
+      "signature": "function _collectUseNames(node, out) {"
+    },
+    {
+      "id": "./ai/scripts/context-index-treesitter.js:extractSymbolsAst:858",
+      "name": "extractSymbolsAst",
+      "type": "function",
+      "file": "./ai/scripts/context-index-treesitter.js",
+      "startLine": 858,
+      "endLine": 874,
+      "signature": "function extractSymbolsAst(filePath, content) {"
+    },
+    {
+      "id": "./ai/scripts/context-index-treesitter.js:extractEdgesAst:881",
+      "name": "extractEdgesAst",
+      "type": "function",
+      "file": "./ai/scripts/context-index-treesitter.js",
+      "startLine": 881,
+      "endLine": 909,
+      "signature": "function extractEdgesAst(filePath, content, knownNames) {"
+    },
+    {
+      "id": "./ai/scripts/language-specs.js:readJson:6",
+      "name": "readJson",
+      "type": "function",
+      "file": "./ai/scripts/language-specs.js",
+      "startLine": 6,
+      "endLine": 9,
+      "signature": "function readJson(filePath) {"
+    },
+    {
+      "id": "./ai/scripts/language-specs.js:writeJson:11",
+      "name": "writeJson",
+      "type": "function",
+      "file": "./ai/scripts/language-specs.js",
+      "startLine": 11,
+      "endLine": 13,
+      "signature": "function writeJson(filePath, payload) {"
+    },
+    {
+      "id": "./ai/scripts/language-specs.js:parseArgs:15",
+      "name": "parseArgs",
+      "type": "function",
+      "file": "./ai/scripts/language-specs.js",
+      "startLine": 15,
+      "endLine": 38,
+      "signature": "function parseArgs(argv) {"
+    },
+    {
+      "id": "./ai/scripts/language-specs.js:validateSpecShape:40",
+      "name": "validateSpecShape",
+      "type": "function",
+      "file": "./ai/scripts/language-specs.js",
+      "startLine": 40,
+      "endLine": 130,
+      "signature": "function validateSpecShape(specs) {"
+    },
+    {
+      "id": "./ai/scripts/language-specs.js:commandList:132",
+      "name": "commandList",
+      "type": "function",
+      "file": "./ai/scripts/language-specs.js",
+      "startLine": 132,
+      "endLine": 147,
+      "signature": "function commandList() {"
+    },
+    {
+      "id": "./ai/scripts/language-specs.js:commandValidate:149",
+      "name": "commandValidate",
+      "type": "function",
+      "file": "./ai/scripts/language-specs.js",
+      "startLine": 149,
+      "endLine": 162,
+      "signature": "function commandValidate() {"
+    },
+    {
+      "id": "./ai/scripts/language-specs.js:ensureExtList:164",
+      "name": "ensureExtList",
+      "type": "function",
+      "file": "./ai/scripts/language-specs.js",
+      "startLine": 164,
+      "endLine": 171,
+      "signature": "function ensureExtList(options) {"
+    },
+    {
+      "id": "./ai/scripts/language-specs.js:commandScaffold:173",
+      "name": "commandScaffold",
+      "type": "function",
+      "file": "./ai/scripts/language-specs.js",
+      "startLine": 173,
+      "endLine": 211,
+      "signature": "function commandScaffold(options) {"
+    },
+    {
+      "id": "./ai/scripts/language-specs.js:commandAdd:213",
+      "name": "commandAdd",
+      "type": "function",
+      "file": "./ai/scripts/language-specs.js",
+      "startLine": 213,
+      "endLine": 287,
+      "signature": "function commandAdd(options) {"
+    },
+    {
+      "id": "./ai/scripts/language-specs.js:printHelp:289",
+      "name": "printHelp",
+      "type": "function",
+      "file": "./ai/scripts/language-specs.js",
+      "startLine": 289,
+      "endLine": 301,
+      "signature": "function printHelp() {"
+    },
+    {
+      "id": "./ai/scripts/language-specs.js:main:303",
+      "name": "main",
+      "type": "function",
+      "file": "./ai/scripts/language-specs.js",
+      "startLine": 303,
+      "endLine": 310,
+      "signature": "function main() {"
+    },
+    {
+      "id": "./ai/scripts/context-pack.js:tokens:10",
+      "name": "tokens",
+      "type": "function",
+      "file": "./ai/scripts/context-pack.js",
+      "startLine": 10,
+      "endLine": 15,
+      "signature": "function tokens(text) {"
+    },
+    {
+      "id": "./ai/scripts/context-pack.js:scoreSymbols:17",
+      "name": "scoreSymbols",
+      "type": "function",
+      "file": "./ai/scripts/context-pack.js",
+      "startLine": 17,
+      "endLine": 31,
+      "signature": "function scoreSymbols(promptTokens, symbols) {"
+    },
+    {
+      "id": "./ai/scripts/context-pack.js:buildRefsBySymbol:33",
+      "name": "buildRefsBySymbol",
+      "type": "function",
+      "file": "./ai/scripts/context-pack.js",
+      "startLine": 33,
+      "endLine": 40,
+      "signature": "function buildRefsBySymbol(index) {"
+    },
+    {
+      "id": "./ai/scripts/context-pack.js:buildSymbolsByFile:42",
+      "name": "buildSymbolsByFile",
+      "type": "function",
+      "file": "./ai/scripts/context-pack.js",
+      "startLine": 42,
+      "endLine": 49,
+      "signature": "function buildSymbolsByFile(index) {"
+    },
+    {
+      "id": "./ai/scripts/context-pack.js:expand:51",
+      "name": "expand",
+      "type": "function",
+      "file": "./ai/scripts/context-pack.js",
+      "startLine": 51,
+      "endLine": 89,
+      "signature": "function expand(index, seeds, maxDepth, maxEdges) {"
+    },
+    {
+      "id": "./ai/scripts/context-pack.js:dedupeByFileLine:91",
+      "name": "dedupeByFileLine",
+      "type": "function",
+      "file": "./ai/scripts/context-pack.js",
+      "startLine": 91,
+      "endLine": 98,
+      "signature": "function dedupeByFileLine(symbols) {"
+    },
+    {
+      "id": "./ai/scripts/context-pack.js:readRange:100",
+      "name": "readRange",
+      "type": "function",
+      "file": "./ai/scripts/context-pack.js",
+      "startLine": 100,
+      "endLine": 110,
+      "signature": "function readRange(rootDir, relPath, fromLine, toLine, redactSecrets) {"
+    },
+    {
+      "id": "./ai/scripts/context-pack.js:buildContextPack:112",
+      "name": "buildContextPack",
+      "type": "function",
+      "file": "./ai/scripts/context-pack.js",
+      "startLine": 112,
+      "endLine": 170,
+      "signature": "function buildContextPack({"
+    },
+    {
+      "id": "./ai/scripts/memory.js:toInt:33",
+      "name": "toInt",
+      "type": "function",
+      "file": "./ai/scripts/memory.js",
+      "startLine": 33,
+      "endLine": 36,
+      "signature": "function toInt(value, fallback) {"
+    },
+    {
+      "id": "./ai/scripts/memory.js:parseArgs:38",
+      "name": "parseArgs",
+      "type": "function",
+      "file": "./ai/scripts/memory.js",
+      "startLine": 38,
+      "endLine": 68,
+      "signature": "function parseArgs(argv) {"
+    },
+    {
+      "id": "./ai/scripts/memory.js:loadContextConfig:70",
+      "name": "loadContextConfig",
+      "type": "function",
+      "file": "./ai/scripts/memory.js",
+      "startLine": 70,
+      "endLine": 77,
+      "signature": "function loadContextConfig() {"
+    },
+    {
+      "id": "./ai/scripts/memory.js:trimToBytes:79",
+      "name": "trimToBytes",
+      "type": "function",
+      "file": "./ai/scripts/memory.js",
+      "startLine": 79,
+      "endLine": 88,
+      "signature": "function trimToBytes(text, maxBytes) {"
+    },
+    {
+      "id": "./ai/scripts/memory.js:extractEntries:90",
+      "name": "extractEntries",
+      "type": "function",
+      "file": "./ai/scripts/memory.js",
+      "startLine": 90,
+      "endLine": 95,
+      "signature": "function extractEntries(text) {"
+    },
+    {
+      "id": "./ai/scripts/memory.js:readLogWindow:97",
+      "name": "readLogWindow",
+      "type": "function",
+      "file": "./ai/scripts/memory.js",
+      "startLine": 97,
+      "endLine": 104,
+      "signature": "function readLogWindow(filePath, maxEntries, maxBytes) {"
+    },
+    {
+      "id": "./ai/scripts/memory.js:printHelp:106",
+      "name": "printHelp",
+      "type": "function",
+      "file": "./ai/scripts/memory.js",
+      "startLine": 106,
+      "endLine": 112,
+      "signature": "function printHelp() {"
+    },
+    {
+      "id": "./ai/scripts/memory.js:main:114",
+      "name": "main",
+      "type": "function",
+      "file": "./ai/scripts/memory.js",
+      "startLine": 114,
+      "endLine": 150,
+      "signature": "function main() {"
+    }
+  ],
+  "edges": [],
+  "byFile": {
+    "./ai/scripts/context-index.js": {
+      "hash": "a96ff08c858a4334b013836c352c7fc0",
+      "mode": "ast",
+      "symbols": [
+        {
+          "id": "./ai/scripts/context-index.js:resolveIndexConfig:82",
+          "name": "resolveIndexConfig",
+          "type": "function",
+          "file": "./ai/scripts/context-index.js",
+          "startLine": 82,
+          "endLine": 95,
+          "signature": "function resolveIndexConfig(contextConfig = {"
+        },
+        {
+          "id": "./ai/scripts/context-index.js:resolveMode:97",
+          "name": "resolveMode",
+          "type": "function",
+          "file": "./ai/scripts/context-index.js",
+          "startLine": 97,
+          "endLine": 107,
+          "signature": "function resolveMode(configMode) {"
+        },
+        {
+          "id": "./ai/scripts/context-index.js:compileIgnorePatterns:113",
+          "name": "compileIgnorePatterns",
+          "type": "function",
+          "file": "./ai/scripts/context-index.js",
+          "startLine": 113,
+          "endLine": 125,
+          "signature": "function compileIgnorePatterns(patterns) {"
+        },
+        {
+          "id": "./ai/scripts/context-index.js:matchesIgnorePattern:127",
+          "name": "matchesIgnorePattern",
+          "type": "function",
+          "file": "./ai/scripts/context-index.js",
+          "startLine": 127,
+          "endLine": 132,
+          "signature": "function matchesIgnorePattern(filePath, compiledPatterns) {"
+        },
+        {
+          "id": "./ai/scripts/context-index.js:safeRegexExec:138",
+          "name": "safeRegexExec",
+          "type": "function",
+          "file": "./ai/scripts/context-index.js",
+          "startLine": 138,
+          "endLine": 157,
+          "signature": "function safeRegexExec(regex, content, timeoutMs = 5000) {"
+        },
+        {
+          "id": "./ai/scripts/context-index.js:extToLang:163",
+          "name": "extToLang",
+          "type": "function",
+          "file": "./ai/scripts/context-index.js",
+          "startLine": 163,
+          "endLine": 177,
+          "signature": "function extToLang(filePath) {"
+        },
+        {
+          "id": "./ai/scripts/context-index.js:lineOfOffset:179",
+          "name": "lineOfOffset",
+          "type": "function",
+          "file": "./ai/scripts/context-index.js",
+          "startLine": 179,
+          "endLine": 181,
+          "signature": "function lineOfOffset(text, offset) {"
+        },
+        {
+          "id": "./ai/scripts/context-index.js:signatureLine:183",
+          "name": "signatureLine",
+          "type": "function",
+          "file": "./ai/scripts/context-index.js",
+          "startLine": 183,
+          "endLine": 192,
+          "signature": "function signatureLine(text, lineNum) {"
+        },
+        {
+          "id": "./ai/scripts/context-index.js:estimateEndLine:194",
+          "name": "estimateEndLine",
+          "type": "function",
+          "file": "./ai/scripts/context-index.js",
+          "startLine": 194,
+          "endLine": 214,
+          "signature": "function estimateEndLine(content, startLine) {"
+        },
+        {
+          "id": "./ai/scripts/context-index.js:extractSymbols:220",
+          "name": "extractSymbols",
+          "type": "function",
+          "file": "./ai/scripts/context-index.js",
+          "startLine": 220,
+          "endLine": 245,
+          "signature": "function extractSymbols(filePath, content) {"
+        },
+        {
+          "id": "./ai/scripts/context-index.js:shouldIgnoreEdgeSymbol:251",
+          "name": "shouldIgnoreEdgeSymbol",
+          "type": "function",
+          "file": "./ai/scripts/context-index.js",
+          "startLine": 251,
+          "endLine": 254,
+          "signature": "function shouldIgnoreEdgeSymbol(symName) {"
+        },
+        {
+          "id": "./ai/scripts/context-index.js:extractEdges:256",
+          "name": "extractEdges",
+          "type": "function",
+          "file": "./ai/scripts/context-index.js",
+          "startLine": 256,
+          "endLine": 269,
+          "signature": "function extractEdges(filePath, content, knownNames, definedInFile) {"
+        },
+        {
+          "id": "./ai/scripts/context-index.js:hashContent:275",
+          "name": "hashContent",
+          "type": "function",
+          "file": "./ai/scripts/context-index.js",
+          "startLine": 275,
+          "endLine": 277,
+          "signature": "function hashContent(s) {"
+        },
+        {
+          "id": "./ai/scripts/context-index.js:buildCodeIndex:282",
+          "name": "buildCodeIndex",
+          "type": "function",
+          "file": "./ai/scripts/context-index.js",
+          "startLine": 282,
+          "endLine": 370,
+          "signature": "function buildCodeIndex({"
+        },
+        {
+          "id": "./ai/scripts/context-index.js:loadCodeIndex:376",
+          "name": "loadCodeIndex",
+          "type": "function",
+          "file": "./ai/scripts/context-index.js",
+          "startLine": 376,
+          "endLine": 385,
+          "signature": "function loadCodeIndex(indexPath) {"
+        },
+        {
+          "id": "./ai/scripts/context-index.js:saveCodeIndex:387",
+          "name": "saveCodeIndex",
+          "type": "function",
+          "file": "./ai/scripts/context-index.js",
+          "startLine": 387,
+          "endLine": 391,
+          "signature": "function saveCodeIndex(indexPath, index) {"
+        }
+      ],
+      "size": 13412
+    },
+    "./ai/scripts/cleanup.js": {
+      "hash": "388629a761b10f34ff1a361dceeffb33",
+      "mode": "ast",
+      "symbols": [
+        {
+          "id": "./ai/scripts/cleanup.js:cleanup:7",
+          "name": "cleanup",
+          "type": "function",
+          "file": "./ai/scripts/cleanup.js",
+          "startLine": 7,
+          "endLine": 35,
+          "signature": "function cleanup() {"
+        }
+      ],
+      "size": 1040
+    },
+    "./ai/scripts/architecture-check.js": {
+      "hash": "6204976fef862c87f547fb2c1591ff70",
+      "mode": "ast",
+      "symbols": [
+        {
+          "id": "./ai/scripts/architecture-check.js:toArray:29",
+          "name": "toArray",
+          "type": "function",
+          "file": "./ai/scripts/architecture-check.js",
+          "startLine": 29,
+          "endLine": 31,
+          "signature": "function toArray(value, fallback) {"
+        },
+        {
+          "id": "./ai/scripts/architecture-check.js:toInt:33",
+          "name": "toInt",
+          "type": "function",
+          "file": "./ai/scripts/architecture-check.js",
+          "startLine": 33,
+          "endLine": 36,
+          "signature": "function toInt(value, fallback) {"
+        },
+        {
+          "id": "./ai/scripts/architecture-check.js:parseArgs:38",
+          "name": "parseArgs",
+          "type": "function",
+          "file": "./ai/scripts/architecture-check.js",
+          "startLine": 38,
+          "endLine": 59,
+          "signature": "function parseArgs(argv) {"
+        },
+        {
+          "id": "./ai/scripts/architecture-check.js:loadRules:61",
+          "name": "loadRules",
+          "type": "function",
+          "file": "./ai/scripts/architecture-check.js",
+          "startLine": 61,
+          "endLine": 87,
+          "signature": "function loadRules(options) {"
+        },
+        {
+          "id": "./ai/scripts/architecture-check.js:normPath:89",
+          "name": "normPath",
+          "type": "function",
+          "file": "./ai/scripts/architecture-check.js",
+          "startLine": 89,
+          "endLine": 91,
+          "signature": "function normPath(value) {"
+        },
+        {
+          "id": "./ai/scripts/architecture-check.js:isIgnored:93",
+          "name": "isIgnored",
+          "type": "function",
+          "file": "./ai/scripts/architecture-check.js",
+          "startLine": 93,
+          "endLine": 96,
+          "signature": "function isIgnored(relPath, rules) {"
+        },
+        {
+          "id": "./ai/scripts/architecture-check.js:walk:98",
+          "name": "walk",
+          "type": "function",
+          "file": "./ai/scripts/architecture-check.js",
+          "startLine": 98,
+          "endLine": 113,
+          "signature": "function walk(absDir, rules, files) {"
+        },
+        {
+          "id": "./ai/scripts/architecture-check.js:collectFiles:115",
+          "name": "collectFiles",
+          "type": "function",
+          "file": "./ai/scripts/architecture-check.js",
+          "startLine": 115,
+          "endLine": 124,
+          "signature": "function collectFiles(rules) {"
+        },
+        {
+          "id": "./ai/scripts/architecture-check.js:count:126",
+          "name": "count",
+          "type": "function",
+          "file": "./ai/scripts/architecture-check.js",
+          "startLine": 126,
+          "endLine": 129,
+          "signature": "function count(content, regex) {"
+        },
+        {
+          "id": "./ai/scripts/architecture-check.js:detectConcerns:131",
+          "name": "detectConcerns",
+          "type": "function",
+          "file": "./ai/scripts/architecture-check.js",
+          "startLine": 131,
+          "endLine": 133,
+          "signature": "function detectConcerns(content) {"
+        },
+        {
+          "id": "./ai/scripts/architecture-check.js:analyze:135",
+          "name": "analyze",
+          "type": "function",
+          "file": "./ai/scripts/architecture-check.js",
+          "startLine": 135,
+          "endLine": 153,
+          "signature": "function analyze(file, rules) {"
+        },
+        {
+          "id": "./ai/scripts/architecture-check.js:printHelp:155",
+          "name": "printHelp",
+          "type": "function",
+          "file": "./ai/scripts/architecture-check.js",
+          "startLine": 155,
+          "endLine": 158,
+          "signature": "function printHelp() {"
+        },
+        {
+          "id": "./ai/scripts/architecture-check.js:main:160",
+          "name": "main",
+          "type": "function",
+          "file": "./ai/scripts/architecture-check.js",
+          "startLine": 160,
+          "endLine": 185,
+          "signature": "function main() {"
+        }
+      ],
+      "size": 6982
+    },
+    "./ai/scripts/context-index-treesitter.js": {
+      "hash": "cc9f1618c7213b6464eff3bc9ded813f",
+      "mode": "ast",
+      "symbols": [
+        {
+          "id": "./ai/scripts/context-index-treesitter.js:isTreeSitterAvailable:48",
+          "name": "isTreeSitterAvailable",
+          "type": "function",
+          "file": "./ai/scripts/context-index-treesitter.js",
+          "startLine": 48,
+          "endLine": 51,
+          "signature": "function isTreeSitterAvailable() {"
+        },
+        {
+          "id": "./ai/scripts/context-index-treesitter.js:_init:53",
+          "name": "_init",
+          "type": "function",
+          "file": "./ai/scripts/context-index-treesitter.js",
+          "startLine": 53,
+          "endLine": 61,
+          "signature": "function _init() {"
+        },
+        {
+          "id": "./ai/scripts/context-index-treesitter.js:_getParser:63",
+          "name": "_getParser",
+          "type": "function",
+          "file": "./ai/scripts/context-index-treesitter.js",
+          "startLine": 63,
+          "endLine": 87,
+          "signature": "function _getParser(ext) {"
+        },
+        {
+          "id": "./ai/scripts/context-index-treesitter.js:signatureFromNode:94",
+          "name": "signatureFromNode",
+          "type": "function",
+          "file": "./ai/scripts/context-index-treesitter.js",
+          "startLine": 94,
+          "endLine": 104,
+          "signature": "function signatureFromNode(node, content) {"
+        },
+        {
+          "id": "./ai/scripts/context-index-treesitter.js:_walkJsTs:121",
+          "name": "_walkJsTs",
+          "type": "function",
+          "file": "./ai/scripts/context-index-treesitter.js",
+          "startLine": 121,
+          "endLine": 169,
+          "signature": "function _walkJsTs(rootNode, filePath, content) {"
+        },
+        {
+          "id": "./ai/scripts/context-index-treesitter.js:_walkPython:178",
+          "name": "_walkPython",
+          "type": "function",
+          "file": "./ai/scripts/context-index-treesitter.js",
+          "startLine": 178,
+          "endLine": 207,
+          "signature": "function _walkPython(rootNode, filePath, content) {"
+        },
+        {
+          "id": "./ai/scripts/context-index-treesitter.js:_walkRust:220",
+          "name": "_walkRust",
+          "type": "function",
+          "file": "./ai/scripts/context-index-treesitter.js",
+          "startLine": 220,
+          "endLine": 249,
+          "signature": "function _walkRust(rootNode, filePath, content) {"
+        },
+        {
+          "id": "./ai/scripts/context-index-treesitter.js:_walkCCpp:261",
+          "name": "_walkCCpp",
+          "type": "function",
+          "file": "./ai/scripts/context-index-treesitter.js",
+          "startLine": 261,
+          "endLine": 312,
+          "signature": "function _walkCCpp(rootNode, filePath, content) {"
+        },
+        {
+          "id": "./ai/scripts/context-index-treesitter.js:_walkGo:316",
+          "name": "_walkGo",
+          "type": "function",
+          "file": "./ai/scripts/context-index-treesitter.js",
+          "startLine": 316,
+          "endLine": 381,
+          "signature": "function _walkGo(rootNode, filePath, content) {"
+        },
+        {
+          "id": "./ai/scripts/context-index-treesitter.js:_walkPhp:385",
+          "name": "_walkPhp",
+          "type": "function",
+          "file": "./ai/scripts/context-index-treesitter.js",
+          "startLine": 385,
+          "endLine": 442,
+          "signature": "function _walkPhp(rootNode, filePath, content) {"
+        },
+        {
+          "id": "./ai/scripts/context-index-treesitter.js:_walkJava:446",
+          "name": "_walkJava",
+          "type": "function",
+          "file": "./ai/scripts/context-index-treesitter.js",
+          "startLine": 446,
+          "endLine": 491,
+          "signature": "function _walkJava(rootNode, filePath, content) {"
+        },
+        {
+          "id": "./ai/scripts/context-index-treesitter.js:_walkCSharp:495",
+          "name": "_walkCSharp",
+          "type": "function",
+          "file": "./ai/scripts/context-index-treesitter.js",
+          "startLine": 495,
+          "endLine": 541,
+          "signature": "function _walkCSharp(rootNode, filePath, content) {"
+        },
+        {
+          "id": "./ai/scripts/context-index-treesitter.js:_walkRuby:545",
+          "name": "_walkRuby",
+          "type": "function",
+          "file": "./ai/scripts/context-index-treesitter.js",
+          "startLine": 545,
+          "endLine": 602,
+          "signature": "function _walkRuby(rootNode, filePath, content) {"
+        },
+        {
+          "id": "./ai/scripts/context-index-treesitter.js:_extractImportsJsTs:626",
+          "name": "_extractImportsJsTs",
+          "type": "function",
+          "file": "./ai/scripts/context-index-treesitter.js",
+          "startLine": 626,
+          "endLine": 673,
+          "signature": "function _extractImportsJsTs(rootNode) {"
+        },
+        {
+          "id": "./ai/scripts/context-index-treesitter.js:_collectImportClauseNames:675",
+          "name": "_collectImportClauseNames",
+          "type": "function",
+          "file": "./ai/scripts/context-index-treesitter.js",
+          "startLine": 675,
+          "endLine": 694,
+          "signature": "function _collectImportClauseNames(importClause, out) {"
+        },
+        {
+          "id": "./ai/scripts/context-index-treesitter.js:_collectObjectPatternNames:696",
+          "name": "_collectObjectPatternNames",
+          "type": "function",
+          "file": "./ai/scripts/context-index-treesitter.js",
+          "startLine": 696,
+          "endLine": 706,
+          "signature": "function _collectObjectPatternNames(objectPattern, out) {"
+        },
+        {
+          "id": "./ai/scripts/context-index-treesitter.js:_extractImportsPython:708",
+          "name": "_extractImportsPython",
+          "type": "function",
+          "file": "./ai/scripts/context-index-treesitter.js",
+          "startLine": 708,
+          "endLine": 751,
+          "signature": "function _extractImportsPython(rootNode) {"
+        },
+        {
+          "id": "./ai/scripts/context-index-treesitter.js:_extractImportsGo:753",
+          "name": "_extractImportsGo",
+          "type": "function",
+          "file": "./ai/scripts/context-index-treesitter.js",
+          "startLine": 753,
+          "endLine": 793,
+          "signature": "function _extractImportsGo(rootNode) {"
+        },
+        {
+          "id": "./ai/scripts/context-index-treesitter.js:_extractImportsRust:795",
+          "name": "_extractImportsRust",
+          "type": "function",
+          "file": "./ai/scripts/context-index-treesitter.js",
+          "startLine": 795,
+          "endLine": 814,
+          "signature": "function _extractImportsRust(rootNode) {"
+        },
+        {
+          "id": "./ai/scripts/context-index-treesitter.js:_collectUseNames:816",
+          "name": "_collectUseNames",
+          "type": "function",
+          "file": "./ai/scripts/context-index-treesitter.js",
+          "startLine": 816,
+          "endLine": 837,
+          "signature": "function _collectUseNames(node, out) {"
+        },
+        {
+          "id": "./ai/scripts/context-index-treesitter.js:extractSymbolsAst:858",
+          "name": "extractSymbolsAst",
+          "type": "function",
+          "file": "./ai/scripts/context-index-treesitter.js",
+          "startLine": 858,
+          "endLine": 874,
+          "signature": "function extractSymbolsAst(filePath, content) {"
+        },
+        {
+          "id": "./ai/scripts/context-index-treesitter.js:extractEdgesAst:881",
+          "name": "extractEdgesAst",
+          "type": "function",
+          "file": "./ai/scripts/context-index-treesitter.js",
+          "startLine": 881,
+          "endLine": 909,
+          "signature": "function extractEdgesAst(filePath, content, knownNames) {"
+        }
+      ],
+      "size": 28094
+    },
+    "./ai/scripts/language-specs.js": {
+      "hash": "4ffefff20034f4fb95c0393f8aa39a80",
+      "mode": "ast",
+      "symbols": [
+        {
+          "id": "./ai/scripts/language-specs.js:readJson:6",
+          "name": "readJson",
+          "type": "function",
+          "file": "./ai/scripts/language-specs.js",
+          "startLine": 6,
+          "endLine": 9,
+          "signature": "function readJson(filePath) {"
+        },
+        {
+          "id": "./ai/scripts/language-specs.js:writeJson:11",
+          "name": "writeJson",
+          "type": "function",
+          "file": "./ai/scripts/language-specs.js",
+          "startLine": 11,
+          "endLine": 13,
+          "signature": "function writeJson(filePath, payload) {"
+        },
+        {
+          "id": "./ai/scripts/language-specs.js:parseArgs:15",
+          "name": "parseArgs",
+          "type": "function",
+          "file": "./ai/scripts/language-specs.js",
+          "startLine": 15,
+          "endLine": 38,
+          "signature": "function parseArgs(argv) {"
+        },
+        {
+          "id": "./ai/scripts/language-specs.js:validateSpecShape:40",
+          "name": "validateSpecShape",
+          "type": "function",
+          "file": "./ai/scripts/language-specs.js",
+          "startLine": 40,
+          "endLine": 130,
+          "signature": "function validateSpecShape(specs) {"
+        },
+        {
+          "id": "./ai/scripts/language-specs.js:commandList:132",
+          "name": "commandList",
+          "type": "function",
+          "file": "./ai/scripts/language-specs.js",
+          "startLine": 132,
+          "endLine": 147,
+          "signature": "function commandList() {"
+        },
+        {
+          "id": "./ai/scripts/language-specs.js:commandValidate:149",
+          "name": "commandValidate",
+          "type": "function",
+          "file": "./ai/scripts/language-specs.js",
+          "startLine": 149,
+          "endLine": 162,
+          "signature": "function commandValidate() {"
+        },
+        {
+          "id": "./ai/scripts/language-specs.js:ensureExtList:164",
+          "name": "ensureExtList",
+          "type": "function",
+          "file": "./ai/scripts/language-specs.js",
+          "startLine": 164,
+          "endLine": 171,
+          "signature": "function ensureExtList(options) {"
+        },
+        {
+          "id": "./ai/scripts/language-specs.js:commandScaffold:173",
+          "name": "commandScaffold",
+          "type": "function",
+          "file": "./ai/scripts/language-specs.js",
+          "startLine": 173,
+          "endLine": 211,
+          "signature": "function commandScaffold(options) {"
+        },
+        {
+          "id": "./ai/scripts/language-specs.js:commandAdd:213",
+          "name": "commandAdd",
+          "type": "function",
+          "file": "./ai/scripts/language-specs.js",
+          "startLine": 213,
+          "endLine": 287,
+          "signature": "function commandAdd(options) {"
+        },
+        {
+          "id": "./ai/scripts/language-specs.js:printHelp:289",
+          "name": "printHelp",
+          "type": "function",
+          "file": "./ai/scripts/language-specs.js",
+          "startLine": 289,
+          "endLine": 301,
+          "signature": "function printHelp() {"
+        },
+        {
+          "id": "./ai/scripts/language-specs.js:main:303",
+          "name": "main",
+          "type": "function",
+          "file": "./ai/scripts/language-specs.js",
+          "startLine": 303,
+          "endLine": 310,
+          "signature": "function main() {"
+        }
+      ],
+      "size": 8831
+    },
+    "./ai/scripts/context-pack.js": {
+      "hash": "20912a77db17949535cd63c9009f0113",
+      "mode": "ast",
+      "symbols": [
+        {
+          "id": "./ai/scripts/context-pack.js:tokens:10",
+          "name": "tokens",
+          "type": "function",
+          "file": "./ai/scripts/context-pack.js",
+          "startLine": 10,
+          "endLine": 15,
+          "signature": "function tokens(text) {"
+        },
+        {
+          "id": "./ai/scripts/context-pack.js:scoreSymbols:17",
+          "name": "scoreSymbols",
+          "type": "function",
+          "file": "./ai/scripts/context-pack.js",
+          "startLine": 17,
+          "endLine": 31,
+          "signature": "function scoreSymbols(promptTokens, symbols) {"
+        },
+        {
+          "id": "./ai/scripts/context-pack.js:buildRefsBySymbol:33",
+          "name": "buildRefsBySymbol",
+          "type": "function",
+          "file": "./ai/scripts/context-pack.js",
+          "startLine": 33,
+          "endLine": 40,
+          "signature": "function buildRefsBySymbol(index) {"
+        },
+        {
+          "id": "./ai/scripts/context-pack.js:buildSymbolsByFile:42",
+          "name": "buildSymbolsByFile",
+          "type": "function",
+          "file": "./ai/scripts/context-pack.js",
+          "startLine": 42,
+          "endLine": 49,
+          "signature": "function buildSymbolsByFile(index) {"
+        },
+        {
+          "id": "./ai/scripts/context-pack.js:expand:51",
+          "name": "expand",
+          "type": "function",
+          "file": "./ai/scripts/context-pack.js",
+          "startLine": 51,
+          "endLine": 89,
+          "signature": "function expand(index, seeds, maxDepth, maxEdges) {"
+        },
+        {
+          "id": "./ai/scripts/context-pack.js:dedupeByFileLine:91",
+          "name": "dedupeByFileLine",
+          "type": "function",
+          "file": "./ai/scripts/context-pack.js",
+          "startLine": 91,
+          "endLine": 98,
+          "signature": "function dedupeByFileLine(symbols) {"
+        },
+        {
+          "id": "./ai/scripts/context-pack.js:readRange:100",
+          "name": "readRange",
+          "type": "function",
+          "file": "./ai/scripts/context-pack.js",
+          "startLine": 100,
+          "endLine": 110,
+          "signature": "function readRange(rootDir, relPath, fromLine, toLine, redactSecrets) {"
+        },
+        {
+          "id": "./ai/scripts/context-pack.js:buildContextPack:112",
+          "name": "buildContextPack",
+          "type": "function",
+          "file": "./ai/scripts/context-pack.js",
+          "startLine": 112,
+          "endLine": 170,
+          "signature": "function buildContextPack({"
+        }
+      ],
+      "size": 5039
+    },
+    "./ai/scripts/memory.js": {
+      "hash": "d324bcd64368c90e437fd9cf85b3fe06",
+      "mode": "ast",
+      "symbols": [
+        {
+          "id": "./ai/scripts/memory.js:toInt:33",
+          "name": "toInt",
+          "type": "function",
+          "file": "./ai/scripts/memory.js",
+          "startLine": 33,
+          "endLine": 36,
+          "signature": "function toInt(value, fallback) {"
+        },
+        {
+          "id": "./ai/scripts/memory.js:parseArgs:38",
+          "name": "parseArgs",
+          "type": "function",
+          "file": "./ai/scripts/memory.js",
+          "startLine": 38,
+          "endLine": 68,
+          "signature": "function parseArgs(argv) {"
+        },
+        {
+          "id": "./ai/scripts/memory.js:loadContextConfig:70",
+          "name": "loadContextConfig",
+          "type": "function",
+          "file": "./ai/scripts/memory.js",
+          "startLine": 70,
+          "endLine": 77,
+          "signature": "function loadContextConfig() {"
+        },
+        {
+          "id": "./ai/scripts/memory.js:trimToBytes:79",
+          "name": "trimToBytes",
+          "type": "function",
+          "file": "./ai/scripts/memory.js",
+          "startLine": 79,
+          "endLine": 88,
+          "signature": "function trimToBytes(text, maxBytes) {"
+        },
+        {
+          "id": "./ai/scripts/memory.js:extractEntries:90",
+          "name": "extractEntries",
+          "type": "function",
+          "file": "./ai/scripts/memory.js",
+          "startLine": 90,
+          "endLine": 95,
+          "signature": "function extractEntries(text) {"
+        },
+        {
+          "id": "./ai/scripts/memory.js:readLogWindow:97",
+          "name": "readLogWindow",
+          "type": "function",
+          "file": "./ai/scripts/memory.js",
+          "startLine": 97,
+          "endLine": 104,
+          "signature": "function readLogWindow(filePath, maxEntries, maxBytes) {"
+        },
+        {
+          "id": "./ai/scripts/memory.js:printHelp:106",
+          "name": "printHelp",
+          "type": "function",
+          "file": "./ai/scripts/memory.js",
+          "startLine": 106,
+          "endLine": 112,
+          "signature": "function printHelp() {"
+        },
+        {
+          "id": "./ai/scripts/memory.js:main:114",
+          "name": "main",
+          "type": "function",
+          "file": "./ai/scripts/memory.js",
+          "startLine": 114,
+          "endLine": 150,
+          "signature": "function main() {"
+        }
+      ],
+      "size": 4406
+    }
+  }
+}

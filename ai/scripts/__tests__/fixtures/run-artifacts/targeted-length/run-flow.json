@@ -1,0 +1,29 @@
+{
+  "runId": "run-1773595204109",
+  "phases": {
+    "preprocess": {
+      "status": "done"
+    }
+  },
+  "operationalSignals": {
+    "status": "failed",
+    "retries": {
+      "count": 1,
+      "rateLimitCount": 0,
+      "events": [
+        {
+          "agent": "developer",
+          "stage": "proposal",
+          "attempt": 1,
+          "willRetry": false,
+          "isRateLimit": false,
+          "errorName": "Error",
+          "message": "OpenAI empty response. finish_reason: length, model: gpt-5.4"
+        }
+      ]
+    },
+    "toolLoopExhaustions": {
+      "count": 0
+    }
+  }
+}

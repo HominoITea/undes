@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "backend-java-approval-routing",
+      "status": "validated-live-partial",
+      "projectAlias": "<TARGET_PROJECT>",
+      "projectType": "backend-java-workflow",
+      "goal": "Prove that answer-depth can trace approval-route generation, queue movement, and evidence-grounded patch safety on a Java workflow.",
+      "successTarget": {
+        "testerScoreMin": 8,
+        "patchSafeEligible": true,
+        "forbidGroundingGapCategories": [
+          "substantive-assumptions"
+        ]
+      }
+    },
+    {
+      "id": "backend-java-lifecycle-sync",
+      "status": "prepared",
+      "projectAlias": "<SECOND_VALIDATION_PROJECT>",
+      "projectType": "backend-java-lifecycle",
+      "goal": "Prove that answer-depth generalizes to a different Java reasoning shape: lifecycle/status synchronization instead of approval-route generation.",
+      "startingSeams": [
+        "service or handler method that triggers the lifecycle transition",
+        "entity fields that represent current lifecycle state",
+        "repository read/write seam for that state",
+        "listener/event/subscriber seam triggered by the transition",
+        "reset/retry/compensation seam that can rewrite the same state"
+      ],
+      "successTarget": {
+        "testerScoreMin": 8,
+        "patchSafeEligible": true,
+        "forbidGroundingGapCategories": [
+          "substantive-assumptions"
+        ],
+        "requiredGroundedSeamGroups": [
+          "entry-point service or handler path",
+          "entity mutation or persistence seam",
+          "readback/projection or side-effect seam"
+        ]
+      }
+    }
+  ]
+}

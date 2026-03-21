@@ -1,0 +1,79 @@
+{
+  "agents": [
+    {
+      "name": "prompt-engineer",
+      "apiUrl": "https://api.anthropic.com/v1/messages",
+      "model": "claude-sonnet-4-6",
+      "key": "CLAUDE_API_KEY",
+      "contextBudget": 18000,
+      "maxOutputTokens": 1200,
+      "role": "Senior Prompt Engineer",
+      "phase": "pre-process",
+      "description": "Understands nuances, clarifies ambiguities, enhances prompts"
+    },
+    {
+      "name": "architect",
+      "apiUrl": "https://api.anthropic.com/v1/messages",
+      "model": "claude-sonnet-4-6",
+      "key": "CLAUDE_API_KEY",
+      "contextBudget": 22000,
+      "maxOutputTokens": 1536,
+      "role": "Architect",
+      "debatePhases": ["proposal", "critique"],
+      "description": "System design, trade-off analysis, big-picture thinking"
+    },
+    {
+      "name": "reviewer",
+      "apiUrl": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent",
+      "model": "gemini-3.1-pro-preview",
+      "key": "GEMINI_API_KEY",
+      "contextBudget": 22000,
+      "maxOutputTokens": 1536,
+      "role": "Reviewer",
+      "description": "Critical analysis, finds problems and inconsistencies"
+    },
+    {
+      "name": "developer",
+      "apiUrl": "https://api.openai.com/v1/chat/completions",
+      "model": "gpt-5.4",
+      "key": "OPENAI_API_KEY",
+      "contextBudget": 24000,
+      "maxOutputTokens": 2048,
+      "role": "Implementer",
+      "description": "Fast code generation, practical implementation"
+    },
+    {
+      "name": "synthesizer",
+      "apiUrl": "https://api.openai.com/v1/chat/completions",
+      "model": "gpt-5.4",
+      "key": "OPENAI_API_KEY",
+      "contextBudget": 24000,
+      "maxOutputTokens": 1800,
+      "role": "Consensus Synthesizer",
+      "consensus": true,
+      "description": "Balances viewpoints, produces nuanced final answer"
+    },
+    {
+      "name": "devils-advocate",
+      "apiUrl": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-pro-preview:generateContent",
+      "model": "gemini-3.1-pro-preview",
+      "key": "GEMINI_API_KEY",
+      "contextBudget": 22000,
+      "maxOutputTokens": 1536,
+      "role": "Devil's Advocate",
+      "phase": "devil-advocate",
+      "description": "Challenges solutions, finds weaknesses, edge cases, security issues"
+    },
+    {
+      "name": "tester",
+      "apiUrl": "https://api.openai.com/v1/chat/completions",
+      "model": "gpt-5.4",
+      "key": "OPENAI_API_KEY",
+      "contextBudget": 20000,
+      "maxOutputTokens": 1800,
+      "role": "Senior Tester",
+      "phase": "post-process",
+      "description": "Creates/updates runnable tests, validates solutions, finds bugs"
+    }
+  ]
+}

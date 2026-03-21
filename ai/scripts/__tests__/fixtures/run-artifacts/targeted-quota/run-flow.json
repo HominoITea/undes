@@ -1,0 +1,50 @@
+{
+  "runId": "run-1773595607454",
+  "phases": {
+    "preprocess": {
+      "status": "done"
+    },
+    "proposals": {
+      "status": "partial"
+    },
+    "critiques": {
+      "status": "partial"
+    },
+    "consensus": {
+      "status": "done"
+    },
+    "approval-1": {
+      "status": "partial"
+    }
+  },
+  "operationalSignals": {
+    "status": "failed",
+    "retries": {
+      "count": 6,
+      "rateLimitCount": 6,
+      "events": [
+        {
+          "agent": "synthesizer",
+          "stage": "revision",
+          "attempt": 1,
+          "willRetry": true,
+          "isRateLimit": true,
+          "errorName": "ProviderApiError",
+          "message": "Openai API error (429): { \"error\": { \"message\": \"You exceeded your current quota, please check your plan and billing details.\", \"type\": \"insufficient_quota\", \"code\": \"insufficient_quota\" } }"
+        },
+        {
+          "agent": "developer",
+          "stage": "approval-2",
+          "attempt": 4,
+          "willRetry": false,
+          "isRateLimit": true,
+          "errorName": "ProviderApiError",
+          "message": "Openai API error (429): { \"error\": { \"message\": \"You exceeded your current quota, please check your plan and billing details.\", \"type\": \"insufficient_quota\", \"code\": \"insufficient_quota\" } }"
+        }
+      ]
+    },
+    "toolLoopExhaustions": {
+      "count": 1
+    }
+  }
+}

@@ -1,0 +1,28 @@
+# Claude Guide
+
+Project type: Next.js + React + TypeScript (App Router)
+
+## Objective
+
+Produce implementation plans and code suggestions that are correct, maintainable, and production-safe.
+
+## Working Style
+
+- Prioritize architecture consistency over novelty.
+- Keep recommendations grounded in existing repository patterns.
+- Raise explicit risks (security, data integrity, performance) before implementation.
+
+## Focus Checklist
+
+1. Confirm server/client boundaries are correct.
+2. Confirm API contract and validation schema are explicit.
+3. Confirm auth/permission checks happen on server.
+4. Confirm changes are testable and rollback-aware.
+5. Confirm no secrets/PII leak into logs or prompts.
+
+## Expected Output Format
+
+- Short implementation summary.
+- File-level change plan.
+- Edge cases and risk notes.
+- Validation plan (tests/manual checks).

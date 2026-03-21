@@ -1,0 +1,19 @@
+# Project Architecture & Stack
+
+> **INSTRUCTION:** Edit this file to describe your project's high-level architecture. The AI will read this to understand *how* your system works before writing code.
+
+## 1. Tech Stack
+- **Language:** TypeScript
+- **Framework:** Next.js (App Router), React
+- **Database:** PostgreSQL (via Prisma)
+- **Cloud:** Vercel
+
+## 2. Architecture Overview
+- **Presentation Layer:** App Router pages, layouts, server components, UI components
+- **Application Layer:** Feature services, validation schemas, orchestration logic
+- **Infrastructure Layer:** Prisma client, external APIs, auth adapters, logging
+
+## 3. Key Decisions
+- We keep feature logic close to feature folders and avoid a giant `lib/` catch-all.
+- Server-only logic stays out of client components.
+- All API boundaries are validated with schemas before persistence.

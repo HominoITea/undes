@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "status": "internal-pre-host",
+  "mode": "allowlist",
+  "purpose": "Defines the public-safe export tree for future public mirror sync.",
+  "requiredPaths": [
+    ".gitignore",
+    "README.md",
+    "AI_WORKFLOW.md",
+    "CLAUDE.md",
+    "HUB_RULES.md",
+    "package.json",
+    "package-lock.json",
+    "ai/ARCHITECTURE_LAYERS.md",
+    "ai/LANGUAGE_SPEC.md",
+    "ai/PATTERNS.md",
+    "ai/PILOT_RUNBOOK.md",
+    "ai/PROTOCOL.md",
+    "ai/ROADMAP.md",
+    "ai/SYSTEM_PROMPT.md",
+    "ai/agents.json",
+    "ai/architecture-rules.json",
+    "ai/context.json",
+    "ai/llms.md",
+    "ai/design/README.md",
+    "ai/design/features",
+    "ai/prompts/providers",
+    "ai/scripts",
+    "ai/specs",
+    "examples"
+  ],
+  "optionalPaths": [
+    ".cursorrules",
+    "ai.bat",
+    "CONTRIBUTING.md",
+    "LICENSE",
+    "SECURITY.md",
+    "docs/USER_AGREEMENT.md"
+  ],
+  "forbiddenPaths": [
+    ".ai",
+    ".ai.env",
+    ".claude",
+    ".tmp-test-work",
+    "PROJECT_PLANNED_CHANGES.md",
+    "UNIFIED_MODEL_CHANGE_LOG.md",
+    "commercial-addons-local",
+    "config/hub-config.json",
+    "config/projects.json",
+    "docs/commercialization",
+    "legacy"
+  ],
+  "notes": [
+    "If a path is not listed in requiredPaths or optionalPaths, it is excluded from the public export by default.",
+    "Required paths must exist in the private canonical repository before the first public release.",
+    "Optional paths may be added later when the public package reaches launch readiness."
+  ]
+}
