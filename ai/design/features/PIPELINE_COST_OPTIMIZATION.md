@@ -1,6 +1,6 @@
 # Pipeline Cost & Efficiency Optimization
 
-Status: discussion
+Status: in-progress
 Priority: P1
 
 ## Why This Exists
@@ -10,6 +10,28 @@ Lever 3 and revision rounds). As the pipeline gains more features (Lever 3,
 typed debate contracts, DA-revision), the per-run cost grows. This document
 identifies concrete optimization opportunities that reduce cost without
 sacrificing answer quality.
+
+## Current Runtime Status (2026-03-21)
+
+Already landed in code:
+- Anthropic prompt caching is enabled in `ai/scripts/infrastructure/providers.js`
+- Complexity-based routing is active in bounded form in `ai/scripts/generate-context.js`
+  (`trivial` / `standard` / `complex`, plus `--full-panel` override)
+- Conditional Devil's Advocate skip is active for:
+  - diagnostic + no-fetchable-seam cases
+  - clean patch-safe consensus cases (`allAgreed`, `avgApprovalScore >= 9`,
+    `patchSafeEligible = true`)
+- Conditional tester skip for DIAGNOSTIC results is now active; tester runs only
+  for patch-validation cases
+- Rerun skip-enhance is active in bounded form:
+  - manual `--skip-enhance`
+  - automatic preprocess reuse when the latest archived run has the same prompt
+    hash and a completed `preprocess` artifact
+- `maxApprovalRounds=2` and major orchestrator decomposition slices are already
+  landed under adjacent tracks
+
+Still open under this track:
+- fresh live validation to confirm the cost savings stack in real runs
 
 ## Pipeline Snapshot (2026-03-15)
 
@@ -32,6 +54,7 @@ sacrificing answer quality.
 Priority: P0
 Complexity: Low
 Estimated savings: -$0.15-0.25/run (-20-30% input cost)
+Status: landed
 
 **Problem:** Sequential Anthropic calls (prompt-engineer, architect) share the
 same context prefix (system prompt, context pack, project metadata). Each call
@@ -54,6 +77,7 @@ change model behavior.
 Priority: P1
 Complexity: Medium
 Estimated savings: -60% tokens on simple tasks (-$0.50/simple run)
+Status: phase-1 landed
 
 **Problem:** Every task — from a typo fix to an architectural refactor — gets
 the full 3-agent debate panel (architect + reviewer + developer). For trivial
@@ -81,28 +105,34 @@ This proposal provides the concrete MVP shape.
 Priority: P2
 Complexity: Low
 Estimated savings: -$0.10-0.15/clean run
+Status: landed (refined)
 
 **Problem:** Devil's Advocate runs on every run, even when all approval agents
 gave 9-10/10 and unanimously agreed. In these cases, DA rarely finds anything
 actionable — the answer is already well-grounded.
 
-**Fix:** Skip DA when:
-- `allAgreed === true`, AND
-- `avgApprovalScore >= 9`
+**Fix:** Skip DA when either:
+- the run is already `DIAGNOSTIC` with substantive assumptions and no remaining
+  fetchable seams, OR
+- the run is already clean and patch-safe:
+  - `allAgreed === true`
+  - `avgApprovalScore >= 9`
+  - `patchSafeEligible === true`
 
 Still run DA when any approval round had disagreement or low scores.
 
-**Implementation:** ~4 lines of conditional logic before DA invocation.
+**Implementation:** landed as a bounded orchestrator gate.
 
-**Risk:** Low. High-confidence unanimous approval is a strong signal. If a
-subtle issue slips through, it would likely also slip through DA at 9+
-confidence. The evidence-grounding gate catches hallucinations independently.
+**Risk:** Low. The clean-run branch is additionally guarded by
+`patchSafeEligible === true`, so score-only agreement cannot bypass DA when the
+evidence gate still sees unresolved patch-safety problems.
 
 ### 4. Conditional Tester Skip for DIAGNOSTIC Results
 
 Priority: P2
 Complexity: Low
 Estimated savings: -$0.08-0.10/diagnostic run
+Status: landed
 
 **Problem:** The tester (post-process) generates test cases and validates the
 result. But for DIAGNOSTIC results there is no patch code to test. The tester
@@ -110,7 +140,8 @@ produces generic test suggestions that the operator cannot apply.
 
 **Fix:** Skip tester when `resultMode === 'DIAGNOSTIC'`.
 
-**Implementation:** ~4 lines of conditional logic before tester invocation.
+**Implementation:** landed as a bounded tester gate in the orchestrator:
+patch-validation runs still invoke tester; diagnostic results now skip it.
 
 **Risk:** Minimal. DIAGNOSTIC results explicitly state they are not
 implementation-ready. Test generation for non-existent code adds no value.
@@ -120,21 +151,24 @@ implementation-ready. Test generation for non-existent code adds no value.
 Priority: P2
 Complexity: Low
 Estimated savings: -$0.06/run, -3-5s latency
+Status: landed (bounded)
 
 **Problem:** When the operator reruns the same prompt (e.g., after Lever 3
 expansion or context changes), prompt-engineer re-enhances the exact same text.
 The enhanced prompt is identical to the previous run.
 
-**Fix:** Add `--skip-enhance` flag. For reruns, detect if the prompt matches
-the previous run's input and skip enhancement automatically. Also useful for
-operators who write precise prompts and do not want LLM rewriting.
+**Fix:** Support both:
+- manual `--skip-enhance`
+- automatic reuse of the previous prompt-engineer result when the latest
+  archived run has the same prompt hash and a completed `preprocess` output
 
-**Implementation:**
-- Add CLI flag `--skip-enhance`
-- Optionally: hash-compare prompt against last checkpoint
-- Pass original prompt directly to proposal phase
+**Implementation:** landed as a bounded preprocess reuse path. The reused
+prompt-engineer JSON is normalized, copied into the current run archive, and the
+current run continues with the reused enhanced prompt and scope artifacts.
 
-**Risk:** None. Operator opt-in.
+**Risk:** Low. The automatic branch is bounded to same-prompt-hash reuse and a
+completed archived `preprocess` artifact; otherwise the pipeline falls back to a
+fresh prompt-engineer call.
 
 ### 6. Reduce maxApprovalRounds from 3 to 2
 
@@ -195,11 +229,9 @@ after this decomposition.
 
 ## Recommended Implementation Order (after Lever 3)
 
-1. Prompt caching (P0) — cheapest to implement, highest ROI
-2. Complexity routing (P1) — biggest savings, needs classifier
-3. Skip DA/tester conditionally (P2) — quick wins, ~4 lines each
-4. Decompose orchestrator (P1) — no cost savings, accelerates all future work
-5. Skip enhance / reduce approval rounds (P2) — operator polish
+1. Fresh live validation of the landed cost stack (P1) — confirm real savings
+   in full runs, not only unit behavior
+2. Any further routing tuning only after fresh live validation data
 
 ## MVP Risk Debt
 

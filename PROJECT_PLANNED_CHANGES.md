@@ -4336,3 +4336,139 @@ Notes:
 - Added a compact validation snapshot section with explicit results, conclusions, and proposals
 - Recorded the current evidence as "Batch 6 technically works, but runtime gain is still modest"
 - Captured the next decision point precisely: prefer exact `callEdges` over broad ref expansion before widening rollout
+
+## [2026-03-22 01:10:00 UTC] - Project: ai-hub-coding
+Planned Change: CLI naming migration plan — introduce `undes` commands while keeping `ai` as compatibility aliases.
+Owner Model: Codex (GPT-5)
+Priority: P2
+Status: PLANNED
+Target Files:
+- `package.json`
+- `README.md`
+- `AI_WORKFLOW.md`
+- `ai/PILOT_RUNBOOK.md`
+- `UNIFIED_MODEL_CHANGE_LOG.md`
+- `PROJECT_PLANNED_CHANGES.md`
+Notes:
+- Do not do a breaking rename now: current `npm run ai` is a stable operator contract and is already embedded in docs, tests, and user habits
+- Preferred migration shape:
+  - add `undes`, `undes:index`, `undes:test`, and other primary aliases
+  - keep `ai*` commands as legacy compatibility aliases for at least one transition cycle
+  - switch docs/examples gradually to `undes`
+- Decision criteria before removing `ai` later:
+  - docs and runbooks fully migrated
+  - no critical internal/test surfaces still depending on `ai*`
+  - at least one release cycle with both command families available
+
+## [2026-03-22 01:30:00 UTC] - Project: ai-hub-coding
+Planned Change: Semantic Context Bridge Batch 6.1 — prefer precise `callEdges` over broad ref expansion in L2.
+Owner Model: Codex (GPT-5)
+Priority: P1
+Status: DONE
+Target Files:
+- `ai/scripts/context-pack.js`
+- `ai/scripts/__tests__/context-pack.test.js`
+- `ai/design/features/SEMANTIC_CONTEXT_BRIDGE.md`
+- `ai/ROADMAP.md`
+- `UNIFIED_MODEL_CHANGE_LOG.md`
+- `PROJECT_PLANNED_CHANGES.md`
+Notes:
+- Changed `collectDependencySymbols()` so selected symbols with `callEdges` use only precise `callEdges` for L2 dependency bodies; broad ref/import expansion remains the fallback for symbols without `callEdges`
+- Added regression coverage proving noisy ref dependencies no longer override a precise `callEdge`
+- Offline compare on `nornick` versus the pre-6.1 additive logic:
+  - `120` sampled prompts
+  - `10` smaller packs, `13` larger, `97` unchanged
+  - average pack size moved from `45583` to `45565` bytes (`-18`)
+  - biggest wins: `-4670`, `-4670`, `-3402` bytes
+- Verification passed: targeted `context-pack` suite (`30` tests, `0` fail) and full `npm run ai:test` (`502` tests, `501` pass, `0` fail, `1` skipped)
+
+## [2026-03-22 01:45:00 UTC] - Project: ai-hub-coding
+Planned Change: Manual relevance sampling for Semantic Context Bridge Batch 6.1 biggest-win cases.
+Owner Model: Codex (GPT-5)
+Priority: P2
+Status: DONE
+Target Files:
+- `ai/design/features/SEMANTIC_CONTEXT_BRIDGE.md`
+- `ai/ROADMAP.md`
+- `UNIFIED_MODEL_CHANGE_LOG.md`
+- `PROJECT_PLANNED_CHANGES.md`
+Notes:
+- Manually checked the three largest byte-reduction cases on `nornick`: `createSession -> saveNewSession`, `clearSession -> parseRefreshToken`, `getUserRoles -> getTokenClaims`
+- Expected callees remained present before and after Batch 6.1, so the reductions were not caused by dropping the obvious target symbol outright
+- But the L2 dependency sections in those cases were still noisy, so the current evidence is enough to keep Batch 6.1 bounded as default, but not enough to justify any wider rollout
+
+## [2026-03-22 01:50:00 UTC] - Project: ai-hub-coding
+Planned Change: Decision plan for next steps after Semantic Context Bridge Batch 6.1.
+Owner Model: Codex (GPT-5)
+Priority: P2
+Status: DONE
+Target Files:
+- `UNIFIED_MODEL_CHANGE_LOG.md`
+- `PROJECT_PLANNED_CHANGES.md`
+Notes:
+- Option A: freeze Semantic Context Bridge at the current bounded-default state and stop further work on this track for now
+- Option B: run one more narrow L2 precision experiment without widening languages or touching L0/L1
+- Option C: shift focus to higher-ROI tracks (`live validation`, `grep-ast precision tuning`, `pipeline cost optimization`)
+- Current recommendation: Option C
+- Rationale: Semantic Context Bridge is in a good engineering state, but recent validation shows diminishing returns relative to other open tracks
+- Gemini CLI Review: Strongly agree with Option C. Recommend immediately pivoting to `Pipeline Cost & Efficiency Optimization` (specifically Anthropic Prompt Caching and Complexity-Based Routing) for massive and immediate ROI.
+
+## [2026-03-21 21:30:00 UTC] - Project: ai-hub-coding
+Planned Change: Pipeline Cost Optimization refinement — skip tester for DIAGNOSTIC results and reconcile docs with current runtime state.
+Owner Model: Codex (GPT-5)
+Priority: P1
+Status: DONE
+Target Files:
+- `ai/scripts/domain/seam-decision.js`
+- `ai/scripts/domain/operational-signals.js`
+- `ai/scripts/domain/operational-signals-snapshot.js`
+- `ai/scripts/generate-context.js`
+- `ai/scripts/__tests__/generate-context.contract.test.js`
+- `ai/design/features/PIPELINE_COST_OPTIMIZATION.md`
+- `ai/design/features/ROUND_ORCHESTRATION_RATIONALIZATION.md`
+- `ai/ROADMAP.md`
+- `UNIFIED_MODEL_CHANGE_LOG.md`
+- `PROJECT_PLANNED_CHANGES.md`
+Notes:
+- Added a dedicated tester gate helper so DIAGNOSTIC results no longer run post-process validation; tester is now patch-validation-only for non-trivial tasks
+- Updated operational signals to record `testerDiagnosticSkipped` while preserving legacy `testerDiagnosticMode` compatibility for older run snapshots
+- Reconciled roadmap/design wording with reality: Anthropic prompt caching and bounded complexity routing are already landed, so the remaining cost track now centers on clean-run DA skip, rerun skip-enhance, and telemetry/doc cleanup
+- Added a short reconciliation note in `ROUND_ORCHESTRATION_RATIONALIZATION.md` so the older accepted `diagnostic-review` proposal is clearly marked as historical, not current runtime behavior
+- Verification passed: targeted `generate-context.contract` + `prompt-content` suites green, and full `npm run ai:test` green (`502` tests, `501` pass, `0` fail, `1` skipped)
+
+## [2026-03-21 22:10:00 UTC] - Project: ai-hub-coding
+Planned Change: Pipeline Cost Optimization refinement — skip Devil's Advocate for clean patch-safe high-approval consensus runs.
+Owner Model: Codex (GPT-5)
+Priority: P1
+Status: DONE
+Target Files:
+- `ai/scripts/domain/seam-decision.js`
+- `ai/scripts/generate-context.js`
+- `ai/scripts/__tests__/generate-context.contract.test.js`
+- `ai/design/features/PIPELINE_COST_OPTIMIZATION.md`
+- `ai/ROADMAP.md`
+- `UNIFIED_MODEL_CHANGE_LOG.md`
+- `PROJECT_PLANNED_CHANGES.md`
+Notes:
+- Added `computeAverageApprovalScore()` and extended the DA gate so clean runs can skip DA only when all three conditions hold: unanimous approval, `avgApprovalScore >= 9`, and `patchSafeEligible = true`
+- Kept the older diagnostic/no-fetchable-seams DA skip intact and higher-priority, so existing diagnostic routing behavior is unchanged
+- This keeps the optimization bounded: score-only approval agreement is not enough to bypass DA when the evidence gate still sees unresolved patch-safety gaps
+- Verification passed: targeted `generate-context.contract` and `prompt-content` suites green, and full `npm run ai:test` green (`502` tests, `501` pass, `0` fail, `1` skipped)
+
+## [2026-03-21 22:40:00 UTC] - Project: ai-hub-coding
+Planned Change: Pipeline Cost Optimization refinement — reuse preprocess results on same-prompt reruns and keep `--skip-enhance` as manual override.
+Owner Model: Codex (GPT-5)
+Priority: P1
+Status: DONE
+Target Files:
+- `ai/scripts/generate-context.js`
+- `ai/scripts/__tests__/generate-context.contract.test.js`
+- `ai/design/features/PIPELINE_COST_OPTIMIZATION.md`
+- `ai/ROADMAP.md`
+- `UNIFIED_MODEL_CHANGE_LOG.md`
+- `PROJECT_PLANNED_CHANGES.md`
+Notes:
+- Added bounded automatic preprocess reuse: when the latest archived run has the same prompt hash and a completed `preprocess` artifact, the current run skips a fresh prompt-engineer call and reuses the normalized result
+- Kept the explicit `--skip-enhance` path intact; the new branch is a safe fallback-on-match, not a replacement for manual operator control
+- Reused preprocess artifacts are copied into the current run archive and checkpointed as the current run's `preprocess` output, so resume semantics stay consistent
+- Verification passed: targeted `generate-context.contract` and `prompt-content` suites green, and full `npm run ai:test` green (`504` tests, `503` pass, `0` fail, `1` skipped)

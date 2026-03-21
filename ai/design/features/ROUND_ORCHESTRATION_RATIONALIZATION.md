@@ -3,6 +3,14 @@
 Status: discussion
 Priority: P0
 
+Implementation note (2026-03-21): the original Phase 1 discussion accepted a
+lightweight `diagnostic-review` tester mode for `DIAGNOSTIC` results. Runtime
+behavior has since been tightened by the Pipeline Cost Optimization track:
+tester is now skipped for `DIAGNOSTIC` results and runs only for
+`patch-validation` cases. Historical discussion below is preserved for context;
+current source of truth is `ai/scripts/generate-context.js` plus
+`ai/design/features/PIPELINE_COST_OPTIMIZATION.md`.
+
 ## Why This Exists
 
 The current hub pipeline spends too many tokens on "text convergence" before it

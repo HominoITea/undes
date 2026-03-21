@@ -95,9 +95,23 @@ function buildTrustGapSnapshot(trust = {}) {
   };
 }
 
+function computeAverageApprovalScore(approvalOutputs = []) {
+  const scores = Array.isArray(approvalOutputs)
+    ? approvalOutputs
+      .map((item) => item?.approval?.score)
+      .filter((value) => value !== null && value !== undefined && value !== '')
+      .map((value) => Number(value))
+      .filter((value) => Number.isFinite(value))
+    : [];
+  if (scores.length === 0) return null;
+  return Number((scores.reduce((sum, value) => sum + value, 0) / scores.length).toFixed(1));
+}
+
 function shouldSkipDevilsAdvocate(options = {}) {
   const trust = options.trust || {};
   const remainingFetchableSeamCount = Number(options.remainingFetchableSeamCount) || 0;
+  const allAgreed = options.allAgreed === true;
+  const avgApprovalScore = Number(options.avgApprovalScore);
   const resultMode = normalizeResultModeBase(trust?.resultMode || '');
   const categories = Array.isArray(trust?.groundingGapCategories)
     ? trust.groundingGapCategories.map((item) => String(item || '').trim()).filter(Boolean)
@@ -105,13 +119,24 @@ function shouldSkipDevilsAdvocate(options = {}) {
   const hasSubstantiveAssumptions = categories.includes('substantive-assumptions')
     || trust?.groundingValidation?.hasSubstantiveAssumptions === true;
 
-  const skip = resultMode === 'DIAGNOSTIC'
+  const diagnosticSkip = resultMode === 'DIAGNOSTIC'
     && hasSubstantiveAssumptions
     && remainingFetchableSeamCount === 0;
+  if (diagnosticSkip) {
+    return {
+      skip: true,
+      reason: 'diagnostic-with-substantive-assumptions-and-no-fetchable-seams',
+    };
+  }
+
+  const cleanRunSkip = allAgreed
+    && Number.isFinite(avgApprovalScore)
+    && avgApprovalScore >= 9
+    && trust?.groundingValidation?.patchSafeEligible === true;
 
   return {
-    skip,
-    reason: skip ? 'diagnostic-with-substantive-assumptions-and-no-fetchable-seams' : '',
+    skip: cleanRunSkip,
+    reason: cleanRunSkip ? 'clean-patch-safe-high-approval-consensus' : '',
   };
 }
 
@@ -119,6 +144,24 @@ function resolveTesterMode(trust = {}) {
   return trust?.groundingValidation?.patchSafeEligible === true
     ? 'patch-validation'
     : 'diagnostic-review';
+}
+
+function resolveTesterGate(trust = {}) {
+  const mode = resolveTesterMode(trust);
+  if (mode === 'patch-validation') {
+    return {
+      skip: false,
+      mode,
+      action: mode,
+      reason: 'patch-safe-eligible',
+    };
+  }
+  return {
+    skip: true,
+    mode,
+    action: 'skipped',
+    reason: 'diagnostic-result',
+  };
 }
 
 module.exports = {
@@ -130,6 +173,8 @@ module.exports = {
   computeCritiqueSeamOverlap,
   shouldTriggerSeamExpansion,
   buildTrustGapSnapshot,
+  computeAverageApprovalScore,
   shouldSkipDevilsAdvocate,
   resolveTesterMode,
+  resolveTesterGate,
 };

@@ -23,6 +23,7 @@ const {
   buildResultFileContent,
   buildPatchSafeResultContent,
   parseRuntimeOverridesDocument,
+  loadReusablePreprocessResult,
   getMaxOutputTokens,
   getConfiguredMaxOutputTokens,
   getAutoMaxOutputTokensSettings,
@@ -33,8 +34,10 @@ const {
   deriveApprovalOutcomeType,
   computeCritiqueSeamOverlap,
   shouldTriggerSeamExpansion,
+  computeAverageApprovalScore,
   shouldSkipDevilsAdvocate,
   resolveTesterMode,
+  resolveTesterGate,
   recordPreflightWaitSignal,
   recordOutputTokenAdjustmentSignal,
   recordRetrySignal,
@@ -42,6 +45,7 @@ const {
   recordToolLoopSignal,
   recordIncompleteOutputSignal,
   recordPromptScopeSignal,
+  recordCallGatingSignal,
   buildOperationalSignalsSnapshot,
   isQuotaExhaustedError,
   hasContextPackSection,
@@ -908,6 +912,74 @@ test('parseRuntimeOverridesDocument classifies restart-required keys', () => {
   ]);
 });
 
+test('loadReusablePreprocessResult reuses archived preprocess output for the same prompt hash', () => {
+  const aiDir = fs.mkdtempSync(path.join(os.tmpdir(), 'preprocess-reuse-'));
+  const archivedDir = path.join(aiDir, 'prompts', 'runs', 'run-older');
+  fs.mkdirSync(archivedDir, { recursive: true });
+  const outputPath = path.join(archivedDir, 'prompt-engineer-analysis.json');
+  fs.writeFileSync(outputPath, JSON.stringify({
+    analysis: 'Reuse me.',
+    enhancedPrompt: 'Enhanced prompt',
+    complexity: 'trivial',
+  }, null, 2));
+  fs.writeFileSync(path.join(archivedDir, 'run-flow.json'), JSON.stringify({
+    version: 1,
+    runId: 'run-older',
+    prompt: 'same prompt',
+    promptHash: '66fddd00ccb8',
+    phases: {
+      preprocess: {
+        status: 'done',
+        outputFile: outputPath,
+        agent: 'prompt-engineer',
+      },
+    },
+  }, null, 2));
+
+  const reused = loadReusablePreprocessResult({
+    aiDataDir: aiDir,
+    promptText: 'same prompt',
+    currentRunId: 'run-current',
+  });
+
+  assert.equal(reused.runId, 'run-older');
+  assert.equal(reused.agent, 'prompt-engineer');
+  assert.equal(reused.promptEngineerResult.enhancedPrompt, 'Enhanced prompt');
+  assert.equal(reused.promptEngineerResult.complexity, 'trivial');
+});
+
+test('loadReusablePreprocessResult ignores the active run and mismatched prompts', () => {
+  const aiDir = fs.mkdtempSync(path.join(os.tmpdir(), 'preprocess-reuse-active-'));
+  const runDir = path.join(aiDir, 'prompts', 'run');
+  fs.mkdirSync(runDir, { recursive: true });
+  const outputPath = path.join(runDir, 'prompt-engineer-analysis.json');
+  fs.writeFileSync(outputPath, JSON.stringify({ enhancedPrompt: 'Enhanced prompt' }, null, 2));
+  fs.writeFileSync(path.join(runDir, 'run-flow.json'), JSON.stringify({
+    version: 1,
+    runId: 'run-current',
+    prompt: 'same prompt',
+    promptHash: '66fddd00ccb8',
+    phases: {
+      preprocess: {
+        status: 'done',
+        outputFile: outputPath,
+        agent: 'prompt-engineer',
+      },
+    },
+  }, null, 2));
+
+  assert.equal(loadReusablePreprocessResult({
+    aiDataDir: aiDir,
+    promptText: 'same prompt',
+    currentRunId: 'run-current',
+  }), null);
+  assert.equal(loadReusablePreprocessResult({
+    aiDataDir: aiDir,
+    promptText: 'different prompt',
+    currentRunId: 'run-next',
+  }), null);
+});
+
 test('getMaxOutputTokens prefers safe runtime override over agent default budget', () => {
   const result = getMaxOutputTokens(
     {
@@ -1076,6 +1148,12 @@ test('round rationalization helpers classify critique overlap and downstream gat
   assert.equal(overlap.matched, 1);
   assert.equal(overlap.total, 2);
   assert.equal(overlap.percent, 50);
+  assert.equal(computeAverageApprovalScore([
+    { approval: { score: 10 } },
+    { approval: { score: 8 } },
+    { approval: { score: null } },
+  ]), 9);
+  assert.equal(computeAverageApprovalScore([{ approval: { score: null } }]), null);
 
   assert.deepEqual(
     shouldSkipDevilsAdvocate({
@@ -1091,9 +1169,51 @@ test('round rationalization helpers classify critique overlap and downstream gat
       reason: 'diagnostic-with-substantive-assumptions-and-no-fetchable-seams',
     },
   );
+  assert.deepEqual(
+    shouldSkipDevilsAdvocate({
+      trust: {
+        resultMode: 'PATCH_SAFE',
+        groundingValidation: { patchSafeEligible: true },
+      },
+      allAgreed: true,
+      avgApprovalScore: 9.3,
+      remainingFetchableSeamCount: 2,
+    }),
+    {
+      skip: true,
+      reason: 'clean-patch-safe-high-approval-consensus',
+    },
+  );
+  assert.deepEqual(
+    shouldSkipDevilsAdvocate({
+      trust: {
+        resultMode: 'PATCH_SAFE',
+        groundingValidation: { patchSafeEligible: false },
+      },
+      allAgreed: true,
+      avgApprovalScore: 9.7,
+      remainingFetchableSeamCount: 0,
+    }),
+    {
+      skip: false,
+      reason: '',
+    },
+  );
 
   assert.equal(resolveTesterMode({ groundingValidation: { patchSafeEligible: true } }), 'patch-validation');
   assert.equal(resolveTesterMode({ groundingValidation: { patchSafeEligible: false } }), 'diagnostic-review');
+  assert.deepEqual(resolveTesterGate({ groundingValidation: { patchSafeEligible: true } }), {
+    skip: false,
+    mode: 'patch-validation',
+    action: 'patch-validation',
+    reason: 'patch-safe-eligible',
+  });
+  assert.deepEqual(resolveTesterGate({ groundingValidation: { patchSafeEligible: false } }), {
+    skip: true,
+    mode: 'diagnostic-review',
+    action: 'skipped',
+    reason: 'diagnostic-result',
+  });
 });
 
 test('computeAgentPhaseRiskForecast flags output, ITPM, and tool-loop pressure from current runtime state', () => {
@@ -1376,6 +1496,11 @@ test('operational signal helpers accumulate bounded post-run telemetry', () => {
     warningPath: '.ai/prompts/runs/run-123/prompt-scope-warning.txt',
     suggestedPromptPath: '.ai/prompts/runs/run-123/suggested-broadened-prompt.txt',
   });
+  recordCallGatingSignal(state, {
+    phase: 'tester',
+    action: 'skipped',
+    reason: 'diagnostic-result',
+  });
 
   const snapshot = buildOperationalSignalsSnapshot(state, {
     status: 'failed',
@@ -1401,6 +1526,8 @@ test('operational signal helpers accumulate bounded post-run telemetry', () => {
   assert.equal(snapshot.roundRationalization.approvalRoundsWithZeroNewSeams, 0);
   assert.equal(snapshot.roundRationalization.tokensBeforeFirstSeamFetch, null);
   assert.equal(snapshot.roundRationalization.critiqueSeamOverlap, null);
+  assert.equal(snapshot.roundRationalization.callsAvoidedByGating.testerDiagnosticSkipped, 1);
+  assert.equal(snapshot.roundRationalization.callsAvoidedByGating.testerDiagnosticMode, 0);
   assert.deepEqual(snapshot.promptScope.notes, ['Prompt pins only a narrow starting seam.']);
   assert.equal(snapshot.promptScope.warningPath, '.ai/prompts/runs/run-123/prompt-scope-warning.txt');
   assert.equal(snapshot.promptScope.suggestedPromptPath, '.ai/prompts/runs/run-123/suggested-broadened-prompt.txt');

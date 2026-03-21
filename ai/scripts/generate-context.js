@@ -161,8 +161,10 @@ const {
   computeCritiqueSeamOverlap,
   shouldTriggerSeamExpansion,
   buildTrustGapSnapshot,
+  computeAverageApprovalScore,
   shouldSkipDevilsAdvocate,
   resolveTesterMode,
+  resolveTesterGate,
 } = require('./domain/seam-decision');
 const {
   hasContextPackSection,
@@ -1109,6 +1111,43 @@ function persistPromptScopeArtifacts(promptEngineerResult = {}, options = {}) {
     warningPath,
     suggestedPromptPath,
   };
+}
+
+function loadReusablePreprocessResult(options = {}) {
+  const aiDataDir = String(options.aiDataDir || '').trim();
+  const promptText = String(options.promptText || '');
+  const currentRunId = String(options.currentRunId || '').trim();
+  if (!aiDataDir || !promptText) return null;
+
+  const archivedFlow = loadLatestArchivedRun(aiDataDir);
+  if (!archivedFlow || archivedFlow.runId === currentRunId) return null;
+  if (archivedFlow.promptHash !== checkpoint.promptHash(promptText)) return null;
+
+  const preprocessPhase = archivedFlow?.phases?.preprocess;
+  const outputFile = String(preprocessPhase?.outputFile || '').trim();
+  if (preprocessPhase?.status !== 'done' || !outputFile || !fs.existsSync(outputFile)) return null;
+
+  let resolvedAiDataDir = '';
+  let resolvedOutputPath = '';
+  try {
+    resolvedAiDataDir = fs.realpathSync(aiDataDir);
+    resolvedOutputPath = fs.realpathSync(outputFile);
+  } catch {
+    return null;
+  }
+  if (!isSameOrSubPath(resolvedAiDataDir, resolvedOutputPath)) return null;
+
+  try {
+    const payload = JSON.parse(fs.readFileSync(resolvedOutputPath, 'utf8'));
+    return {
+      runId: String(archivedFlow.runId || '').trim(),
+      agent: String(preprocessPhase?.agent || '').trim(),
+      outputFile: resolvedOutputPath,
+      promptEngineerResult: normalizePromptEngineerResult(payload, promptText),
+    };
+  } catch {
+    return null;
+  }
 }
 
 
@@ -2153,6 +2192,13 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
     consensusIndex >= 0
       ? mainAgents.filter((_, index) => index !== consensusIndex)
       : mainAgents;
+  const reusedPreprocessResult = ENABLE_PREPOST && preProcessAgents.length > 0 && !resumeMode && !SKIP_ENHANCE
+    ? loadReusablePreprocessResult({
+      aiDataDir: AI_DATA_DIR,
+      promptText,
+      currentRunId: runFlow.runId,
+    })
+    : null;
 
   function filterByDebatePhase(agents, phase) {
     return agents.filter((a) => {
@@ -2718,6 +2764,49 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
           console.log('✅ Pre-process result loaded from checkpoint.');
         } catch (error) {
           console.warn(`⚠️ Failed to parse cached preprocess result: ${error.message}`);
+        }
+      }
+      console.log('================================\n');
+    } else if (reusedPreprocessResult) {
+      console.log('\n📝 ===== PRE-PROCESS PHASE (reused) =====');
+      promptEngineerResult = reusedPreprocessResult.promptEngineerResult;
+      const promptScopeArtifacts = persistPromptScopeArtifacts(promptEngineerResult, {
+        runArchiveDir: RUN_ARCHIVE_DIR,
+      });
+      promptScopeWarningPath = promptScopeArtifacts.warningPath;
+      promptScopeSuggestedPromptPath = promptScopeArtifacts.suggestedPromptPath;
+
+      const preprocessAgentName = preProcessAgents[0]?.name || reusedPreprocessResult.agent || 'prompt-engineer';
+      const outputPath = path.join(RUN_ARCHIVE_DIR, `${preprocessAgentName}-analysis.json`);
+      fs.writeFileSync(outputPath, `${JSON.stringify(promptEngineerResult, null, 2)}\n`);
+      checkpoint.updatePhase(PROJECT_LAYOUT, 'preprocess', {
+        status: 'done',
+        finishedAt: new Date().toISOString(),
+        outputFile: outputPath,
+        outputFormat: 'json',
+        agent: preprocessAgentName,
+      });
+
+      if (promptEngineerResult.enhancedPrompt) {
+        workingPrompt = promptEngineerResult.enhancedPrompt;
+        const enhancedPath = path.join(RUN_ARCHIVE_DIR, 'enhanced-prompt.txt');
+        fs.writeFileSync(enhancedPath, workingPrompt);
+      }
+
+      console.log(`♻️ Reused prompt analysis from ${reusedPreprocessResult.runId}`);
+      if (promptEngineerResult.enhancedPrompt) {
+        console.log('✨ Prompt enhancement reused successfully');
+      }
+      if (promptEngineerResult.scopeRisk !== 'none') {
+        console.warn(`⚠️ Prompt scope risk: ${promptEngineerResult.scopeRisk}`);
+        for (const note of promptEngineerResult.scopeNotes) {
+          console.warn(`   - ${note}`);
+        }
+        if (promptScopeWarningPath) {
+          console.warn(`   Details: ${toRelativePath(promptScopeWarningPath)}`);
+        }
+        if (promptScopeSuggestedPromptPath) {
+          console.warn(`   Suggested broadened prompt: ${toRelativePath(promptScopeSuggestedPromptPath)}`);
         }
       }
       console.log('================================\n');
@@ -3712,11 +3801,14 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
         ...(indexCfg.critiqueExpansionMaxRequests ? { maxItems: Number(indexCfg.critiqueExpansionMaxRequests) } : {}),
       }).filter((request) => hasStructuredFetchHint(request)),
     );
+    const avgApprovalScore = computeAverageApprovalScore(latestApprovalOutputs);
     const devilsAdvocateGate = trivialDASkip
       ? { skip: true, reason: 'trivial-complexity' }
       : shouldSkipDevilsAdvocate({
         trust: currentResultTrust || {},
         remainingFetchableSeamCount: remainingFetchableSeams.length,
+        allAgreed: approvalConsensusAllAgreed,
+        avgApprovalScore,
       });
 
     if (devilsAdvocateGate.skip) {
@@ -3998,13 +4090,18 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
   // ===== POST-PROCESS PHASE (Tester) =====
   let testerResult = null;
   if (ENABLE_TEST && postProcessAgents.length > 0 && taskComplexity !== 'trivial') {
-    const testerMode = resolveTesterMode(currentResultTrust || {});
+    const testerGate = resolveTesterGate(currentResultTrust || {});
+    const testerMode = testerGate.mode;
     recordCallGatingSignal(operationalSignals, {
       phase: 'tester',
-      action: testerMode,
-      reason: testerMode === 'patch-validation' ? 'patch-safe-eligible' : 'diagnostic-or-not-grounded',
+      action: testerGate.action,
+      reason: testerGate.reason,
     });
-    if (resumeMode && checkpoint.isPhaseDone(PROJECT_LAYOUT, 'postprocess')) {
+    if (testerGate.skip) {
+      console.log('\n🧪 ===== POST-PROCESS PHASE (skipped) =====');
+      console.log(`⏭️  Skipped by gate: ${testerGate.reason}`);
+      console.log('=================================\n');
+    } else if (resumeMode && checkpoint.isPhaseDone(PROJECT_LAYOUT, 'postprocess')) {
       console.log('\n🧪 ===== POST-PROCESS PHASE (cached) =====');
       console.log('✅ Post-process result loaded from checkpoint.');
       console.log('=================================\n');
@@ -4611,12 +4708,15 @@ module.exports = {
   buildResultFileContent,
   buildPatchSafeResultContent,
   createOperationalSignalsState,
+  loadReusablePreprocessResult,
   hasStructuredFetchHint,
   deriveApprovalOutcomeType,
   computeCritiqueSeamOverlap,
   shouldTriggerSeamExpansion,
+  computeAverageApprovalScore,
   shouldSkipDevilsAdvocate,
   resolveTesterMode,
+  resolveTesterGate,
   recordPreflightWaitSignal,
   recordOutputTokenAdjustmentSignal,
   recordRetrySignal,
@@ -4624,6 +4724,7 @@ module.exports = {
   recordToolLoopSignal,
   recordIncompleteOutputSignal,
   recordPromptScopeSignal,
+  recordCallGatingSignal,
   buildOperationalSignalsSnapshot,
   getJsonRawSidecarPath,
   writeJsonArtifactWithRaw,

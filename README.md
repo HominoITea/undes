@@ -760,6 +760,17 @@ Anti-duplication rule:
 - Do not paste the same full summary into multiple logs.
 - Secondary log entries should contain a short pointer: `Ref: <task_id>`.
 
+### Git Workflow Rule
+
+For all new feature work:
+- start from a dedicated feature branch, not directly on `main`
+- complete implementation and local verification in that feature branch
+- get review before merge
+- merge only through a PR after review
+
+Direct commits to `main` are allowed only for exceptional repository-maintenance
+or explicitly approved emergency fixes.
+
 ## Roadmap
 See `ai/ROADMAP.md` for the short priority/status view.
 Detailed future-feature design docs live in `ai/design/features/README.md`.

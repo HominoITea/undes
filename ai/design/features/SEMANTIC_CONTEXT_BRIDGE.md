@@ -1,9 +1,10 @@
 # Semantic Context Bridge
 
-Status: design-proposal
+Status: implemented (Batches 1-6 complete, 500 tests pass)
 Priority: P1
 Author: Claude Opus 4.6
 Date: 2026-03-20
+Implemented: 2026-03-21 (Codex) | Reviewed: 2026-03-21 (Claude Opus 4.6)
 
 ## Problem Statement
 
@@ -35,16 +36,17 @@ shell, а не внутри контекстного окна модели.
 4. **Обратная совместимость.** Текущий pipeline не ломается. Новые поля в индексе — additive.
 5. **Без оверкилла.** Не нужны full LSP/компилятор на старте. tree-sitter + ast-grep дают 80% эффекта.
 
-## What We Already Have
+## What We Already Have (updated 2026-03-21, post-implementation)
 
-| Компонент | Файл | Что делает | Что не хватает |
+| Компонент | Файл | Что реализовано | Батч |
 |---|---|---|---|
-| Symbol index | `context-index.js` | name, type, file, lines, signature. 11 языков. Regex + tree-sitter | Нет container, params, returnType, visibility, outline |
-| Structural search | `structural-search.js` | ast-grep паттерны, fallback на index scoring | Только single-token паттерны, нет scope awareness |
-| Context Pack | `context-pack.js` | 4 seed стратегии, BFS expansion, skeleton + snippets | Нет формальных уровней (outline/target/expanded) |
-| Seam Expansion | `critique-expansion.js` | Агент запрашивает недостающие методы → точечный fetch | Owner угадывается по токенам, не по AST ownership |
-| Project detection | `init-project.js` | detectProjectType → 11 типов | llms.md — пустой шаблон, стек не записывается автоматически |
-| Edges | `context-index.js` | file → symbol (imports + regex ref) | Нет function → function call graph |
+| Symbol index | `context-index.js` (v5) | container, containerType, params, returnType, visibility, isAsync, isStatic, bodyLines, outline в byFile, trust labels | B2, B5 |
+| Context Pack | `context-pack.js` | L0/L1/L2 уровни, inferContextLevel(), small-file heuristic (<150 lines → full body), callEdges в L2 expansion | B3 |
+| Seam Expansion | `critique-expansion.js` | Container-based resolution (Class#method → index lookup), fallback на token search | B4 |
+| Stack Profile | `domain/stack-profile.js` | detectProjectStack(), .ai/stack-profile.json, llms.md derived from profile | B1 |
+| Call Graph | `context-index-treesitter.js` | callEdges для static languages (Java, C#, Go, Rust), approx-ast trust, budget ≤ 3x | B6 |
+| Structural search | `structural-search.js` | ast-grep паттерны, fallback на index scoring | pre-SCB |
+| Edges | `context-index.js` | file → symbol (imports + regex ref) + callEdges (symbol → symbol) | B6 |
 
 ## Architecture: Three Capability Levels
 
@@ -438,23 +440,12 @@ LSP Manager:
   stack-aware prompt generation.
 - **Seam Expansion** — Phase 4 повышает hit rate за счёт container + call graph.
 
-## Open Questions
+## Open Questions (all resolved as of 2026-03-21)
 
-1. Хранить outline в `.code_index.json` или в отдельном `.code_outline.json`?
-   Аргумент за отдельный: index может быть большим, outline нужен не всегда.
-   Аргумент за вместе: одна точка истины, atomic update.
+All original questions were closed during consensus. See "Закрытие Open Questions" table below for decisions.
 
-2. Call graph — хранить в edges или отдельной структуре?
-   Текущие edges = `{fromFile, toSymbol, kind}`. Call graph = `{fromSymbol, toSymbol, kind, line}`.
-   Разная гранулярность. Возможно, отдельный массив `callEdges`.
-
-3. Auto stack detect — запускать при каждом `npm run ai` или только при init/index?
-   При каждом run — актуальность. Только при init — быстрее.
-   Компромисс: при index (раз в N минут), кэшировать в context.json.
-
-4. LSP — запускать для каждого run или держать daemon?
-   Daemon проще, но жрёт память. Per-run — overhead на startup (2-5 сек для tsserver).
-   Решать при Phase 5.
+**Remaining open question (post-implementation):**
+- Should L2 prefer precise `callEdges` over broad ref/name expansion when both sources exist? (See Offline Validation Proposals #2)
 
 ## Review Comments — Codex (2026-03-21)
 
@@ -1060,3 +1051,92 @@ Claude утверждает, что дополнительных раунд-тр
 
 ### Итог:
 Согласен с Consolidated Arbitration Outcome. MVP-план стал намного безопаснее и прагматичнее. Готов двигаться дальше в рамках зафиксированных границ.
+
+## Post-Implementation: L2 Precision Experiment — Claude Opus 4.6 (2026-03-21)
+
+### Контекст
+
+Batches 1-6 реализованы. Offline validation на nornick (1155 Java-файлов, 832 callEdges) показала:
+- callEdges технически работают, budget не пробит
+- Из 120 сэмплов только 6 показали byte-level разницу в L2-пакете с callEdges vs без
+- Вывод Codex: impact реальный, но modest — ref-graph уже покрывает большинство зависимостей
+
+### Проблема
+
+Текущий L2 собирает зависимости **аддитивно**: берёт и ref/import edges, и callEdges, складывает всё вместе. Это размывает ценность точных callEdges:
+- callEdges: `createOrder → validateOrder` (symbol → symbol, known container, approx-ast)
+- ref edges: `service.java → validateOrder` (file → symbol, name match, любой validateOrder в индексе)
+
+Когда оба источника работают одновременно, широкие ref edges добавляют шум поверх точных callEdges. Агент получает и точное, и шумное — шум побеждает.
+
+### Согласованное решение
+
+Поддерживаем предложение Codex (Proposal #2 из Offline Validation):
+
+**Эксперимент: L2 предпочитает callEdges над ref expansion когда оба доступны.**
+
+Правила:
+1. Для символов с callEdges (Java, C#, Go, Rust) — L2 использует **только callEdges** для dependency body expansion
+2. Ref/import edges остаются для: import-level связей, символов без callEdges (JS/TS/Python/etc.)
+3. Fallback: если callEdges для символа пусты — ref expansion работает как раньше
+
+Метрики для измерения на nornick:
+- Общий размер L2-пакета (bytes) — ожидаем снижение
+- % релевантных dependency bodies (ручная выборка 20 cases)
+- Нет регресса на существующих тестах (500+)
+
+### Что НЕ делаем
+
+1. Не расширяем callEdges rollout на TS/JS/Python — пока не доказана precision gain на static languages
+2. Не трогаем L0/L1 — только L2 dependency expansion
+3. Не меняем trust labels и evidence gate rules
+
+### Порядок
+
+1. Implement L2 prioritization в `context-pack.js` (collectDependencySymbols)
+2. Offline validation на nornick: сравнить L2 pack size before/after
+3. Если precision gain подтверждён — зафиксировать как default
+4. Если нет значимой разницы — откатить, закрыть вопрос
+
+### Result (2026-03-22)
+
+Experiment landed in `context-pack.js`.
+
+Offline compare on `nornick` against the pre-6.1 additive L2 logic:
+- `120` unique-caller prompts sampled
+- `10` cases produced smaller L2 packs
+- `13` cases produced larger L2 packs
+- `97` cases were unchanged
+- average pack size moved from `45583` bytes to `45565` bytes (`-18` bytes)
+- biggest reductions:
+  - `createSession -> saveNewSession`: `-4670` bytes
+  - `clearSession -> parseRefreshToken`: `-4670` bytes
+  - `getUserRoles -> getTokenClaims`: `-3402` bytes
+
+### Interpretation
+
+- The experiment does not show a dramatic global shift in bytes.
+- It does show that the prioritization can cut meaningful noise on some real Java flows.
+- No regression was introduced in automated tests (`502` tests, `501` pass, `0` fail, `1` skipped).
+
+### Current Position
+
+- Keep Batch 6.1 as the current default: it is bounded, test-clean, and produces some real precision wins without broad fallout.
+- Do **not** widen rollout yet.
+- Next evaluation step should be a small manual relevance sample on the biggest-win cases, not new language coverage.
+
+### Manual Relevance Sample (2026-03-22)
+
+Top win cases checked manually on `nornick`:
+- `createSession -> saveNewSession`
+- `clearSession -> parseRefreshToken`
+- `getUserRoles -> getTokenClaims`
+
+Findings:
+- Expected callees still remained present in the pack both before and after Batch 6.1, so the byte reductions were **not** caused by dropping the obvious target symbol completely.
+- However, the L2 dependency sections were still noisy in these cases; the pack composition changed, but it did not become cleanly “callee-centric”.
+
+Implication:
+- Batch 6.1 is safe enough to keep as a bounded default.
+- But the current evidence is still **not strong enough** to justify wider rollout, more languages, or LSP work.
+- The feature should now be treated as “stabilized but not yet precision-proven”.

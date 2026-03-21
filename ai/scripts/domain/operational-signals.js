@@ -41,6 +41,7 @@ function createOperationalSignalsState() {
       trustDeltaPerRound: [],
       callsAvoidedByGating: {
         devilsAdvocateSkipped: 0,
+        testerDiagnosticSkipped: 0,
         testerDiagnosticMode: 0,
         testerPatchValidationMode: 0,
       },
@@ -270,6 +271,9 @@ function recordCallGatingSignal(state, details = {}) {
   const action = String(details.action || '').trim();
   if (phase === 'devils-advocate' && action === 'skipped') {
     state.roundRationalization.callsAvoidedByGating.devilsAdvocateSkipped += 1;
+  }
+  if (phase === 'tester' && action === 'skipped' && String(details.reason || '').trim() === 'diagnostic-result') {
+    state.roundRationalization.callsAvoidedByGating.testerDiagnosticSkipped += 1;
   }
   if (phase === 'tester' && action === 'diagnostic-review') {
     state.roundRationalization.callsAvoidedByGating.testerDiagnosticMode += 1;

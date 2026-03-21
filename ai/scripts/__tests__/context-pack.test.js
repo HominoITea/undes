@@ -752,6 +752,125 @@ test('integration: L2 adds dependency bodies from guarded callEdges when the tar
   assert.match(pack.markdown, /IllegalStateException/);
 });
 
+test('integration: L2 prefers precise callEdges over broad ref dependencies when both exist', () => {
+  const root = mkTmpDir('ctx-pack-l2-call-priority-');
+  writeFile(
+    root,
+    'src/Service.java',
+    [
+      'class Service {',
+      '  void process() {',
+      '    validateOrder();',
+      '    helperRef();',
+      '  }',
+      '',
+      '  void validateOrder() {',
+      '    throw new IllegalStateException("boom");',
+      '  }',
+      '}',
+    ].join('\n')
+  );
+  writeFile(
+    root,
+    'src/Noise.java',
+    [
+      'class Noise {',
+      '  void helperRef() {',
+      '    throw new RuntimeException("noise");',
+      '  }',
+      '}',
+    ].join('\n')
+  );
+
+  const symbols = [
+    {
+      id: 'svc',
+      name: 'Service',
+      type: 'class',
+      file: 'src/Service.java',
+      startLine: 1,
+      endLine: 10,
+      signature: 'class Service {',
+      container: '<module>',
+      containerType: 'module',
+      bodyLines: 9,
+      trust: 'exact-ast',
+    },
+    {
+      id: 'process',
+      name: 'process',
+      type: 'method',
+      file: 'src/Service.java',
+      startLine: 2,
+      endLine: 5,
+      signature: 'void process() {',
+      container: 'Service',
+      containerType: 'class',
+      bodyLines: 3,
+      trust: 'exact-ast',
+    },
+    {
+      id: 'validate',
+      name: 'validateOrder',
+      type: 'method',
+      file: 'src/Service.java',
+      startLine: 7,
+      endLine: 9,
+      signature: 'void validateOrder() {',
+      container: 'Service',
+      containerType: 'class',
+      bodyLines: 2,
+      trust: 'exact-ast',
+    },
+    {
+      id: 'noise',
+      name: 'helperRef',
+      type: 'method',
+      file: 'src/Noise.java',
+      startLine: 2,
+      endLine: 4,
+      signature: 'void helperRef() {',
+      container: 'Noise',
+      containerType: 'class',
+      bodyLines: 2,
+      trust: 'exact-ast',
+    },
+  ];
+  const edges = [
+    { fromFile: 'src/Service.java', toSymbol: 'helperRef', kind: 'ref' },
+  ];
+  const callEdges = [
+    {
+      fromId: 'process',
+      fromSymbol: 'process',
+      fromFile: 'src/Service.java',
+      toId: 'validate',
+      toSymbol: 'validateOrder',
+      toFile: 'src/Service.java',
+      kind: 'call',
+      trust: 'approx-ast',
+    },
+  ];
+
+  const pack = buildContextPack({
+    rootDir: root,
+    promptText: 'Debug stack trace for process failure',
+    index: makeIndex(symbols, edges, callEdges),
+    cfg: {
+      ...defaultCfg,
+      snippetContextLines: 0,
+      structuralSearchBackend: 'index',
+      smallFileLines: 2,
+    },
+    redactSecrets: null,
+  });
+
+  assert.equal(pack.levelUsed, 'L2');
+  assert.match(pack.markdown, /L2 Dependency Body: validateOrder/);
+  assert.doesNotMatch(pack.markdown, /L2 Dependency Body: helperRef/);
+  assert.doesNotMatch(pack.markdown, /RuntimeException\("noise"\)/);
+});
+
 test('integration: small-file heuristic includes full file even for non-L2 packs', () => {
   const root = mkTmpDir('ctx-pack-small-file-');
   writeFile(

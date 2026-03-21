@@ -679,6 +679,17 @@ Mandatory metadata:
 
 Secondary logs should only keep `Ref: <task_id>` if the full summary already exists in another primary log.
 
+## Git Workflow Rule
+
+For all new feature development:
+- create a dedicated feature branch first
+- do implementation and verification in that feature branch
+- request review before merge
+- merge only through a PR after review
+
+Direct commits to `main` are reserved for exceptional maintenance-only changes or
+explicitly approved emergency fixes.
+
 ---
 
 # Инструкция на русском

@@ -388,12 +388,28 @@ function appendBlockWithinBudget(out, block, bytes, maxPackBytes) {
 }
 
 function collectDependencySymbols(index, selectedSymbols, graph, selectedIds) {
-  const selectedFiles = new Set((selectedSymbols || []).map((sym) => sym.file).filter(Boolean));
-  const explicitDependencies = [];
-  const callDependencyIds = new Set();
+  const callEdgesByFromId = new Map();
+  for (const edge of index?.callEdges || []) {
+    if (!edge?.fromId || !edge?.toId) continue;
+    if (!callEdgesByFromId.has(edge.fromId)) callEdgesByFromId.set(edge.fromId, []);
+    callEdgesByFromId.get(edge.fromId).push(edge);
+  }
 
+  const selectedWithCallEdges = new Set();
+  const fallbackFiles = new Set();
+
+  for (const sym of selectedSymbols || []) {
+    if (!sym?.id || selectedWithCallEdges.has(sym.id)) continue;
+    if (callEdgesByFromId.has(sym.id)) {
+      selectedWithCallEdges.add(sym.id);
+      continue;
+    }
+    if (sym.file) fallbackFiles.add(sym.file);
+  }
+
+  const explicitDependencies = [];
   for (const edge of index?.edges || []) {
-    if (!edge || !selectedFiles.has(edge.fromFile)) continue;
+    if (!edge || !fallbackFiles.has(edge.fromFile)) continue;
     for (const sym of index?.symbols || []) {
       if (!sym || selectedIds.has(sym.id)) continue;
       if (sym.name === edge.toSymbol) {
@@ -402,19 +418,23 @@ function collectDependencySymbols(index, selectedSymbols, graph, selectedIds) {
     }
   }
 
+  const callDependencyIds = new Set();
   for (const edge of index?.callEdges || []) {
-    if (!edge || !selectedIds.has(edge.fromId) || !edge.toId || selectedIds.has(edge.toId)) continue;
+    if (!edge || !selectedWithCallEdges.has(edge.fromId) || !edge.toId || selectedIds.has(edge.toId)) continue;
     callDependencyIds.add(edge.toId);
   }
-
   const callDependencies = (index?.symbols || []).filter((sym) =>
     sym && callDependencyIds.has(sym.id) && !selectedIds.has(sym.id)
   );
 
+  const fallbackGraphSymbols = selectedWithCallEdges.size === 0
+    ? (graph?.symbols || []).filter((sym) => sym && !selectedIds.has(sym.id))
+    : [];
+
   return dedupeByFileLine([
-    ...explicitDependencies,
     ...callDependencies,
-    ...((graph?.symbols || []).filter((sym) => sym && !selectedIds.has(sym.id))),
+    ...explicitDependencies,
+    ...fallbackGraphSymbols,
   ]);
 }
 
