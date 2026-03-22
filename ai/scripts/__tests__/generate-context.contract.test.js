@@ -35,6 +35,7 @@ const {
   computeCritiqueSeamOverlap,
   shouldTriggerSeamExpansion,
   computeAverageApprovalScore,
+  shouldSkipRevisionRound,
   shouldSkipDevilsAdvocate,
   resolveTesterMode,
   resolveTesterGate,
@@ -389,7 +390,7 @@ test('callAgentWithValidation performs one bounded repair pass for truncated tex
     assert.equal(result.completionStatus, 'complete');
     assert.match(result.text, /finishes cleanly\.\n=== END OF DOCUMENT ===$/);
     assert.equal(result.meta.repaired, true);
-    assert.equal(result.meta.repairBudgetTokens, 1536);
+    assert.equal(result.meta.repairBudgetTokens, 1800);
     assert.equal(result.meta.originalCompletion, 'truncated');
 
     const repairMessages = requests[1].messages;
@@ -398,7 +399,7 @@ test('callAgentWithValidation performs one bounded repair pass for truncated tex
     assert.equal(repairMessages[2].content, firstText);
     assert.match(repairMessages[3].content, /Continue from the exact point/);
     assert.doesNotMatch(repairMessages[3].content, /READ_FILE/);
-    assert.equal(requests[1].max_completion_tokens, 1536);
+    assert.equal(requests[1].max_completion_tokens, 1800);
   } finally {
     global.fetch = originalFetch;
   }
@@ -507,6 +508,9 @@ Utils.getCurrentUserPltId();
 test('buildResultWarningFileContent marks diagnostic output as manual-review-only', () => {
   const content = buildResultWarningFileContent({
     resultMode: 'DIAGNOSTIC',
+    primaryFailureClass: 'seam-confirmation-failure',
+    failureClasses: ['seam-confirmation-failure', 'role-evidence-divergence'],
+    failureSummary: 'Grounded fixes still rely on seams that were not directly confirmed by fetched evidence.',
     disagreementNotes: ['- Reviewer disagreed on edge-case handling'],
     contractWarnings: ['Missing required section: `## Grounded Fixes`.'],
     validationWarnings: ['Grounded fix references unconfirmed method seam: `authService.getCurrentUserId`.'],
@@ -515,11 +519,14 @@ test('buildResultWarningFileContent marks diagnostic output as manual-review-onl
   assert.match(content, /WARNING: Generated output is not guaranteed copy-paste-safe\./);
   assert.match(content, /RESULT_MODE: DIAGNOSTIC/);
   assert.match(content, /MANUAL_REVIEW_REQUIRED: YES/);
+  assert.match(content, /PRIMARY_FAILURE_CLASS: seam-confirmation-failure/);
+  assert.match(content, /FAILURE_CLASSES: seam-confirmation-failure, role-evidence-divergence/);
   assert.match(content, /PATCH_SAFE_CONTRACT_GAP_COUNT: 1/);
   assert.match(content, /PATCH_SAFE_GROUNDING_GAP_COUNT: 1/);
   assert.match(content, /PATCH_SAFE_CONTRACT_GAP_CATEGORIES: missing-section/);
   assert.match(content, /PATCH_SAFE_GROUNDING_GAP_CATEGORIES: unconfirmed-seam/);
   assert.match(content, /Reviewer disagreed on edge-case handling/);
+  assert.match(content, /Failure summary: Grounded fixes still rely on seams that were not directly confirmed by fetched evidence\./);
   assert.match(content, /Patch-safe contract gaps:/);
   assert.match(content, /Missing required section: `## Grounded Fixes`\./);
   assert.match(content, /Patch-safe validation gaps:/);
@@ -848,6 +855,11 @@ test('buildFinalTrustSignal summarizes trust gaps into structured telemetry', ()
     },
   }, {
     allAgreed: true,
+    approvalOutputs: [
+      { approval: { agreed: true, score: 9 } },
+      { approval: { agreed: false, score: 3 } },
+    ],
+    operationalSignals: {},
   });
 
   assert.equal(signal.resultMode, 'DIAGNOSTIC');
@@ -860,6 +872,8 @@ test('buildFinalTrustSignal summarizes trust gaps into structured telemetry', ()
   assert.equal(signal.observedFileCount, 1);
   assert.equal(signal.candidateSeamCount, 1);
   assert.equal(signal.hasSubstantiveAssumptions, true);
+  assert.equal(signal.primaryFailureClass, 'anchor-coverage-failure');
+  assert.deepEqual(signal.failureClasses, ['anchor-coverage-failure', 'seam-confirmation-failure', 'role-evidence-divergence']);
 });
 
 test('parseRuntimeOverridesDocument accepts safe live overrides', () => {
@@ -1064,6 +1078,12 @@ test('getRecommendedOutputTokensForStage escalates for heavy proposal and critiq
   assert.equal(getRecommendedOutputTokensForStage('critique', 15000), 8192);
   assert.equal(getRecommendedOutputTokensForStage('critique-retry', 9000), 4096);
   assert.equal(getRecommendedOutputTokensForStage('proposal-tool-budget-final', 11000), 6144);
+  assert.equal(getRecommendedOutputTokensForStage('consensus', 5000), 1800);
+  assert.equal(getRecommendedOutputTokensForStage('consensus', 11000), 4096);
+  assert.equal(getRecommendedOutputTokensForStage('consensus', 15000), 6144);
+  assert.equal(getRecommendedOutputTokensForStage('consensus', 23000), 8192);
+  assert.equal(getRecommendedOutputTokensForStage('revision', 15000), 6144);
+  assert.equal(getRecommendedOutputTokensForStage('da-revision', 23000), 8192);
   assert.equal(getRecommendedOutputTokensForStage('approval', 15000), 384);
   assert.equal(getRecommendedOutputTokensForStage('approval-2', 15000), 384);
 });
@@ -1073,6 +1093,10 @@ test('getRepairMaxOutputTokens keeps repair bounded but large enough for code-he
   assert.equal(getRepairMaxOutputTokens({ maxOutputTokens: 4096 }), 3072);
   assert.equal(getRepairMaxOutputTokens({ maxOutputTokens: 8192 }), 3072);
   assert.equal(getRepairMaxOutputTokens({ maxOutputTokens: 120 }), 256);
+  assert.equal(getRepairMaxOutputTokens({ maxOutputTokens: 4096 }, 'consensus'), 4096);
+  assert.equal(getRepairMaxOutputTokens({ maxOutputTokens: 8192 }, 'consensus'), 6144);
+  assert.equal(getRepairMaxOutputTokens({ maxOutputTokens: 4096 }, 'revision', { maxOutputTokens: 6144 }), 6144);
+  assert.equal(getRepairMaxOutputTokens({ maxOutputTokens: 8192 }, 'critique', { maxOutputTokens: 8192 }), 3072);
 });
 
 test('approval routing helpers keep existing schema and gate seam expansion by structured fetch hints', () => {
@@ -1085,6 +1109,63 @@ test('approval routing helpers keep existing schema and gate seam expansion by s
     agreed: false,
     missingSeams: [{ symbolOrSeam: 'OrderService#cancel', fetchHint: 'src/main/java/example/OrderService.java:10-40' }],
   }), 'fetch-evidence');
+  assert.deepEqual(
+    shouldSkipRevisionRound({
+      approvalOutputs: [
+        {
+          approval: {
+            agreed: false,
+            notes: 'Need OrderService#cancel body before patch-safe approval.',
+            missingSeams: [
+              {
+                symbolOrSeam: 'OrderService#cancel',
+                fetchHint: 'src/main/java/example/OrderService.java:10-40',
+              },
+            ],
+          },
+        },
+        {
+          approval: {
+            agreed: false,
+            notes: 'Keep the assumption explicit until the seam is read.',
+            missingSeams: [],
+          },
+        },
+      ],
+    }),
+    {
+      skip: true,
+      reason: 'evidence-gap-with-editorial-notes',
+      disagreementCount: 2,
+      fetchEvidenceCount: 1,
+      editorialOnlyCount: 1,
+    },
+  );
+  assert.deepEqual(
+    shouldSkipRevisionRound({
+      approvalOutputs: [
+        {
+          approval: {
+            agreed: false,
+            notes: 'Grounded Fixes incorrectly claims the cancellation updates Order.status immediately.',
+            missingSeams: [
+              {
+                symbolOrSeam: 'OrderService#cancel',
+                fetchHint: 'src/main/java/example/OrderService.java:10-40',
+              },
+            ],
+          },
+        },
+      ],
+    }),
+    {
+      skip: false,
+      reason: 'grounded-fix-error',
+      disagreementCount: 1,
+      fetchEvidenceCount: 0,
+      editorialOnlyCount: 0,
+    },
+  );
 
   const trigger = shouldTriggerSeamExpansion({
     trust: {
@@ -1483,10 +1564,17 @@ test('operational signal helpers accumulate bounded post-run telemetry', () => {
   recordIncompleteOutputSignal(state, {
     agent: 'reviewer',
     provider: 'google',
-    stage: 'critique',
+    stage: 'consensus',
     completionStatus: 'truncated',
-    stopReason: 'MAX_TOKENS',
-    outputPath: '.ai/prompts/runs/run-123/reviewer-critique.txt',
+    stopReason: 'length',
+    outputPath: '.ai/prompts/runs/run-123/synthesizer-consensus.txt',
+    estimatedInputTokens: 27645,
+    contextBudget: 28000,
+    maxOutputTokens: 4096,
+    configuredMaxOutputTokens: 4096,
+    recommendedOutputTokens: 8192,
+    repairBudgetTokens: 3072,
+    agreementScore: 27,
   });
   recordPromptScopeSignal(state, {
     risk: 'narrow-starting-seams',
@@ -1495,6 +1583,11 @@ test('operational signal helpers accumulate bounded post-run telemetry', () => {
     notes: ['Prompt pins only a narrow starting seam.'],
     warningPath: '.ai/prompts/runs/run-123/prompt-scope-warning.txt',
     suggestedPromptPath: '.ai/prompts/runs/run-123/suggested-broadened-prompt.txt',
+  });
+  recordCallGatingSignal(state, {
+    phase: 'revision',
+    action: 'skipped-to-seam-expansion',
+    reason: 'evidence-gap-only',
   });
   recordCallGatingSignal(state, {
     phase: 'tester',
@@ -1519,13 +1612,22 @@ test('operational signal helpers accumulate bounded post-run telemetry', () => {
   assert.equal(snapshot.repairs.failed, 1);
   assert.equal(snapshot.toolLoopExhaustions.count, 1);
   assert.equal(snapshot.incompleteOutputs.count, 1);
-  assert.equal(snapshot.incompleteOutputs.byStage.critique, 1);
+  assert.equal(snapshot.incompleteOutputs.byStage.consensus, 1);
+  assert.equal(snapshot.incompleteOutputs.events[0].operatorReason, 'consensus-budget-underprovisioned');
+  assert.equal(snapshot.incompleteOutputs.events[0].estimatedInputTokens, 27645);
+  assert.equal(snapshot.incompleteOutputs.events[0].contextBudget, 28000);
+  assert.equal(snapshot.incompleteOutputs.events[0].maxOutputTokens, 4096);
+  assert.equal(snapshot.incompleteOutputs.events[0].recommendedOutputTokens, 8192);
+  assert.equal(snapshot.incompleteOutputs.events[0].repairBudgetTokens, 3072);
+  assert.equal(snapshot.incompleteOutputs.events[0].agreementScore, 27);
+  assert.equal(snapshot.incompleteOutputs.events[0].budgetShortfallTokens, 4096);
   assert.equal(snapshot.promptScope.risk, 'narrow-starting-seams');
   assert.equal(snapshot.promptScope.warningIssued, true);
   assert.equal(snapshot.promptScope.suggestionAvailable, true);
   assert.equal(snapshot.roundRationalization.approvalRoundsWithZeroNewSeams, 0);
   assert.equal(snapshot.roundRationalization.tokensBeforeFirstSeamFetch, null);
   assert.equal(snapshot.roundRationalization.critiqueSeamOverlap, null);
+  assert.equal(snapshot.roundRationalization.callsAvoidedByGating.revisionSkipped, 1);
   assert.equal(snapshot.roundRationalization.callsAvoidedByGating.testerDiagnosticSkipped, 1);
   assert.equal(snapshot.roundRationalization.callsAvoidedByGating.testerDiagnosticMode, 0);
   assert.deepEqual(snapshot.promptScope.notes, ['Prompt pins only a narrow starting seam.']);
@@ -1554,6 +1656,9 @@ test('operational signal helpers accumulate bounded post-run telemetry', () => {
     candidateSeamCount: 0,
     hasSubstantiveAssumptions: false,
     hasAssumedImplementation: false,
+    primaryFailureClass: 'anchor-coverage-failure',
+    failureClasses: ['anchor-coverage-failure'],
+    failureSummary: 'Evidence anchors do not align cleanly with files observed in this run.',
   });
 });
 

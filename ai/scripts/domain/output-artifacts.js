@@ -65,6 +65,16 @@ function buildAgentCallResult(agent, text = '', baseResult = {}, overrides = {},
   if (overrides.maxOutputTokens !== undefined || baseMeta.maxOutputTokens !== undefined) {
     meta.maxOutputTokens = normalizeTokenCount(overrides.maxOutputTokens ?? baseMeta.maxOutputTokens);
   }
+  if (overrides.estimatedInputTokens !== undefined || baseMeta.estimatedInputTokens !== undefined) {
+    meta.estimatedInputTokens = normalizeTokenCount(
+      overrides.estimatedInputTokens ?? baseMeta.estimatedInputTokens,
+    );
+  }
+  if (overrides.contextBudget !== undefined || baseMeta.contextBudget !== undefined) {
+    meta.contextBudget = normalizeTokenCount(
+      overrides.contextBudget ?? baseMeta.contextBudget,
+    );
+  }
   if (overrides.configuredMaxOutputTokens !== undefined || baseMeta.configuredMaxOutputTokens !== undefined) {
     meta.configuredMaxOutputTokens = normalizeTokenCount(
       overrides.configuredMaxOutputTokens ?? baseMeta.configuredMaxOutputTokens,
@@ -85,6 +95,19 @@ function buildAgentCallResult(agent, text = '', baseResult = {}, overrides = {},
   }
   if (overrides.originalCompletion !== undefined) {
     meta.originalCompletion = String(overrides.originalCompletion || '').trim();
+  }
+  if (overrides.operatorReason !== undefined || baseMeta.operatorReason !== undefined) {
+    meta.operatorReason = String((overrides.operatorReason ?? baseMeta.operatorReason) || '').trim();
+  }
+  if (overrides.agreementScore !== undefined || baseMeta.agreementScore !== undefined) {
+    meta.agreementScore = normalizeTokenCount(
+      overrides.agreementScore ?? baseMeta.agreementScore,
+    );
+  }
+  if (overrides.budgetShortfallTokens !== undefined || baseMeta.budgetShortfallTokens !== undefined) {
+    meta.budgetShortfallTokens = normalizeTokenCount(
+      overrides.budgetShortfallTokens ?? baseMeta.budgetShortfallTokens,
+    );
   }
 
   return {
@@ -129,14 +152,25 @@ function createIncompleteTextOutputError(result, stage = 'unknown') {
   const completionStatus = String(result?.completionStatus || 'invalid');
   const stopReason = String(result?.meta?.stopReason || '').trim();
   const outputPath = result?.outputPath || '';
+  const operatorReason = String(result?.meta?.operatorReason || '').trim();
   const stopReasonNote = stopReason ? `, stopReason=${stopReason}` : '';
+  const operatorReasonNote = operatorReason ? `, reason=${operatorReason}` : '';
   const outputNote = outputPath ? `, output=${toRelativePath(outputPath)}` : '';
   const error = new Error(
-    `${agentName} returned ${completionStatus} output during ${stage}${stopReasonNote}${outputNote}`,
+    `${agentName} returned ${completionStatus} output during ${stage}${stopReasonNote}${operatorReasonNote}${outputNote}`,
   );
   error.code = 'AI_INCOMPLETE_TEXT_OUTPUT';
   error.completionStatus = completionStatus;
   error.stopReason = stopReason;
+  error.operatorReason = operatorReason;
+  error.estimatedInputTokens = result?.meta?.estimatedInputTokens;
+  error.contextBudget = result?.meta?.contextBudget;
+  error.maxOutputTokens = result?.meta?.maxOutputTokens;
+  error.configuredMaxOutputTokens = result?.meta?.configuredMaxOutputTokens;
+  error.recommendedOutputTokens = result?.meta?.recommendedOutputTokens;
+  error.repairBudgetTokens = result?.meta?.repairBudgetTokens;
+  error.agreementScore = result?.meta?.agreementScore;
+  error.budgetShortfallTokens = result?.meta?.budgetShortfallTokens;
   if (outputPath) error.outputPath = outputPath;
   error.agentName = agentName;
   error.stage = stage;

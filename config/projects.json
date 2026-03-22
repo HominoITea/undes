@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "updatedAt": "2026-03-21T11:40:05.954Z",
+  "updatedAt": "2026-03-22T10:08:15.816Z",
   "projects": [
     {
       "projectId": "2159f3a7f790",
@@ -8,7 +8,7 @@
       "displayName": "front",
       "status": "active",
       "createdAt": "2026-03-02T13:45:33.898Z",
-      "lastUsed": "2026-03-10T18:06:53.284Z",
+      "lastUsed": "2026-03-22T10:08:15.816Z",
       "archivedAt": ""
     },
     {
@@ -26,7 +26,7 @@
       "displayName": "plta-document-flow",
       "status": "active",
       "createdAt": "2026-03-11T14:06:04.233Z",
-      "lastUsed": "2026-03-15T17:26:46.450Z",
+      "lastUsed": "2026-03-21T15:11:01.673Z",
       "archivedAt": ""
     },
     {
@@ -35,7 +35,7 @@
       "displayName": "nornick",
       "status": "active",
       "createdAt": "2026-03-16T18:55:01.762Z",
-      "lastUsed": "2026-03-21T11:40:05.954Z",
+      "lastUsed": "2026-03-21T19:59:32.342Z",
       "archivedAt": ""
     }
   ]

@@ -113,8 +113,14 @@ function getMaxOutputTokens(agent, safeOverrides = getRuntimeOverridesSafeConfig
   return getConfiguredMaxOutputTokens(agent, safeOverrides);
 }
 
-function getRepairMaxOutputTokens(agent) {
-  return Math.max(256, Math.min(getMaxOutputTokens(agent), 3072));
+function getRepairMaxOutputTokens(agent, stage = 'unknown', options = {}) {
+  const stageKey = normalizeForecastStage(stage);
+  const hintedTokens = Number(options.maxOutputTokens);
+  const baseTokens = Number.isFinite(hintedTokens) && hintedTokens > 0
+    ? Math.floor(hintedTokens)
+    : getMaxOutputTokens(agent);
+  const stageCap = ['consensus', 'revision', 'da-revision'].includes(stageKey) ? 6144 : 3072;
+  return Math.max(256, Math.min(baseTokens, stageCap));
 }
 
 function getAutoMaxOutputTokensSettings(agent) {

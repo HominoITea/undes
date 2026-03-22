@@ -32,3 +32,10 @@ https://habr.com/ru/articles/1000976
 https://habr.com/ru/articles/1000718
 https://habr.com/ru/articles/1001368
 https://habr.com/ru/companies/ecom_tech/articles/1005610/
+---21,03,2026---
+https://habr.com/ru/articles/1012106
+https://habr.com/ru/companies/cloud_ru/articles/1011868/
+https://ai-manual.ru/article/30-patternov-inzhenerii-ii-sistem-razbor-antipatternov-i-luchshih-praktik-ot-ekspertov/
+https://habr.com/ru/companies/ostrovok/articles/1008652/
+https://habr.com/ru/articles/1010522/
+

@@ -27,6 +27,18 @@ Already landed in code:
   - manual `--skip-enhance`
   - automatic preprocess reuse when the latest archived run has the same prompt
     hash and a completed `preprocess` artifact
+- Consensus/revision output-budget hotfix is active:
+  - heavier `consensus` / `revision` / `da-revision` stages now auto-raise to
+    `4096` / `6144` / `8192` based on input pressure
+  - text-output repair budgets are now stage-aware, so consensus-family repairs
+    are not capped as tightly as proposal/critique repairs
+- Truncation telemetry now carries operator-facing budget context:
+  - `estimatedInputTokens`
+  - configured / recommended / effective output budgets
+  - repair budget
+  - agreement score
+  - operator reason (`consensus-budget-underprovisioned` vs
+    `consensus-output-budget-exhausted`)
 - `maxApprovalRounds=2` and major orchestrator decomposition slices are already
   landed under adjacent tracks
 
@@ -52,6 +64,23 @@ Current conclusion:
 - the remaining validation gap is no longer "does rerun reuse/routing execute?"
 - the remaining gap is "can we observe full-run savings cleanly without provider
   timeout noise?"
+
+Fresh live validation signal on 2026-03-21 (`nornick`, post-consensus-hotfix rerun):
+- confirmed: automatic preprocess reuse now activates on the target project's
+  non-interactive rerun path
+  - console: `PRE-PROCESS PHASE (reused)`
+  - console: `Reused prompt analysis from run-1774109835565`
+- confirmed: the new run is using the updated cost stack on the target project
+- confirmed: the consensus-budget hotfix is active in code on this rerun path
+  - consensus-family stages now have a larger auto-raise envelope
+    (`4096` / `6144` / `8192`)
+  - repair budgets are stage-aware, so `consensus` / `revision` /
+    `da-revision` no longer inherit the tighter generic `3072` cap
+  - truncation telemetry now classifies the failure more explicitly as
+    `consensus-budget-underprovisioned` or
+    `consensus-output-budget-exhausted` with budget context attached
+- pending: full consensus outcome from this rerun was still in progress at log
+  sync time, so the budget-hotfix validation is not yet marked complete
 
 ## Pipeline Snapshot (2026-03-15)
 
@@ -249,9 +278,11 @@ after this decomposition.
 
 ## Recommended Implementation Order (after Lever 3)
 
-1. Repeat live validation on a stable-provider rerun path (P1) — confirm final
-   savings in completed runs, not only partial live behavior
-2. Any further routing tuning only after completed live-validation data
+1. Finish `nornick` post-hotfix validation (P0) — confirm that consensus no
+   longer truncates under the heavier rerun path
+2. Repeat stable-provider rerun validation on `plta-document-flow` / `nornick`
+   to measure completed-run savings, not only partial live behavior
+3. Any further routing tuning only after completed live-validation data
 
 ## MVP Risk Debt
 

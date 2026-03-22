@@ -25,6 +25,7 @@ function buildOperationalSignalsSnapshot(state, overrides = {}, metricsSummary =
         groundingGapCategories: [...(state.finalTrust.groundingGapCategories || [])],
         contractGapSamples: [...(state.finalTrust.contractGapSamples || [])],
         groundingGapSamples: [...(state.finalTrust.groundingGapSamples || [])],
+        failureClasses: [...(state.finalTrust.failureClasses || [])],
       }
       : null,
     preflightWaits: {
@@ -85,6 +86,7 @@ function buildOperationalSignalsSnapshot(state, overrides = {}, metricsSummary =
       trustDeltaPerRound: [...(state.roundRationalization?.trustDeltaPerRound || [])],
       callsAvoidedByGating: {
         devilsAdvocateSkipped: Number(state.roundRationalization?.callsAvoidedByGating?.devilsAdvocateSkipped) || 0,
+        revisionSkipped: Number(state.roundRationalization?.callsAvoidedByGating?.revisionSkipped) || 0,
         testerDiagnosticSkipped: Number(state.roundRationalization?.callsAvoidedByGating?.testerDiagnosticSkipped) || 0,
         testerDiagnosticMode: Number(state.roundRationalization?.callsAvoidedByGating?.testerDiagnosticMode) || 0,
         testerPatchValidationMode: Number(state.roundRationalization?.callsAvoidedByGating?.testerPatchValidationMode) || 0,

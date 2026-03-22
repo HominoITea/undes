@@ -10,6 +10,10 @@ const {
   buildLlmsSummary,
   hasWeakStackSignals,
 } = require('./domain/stack-profile');
+const {
+  buildScaffoldSyncPlan,
+  applyScaffoldSyncPlan,
+} = require('./domain/project-scaffold');
 
 const DEFAULT_MAX_FILES = 200;
 const DEFAULT_MAX_BYTES = 400 * 1024;
@@ -59,6 +63,7 @@ function parseFlags(argv = process.argv, env = process.env) {
     force: args.includes('--force') || env.npm_config_force === 'true',
     yes: args.includes('--yes'),
     audit: args.includes('--audit'),
+    sync: args.includes('--sync'),
     depth: toFiniteNumber(getArgValue(args, '--depth=', DEFAULT_DEPTH), DEFAULT_DEPTH),
     maxFiles: toFiniteNumber(getArgValue(args, '--max-files=', DEFAULT_MAX_FILES), DEFAULT_MAX_FILES),
     maxBytes: toFiniteNumber(getArgValue(args, '--max-bytes=', DEFAULT_MAX_BYTES), DEFAULT_MAX_BYTES),
@@ -988,6 +993,34 @@ async function main(optionsOrArgv = process.argv, env = process.env, baseCwd = p
   // Audit mode: analyze and exit
   if (flags.audit) {
     runAudit(treeFiles, projectType, projectRoot);
+    return;
+  }
+
+  if (flags.sync) {
+    const syncPlan = buildScaffoldSyncPlan(projectRoot, projectLayout, { includeMergeAware: true });
+    const summary = [];
+    if (flags.dryRun) {
+      console.log('🧪 Dry run: scaffold sync plan only.');
+      syncPlan.syncable.forEach((item) => {
+        summary.push(`${item.path}: would update (${item.policy})`);
+      });
+    } else {
+      const updated = applyScaffoldSyncPlan(projectRoot, syncPlan, {
+        mode: 'full-sync',
+        backupMergeAware: true,
+      });
+      if (updated.length === 0) {
+        summary.push('No scaffold drift detected.');
+      } else {
+        updated.forEach((filePath) => summary.push(`${filePath}: updated`));
+      }
+    }
+    console.log('✅ Scaffold sync summary:');
+    summary.forEach((line) => console.log(`- ${line}`));
+    if (syncPlan.issues.length > 0) {
+      console.log('\nℹ️ Additional observations:');
+      syncPlan.issues.forEach((issue) => console.log(`- ${issue.message}`));
+    }
     return;
   }
   const metadata = buildMetadata(treeLines, keyFiles);

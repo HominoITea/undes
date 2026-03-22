@@ -311,6 +311,32 @@ test('updatePhaseAgent marks phase done when all agents done', () => {
   assert.ok(loaded.phases.proposals.finishedAt);
 });
 
+test('updatePhaseAgent can track completion against phase-specific expected agents', () => {
+  const aiDir = mkTmpAiDir();
+  createRun(aiDir, 'test', [], ['prompt-engineer', 'architect', 'reviewer', 'developer', 'synthesizer']);
+  const architectOut = path.join(aiDir, 'architect.txt');
+  const reviewerOut = path.join(aiDir, 'reviewer.txt');
+  fs.writeFileSync(architectOut, `architect\n${END_MARKER}`);
+  fs.writeFileSync(reviewerOut, `reviewer\n${END_MARKER}`);
+
+  updatePhaseAgent(aiDir, 'proposals', 'architect', {
+    status: 'done',
+    outputFile: architectOut,
+    outputFormat: 'text',
+    expectedAgents: ['architect', 'reviewer'],
+  });
+  updatePhaseAgent(aiDir, 'proposals', 'reviewer', {
+    status: 'done',
+    outputFile: reviewerOut,
+    outputFormat: 'text',
+    expectedAgents: ['architect', 'reviewer'],
+  });
+
+  const loaded = loadRun(aiDir);
+  assert.equal(loaded.phases.proposals.status, 'done');
+  assert.deepEqual(loaded.phases.proposals.expectedAgents, ['architect', 'reviewer']);
+});
+
 test('isAgentDone false when agent status is not done', () => {
   const aiDir = mkTmpAiDir();
   createRun(aiDir, 'test', [], ['a']);

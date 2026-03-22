@@ -42,6 +42,8 @@ test('parseResultWarningContent extracts patch-safe gap counts and categories', 
 WARNING: Generated output is not guaranteed copy-paste-safe.
 RESULT_MODE: DIAGNOSTIC
 MANUAL_REVIEW_REQUIRED: YES
+PRIMARY_FAILURE_CLASS: seam-confirmation-failure
+FAILURE_CLASSES: seam-confirmation-failure, role-evidence-divergence
 PATCH_SAFE_CONTRACT_GAP_COUNT: 0
 PATCH_SAFE_GROUNDING_GAP_COUNT: 1
 PATCH_SAFE_CONTRACT_GAP_CATEGORIES: none
@@ -50,6 +52,8 @@ PATCH_SAFE_GROUNDING_GAP_CATEGORIES: substantive-assumptions, unconfirmed-seam
 
   assert.equal(parsed.resultMode, 'DIAGNOSTIC');
   assert.equal(parsed.manualReviewRequired, true);
+  assert.equal(parsed.primaryFailureClass, 'seam-confirmation-failure');
+  assert.deepEqual(parsed.failureClasses, ['seam-confirmation-failure', 'role-evidence-divergence']);
   assert.equal(parsed.contractGapCount, 0);
   assert.equal(parsed.groundingGapCount, 1);
   assert.deepEqual(parsed.contractGapCategories, []);
@@ -153,6 +157,8 @@ Details:
   fs.writeFileSync(resultWarningPath, `
 RESULT_MODE: DIAGNOSTIC
 MANUAL_REVIEW_REQUIRED: YES
+PRIMARY_FAILURE_CLASS: anchor-coverage-failure
+FAILURE_CLASSES: anchor-coverage-failure
 PATCH_SAFE_CONTRACT_GAP_COUNT: 1
 PATCH_SAFE_GROUNDING_GAP_COUNT: 2
 PATCH_SAFE_CONTRACT_GAP_CATEGORIES: missing-section
@@ -190,6 +196,8 @@ PATCH_SAFE_GROUNDING_GAP_CATEGORIES: substantive-assumptions
   assert.deepEqual(summary.promptScope.details, ['User explicitly requested a hard scope.']);
   assert.equal(summary.tester.verdict, 'NEEDS_REVISION');
   assert.equal(summary.tester.score, 6);
+  assert.equal(summary.resultWarning.primaryFailureClass, 'anchor-coverage-failure');
+  assert.deepEqual(summary.resultWarning.failureClasses, ['anchor-coverage-failure']);
   assert.equal(summary.resultWarning.contractGapCount, 1);
   assert.deepEqual(summary.resultWarning.contractGapCategories, ['missing-section']);
   assert.deepEqual(summary.resultWarning.groundingGapCategories, ['substantive-assumptions']);

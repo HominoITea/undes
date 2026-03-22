@@ -46,6 +46,26 @@ function looksLikeRelativeFilePath(value = '') {
   return normalized.includes('/') || /\.[A-Za-z0-9_]+$/.test(normalized);
 }
 
+function extractRelativeFileHint(value = '') {
+  const direct = normalizeRelativePath(value);
+  if (
+    direct
+    && !/\s/.test(direct)
+    && /^.+\.[A-Za-z0-9_]+(?::\d+(?:-\d+)?)?$/.test(direct)
+    && looksLikeRelativeFilePath(direct)
+  ) {
+    return normalizeRelativePath(direct.replace(/:(\d+(?:-\d+)?)$/, ''));
+  }
+
+  const source = String(value || '').trim().replace(/\\/g, '/');
+  if (!source) return '';
+
+  const match = source.match(/([A-Za-z0-9_\-[\]/.]+\.[A-Za-z0-9_]+)/);
+  if (!match) return '';
+
+  return normalizeRelativePath(match[1]);
+}
+
 function parseScopedMethodReference(value = '') {
   const source = sanitizeTextField(value, DEFAULT_MAX_FIELD_LENGTH)
     .replace(/^`+|`+$/g, '')
@@ -147,6 +167,22 @@ function parseLineRange(text = '') {
   };
 }
 
+function buildSkippedSeam(request, reason = '', details = {}) {
+  const normalizedSymbol = normalizeLookupKey(request?.symbolOrSeam || '');
+  const normalizedFetchHint = extractRelativeFileHint(request?.fetchHint || '');
+  const normalizedSymbolFileHint = extractRelativeFileHint(request?.symbolOrSeam || '');
+  return {
+    request,
+    reason: String(reason || '').trim() || 'unknown',
+    diagnostics: {
+      normalizedSymbol,
+      normalizedFetchHint,
+      normalizedSymbolFileHint,
+      ...details,
+    },
+  };
+}
+
 function lineRangeSpan(range) {
   if (!range) return 0;
   return Math.max(1, Number(range.endLine || range.startLine || 0) - Number(range.startLine || 0) + 1);
@@ -216,6 +252,40 @@ function extractMethodHintsFromReason(text = '') {
     if (seen.has(token)) continue;
     seen.add(token);
     out.push(token);
+  }
+  return out;
+}
+
+function extractMethodLikeTokens(text = '') {
+  const source = sanitizeTextField(text, DEFAULT_MAX_FIELD_LENGTH);
+  if (!source) return [];
+
+  const matches = source.match(/\b[A-Za-z_$][A-Za-z0-9_$]{2,}\b/g) || [];
+  const seen = new Set();
+  const out = [];
+  for (const token of matches) {
+    if (!/[A-Z_]/.test(token)) continue;
+    if (seen.has(token)) continue;
+    seen.add(token);
+    out.push(token);
+  }
+  return out;
+}
+
+function dedupeSymbolsByNormalizedIdentity(symbols = []) {
+  const out = [];
+  const seen = new Set();
+  for (const symbol of Array.isArray(symbols) ? symbols : []) {
+    const key = [
+      normalizeRelativePath(symbol?.file || ''),
+      normalizeLookupKey(symbol?.name || ''),
+      String(symbol?.type || '').trim().toLowerCase(),
+      clampPositiveInt(symbol?.startLine, 0),
+      clampPositiveInt(symbol?.endLine || symbol?.startLine, 0),
+    ].join('::');
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(symbol);
   }
   return out;
 }
@@ -350,9 +420,10 @@ function resolveSymbolRequest(request, index, fileHint = '') {
   if (fileHint) {
     candidates = candidates.filter((symbol) => normalizeRelativePath(symbol?.file || '') === fileHint);
   }
+  candidates = dedupeSymbolsByNormalizedIdentity(candidates);
 
   if (candidates.length === 1) return { symbol: candidates[0], reason: '' };
-  if (candidates.length > 1) return { symbol: null, reason: 'ambiguous-symbol-match' };
+  if (candidates.length > 1) return { symbol: null, reason: 'ambiguous-symbol-match', candidateCount: candidates.length };
   return { symbol: null, reason: 'symbol-not-found' };
 }
 
@@ -389,13 +460,14 @@ function resolveScopedMethodRequest(request, index, fileHint = '') {
       normalizeRelativePath(symbol?.file || '') === effectiveFileHint
       && normalizeLookupKey(symbol?.name || '') === methodName
     ));
+    const dedupedFileMatches = dedupeSymbolsByNormalizedIdentity(fileMatches);
     if (ownerName) {
-      const ownedFileMatches = fileMatches.filter((symbol) => normalizeContainerName(symbol?.container || '') === ownerName);
+      const ownedFileMatches = dedupedFileMatches.filter((symbol) => normalizeContainerName(symbol?.container || '') === ownerName);
       if (ownedFileMatches.length === 1) return { symbol: ownedFileMatches[0], reason: '' };
       if (ownedFileMatches.length > 1) return { symbol: null, reason: 'ambiguous-method-match-in-file-owner' };
     }
-    if (fileMatches.length === 1) return { symbol: fileMatches[0], reason: '' };
-    if (fileMatches.length > 1) return { symbol: null, reason: 'ambiguous-method-match-in-file' };
+    if (dedupedFileMatches.length === 1) return { symbol: dedupedFileMatches[0], reason: '' };
+    if (dedupedFileMatches.length > 1) return { symbol: null, reason: 'ambiguous-method-match-in-file' };
     return { symbol: null, reason: 'method-not-found-in-file' };
   }
 
@@ -404,8 +476,9 @@ function resolveScopedMethodRequest(request, index, fileHint = '') {
       normalizeLookupKey(symbol?.name || '') === methodName
       && normalizeContainerName(symbol?.container || '') === ownerName
     ));
-    if (containerMatches.length === 1) return { symbol: containerMatches[0], reason: '' };
-    if (containerMatches.length > 1) return { symbol: null, reason: 'ambiguous-method-in-container' };
+    const dedupedContainerMatches = dedupeSymbolsByNormalizedIdentity(containerMatches);
+    if (dedupedContainerMatches.length === 1) return { symbol: dedupedContainerMatches[0], reason: '' };
+    if (dedupedContainerMatches.length > 1) return { symbol: null, reason: 'ambiguous-method-in-container' };
   }
 
   const ownerSymbols = index.symbols.filter((symbol) => {
@@ -432,6 +505,7 @@ function resolveScopedMethodRequest(request, index, fileHint = '') {
     return startLine >= ownerStart && endLine <= ownerEnd;
   });
   if (nestedMatches.length > 0) methodMatches = nestedMatches;
+  methodMatches = dedupeSymbolsByNormalizedIdentity(methodMatches);
 
   if (methodMatches.length === 1) return { symbol: methodMatches[0], reason: '' };
   if (methodMatches.length > 1) return { symbol: null, reason: 'ambiguous-method-in-owner-type' };
@@ -558,7 +632,7 @@ function resolveScopedOwnerFile(request, index, fileHint = '') {
   if (!scoped || !Array.isArray(index?.symbols)) return '';
 
   const normalizedOwner = normalizeScopedOwnerName(scoped.owner);
-  if (looksLikeRelativeFilePath(fileHint)) return normalizeRelativePath(fileHint);
+  if (extractRelativeFileHint(fileHint)) return extractRelativeFileHint(fileHint);
   if (looksLikeRelativeFilePath(normalizedOwner)) return normalizeRelativePath(normalizedOwner);
 
   const ownerName = normalizeLookupKey(normalizedOwner);
@@ -579,7 +653,9 @@ function resolvePrimarySymbolInFile(request, index, fileHint = '') {
   const file = normalizeRelativePath(fileHint);
   if (!file || !Array.isArray(index?.symbols)) return { symbol: null, reason: 'file-hint-missing' };
 
-  const fileSymbols = index.symbols.filter((symbol) => normalizeRelativePath(symbol?.file || '') === file);
+  const fileSymbols = dedupeSymbolsByNormalizedIdentity(
+    index.symbols.filter((symbol) => normalizeRelativePath(symbol?.file || '') === file),
+  );
   if (fileSymbols.length === 0) return { symbol: null, reason: 'hinted-file-not-indexed' };
 
   const requestedName = normalizeLookupKey(request?.symbolOrSeam || '');
@@ -599,7 +675,55 @@ function resolvePrimarySymbolInFile(request, index, fileHint = '') {
     return ['class', 'interface', 'trait', 'struct', 'module'].includes(type);
   });
   if (containerSymbols.length === 1) return { symbol: containerSymbols[0], reason: '' };
+  if (fileSymbols.length === 1) return { symbol: fileSymbols[0], reason: '' };
   return { symbol: null, reason: 'file-primary-symbol-not-found' };
+}
+
+function buildTokenCandidatesFromRequest(request = {}) {
+  const symbolText = String(request?.symbolOrSeam || '');
+  const symbolFileHint = extractRelativeFileHint(symbolText);
+  const symbolResidual = symbolFileHint
+    ? symbolText.replace(symbolFileHint, ' ')
+    : symbolText;
+  const tokenSets = [
+    extractMethodLikeTokens(symbolResidual),
+    extractMethodLikeTokens(request?.fetchHint || ''),
+    extractMethodHintsFromReason(request?.reasonNeeded || ''),
+  ];
+
+  const out = [];
+  const seen = new Set();
+  for (const set of tokenSets) {
+    for (const token of set) {
+      if (seen.has(token)) continue;
+      seen.add(token);
+      out.push(token);
+    }
+  }
+  return out;
+}
+
+function readHintedFileByTokenSearch(request, rootDir, fileHint, options = {}) {
+  const normalizedFile = extractRelativeFileHint(fileHint);
+  if (!normalizedFile) return null;
+
+  const tokenCandidates = buildTokenCandidatesFromRequest(request);
+  if (tokenCandidates.length === 0) return null;
+
+  const ranged = readBoundedRangeAroundTokenVariants(rootDir, normalizedFile, tokenCandidates, options);
+  if (!ranged) return null;
+
+  return {
+    ...request,
+    file: ranged.file,
+    startLine: ranged.startLine,
+    endLine: ranged.endLine,
+    source: 'hinted-file-token',
+    truncated: ranged.truncated,
+    content: ranged.content,
+    resolvedSymbol: ranged.matchedToken || '',
+    resolvedType: 'token',
+  };
 }
 
 function resolveSingleMissingSeam(request, options = {}) {
@@ -609,12 +733,10 @@ function resolveSingleMissingSeam(request, options = {}) {
     return { fetched: null, skipped: { request, reason: 'missing-root-or-index' } };
   }
 
-  const lineHint = parseLineRange(request?.fetchHint || '');
-  const fileHint = lineHint?.file || (
-    looksLikeRelativeFilePath(request?.fetchHint || '')
-      ? normalizeRelativePath(request?.fetchHint || '')
-      : ''
-  );
+  const lineHint = parseLineRange(request?.fetchHint || '') || parseLineRange(request?.symbolOrSeam || '');
+  const fileHint = lineHint?.file
+    || extractRelativeFileHint(request?.fetchHint || '')
+    || extractRelativeFileHint(request?.symbolOrSeam || '');
   const fileHintReason = lineHint ? 'hint-range-not-found' : 'file-hint-not-found';
 
   const scopedMethodResolution = resolveScopedMethodRequest(request, index, fileHint);
@@ -632,7 +754,7 @@ function resolveSingleMissingSeam(request, options = {}) {
         options,
       );
       if (!ranged) {
-        return { fetched: null, skipped: { request, reason: 'resolved-scoped-method-content-missing' } };
+        return { fetched: null, skipped: buildSkippedSeam(request, 'resolved-scoped-method-content-missing') };
       }
       return {
         fetched: {
@@ -734,9 +856,19 @@ function resolveSingleMissingSeam(request, options = {}) {
       return { fetched: null, skipped: { request, reason: fileHintReason } };
     }
 
+    if (fileHint) {
+      const tokenFetched = readHintedFileByTokenSearch(request, rootDir, fileHint, options);
+      if (tokenFetched) {
+        return {
+          fetched: tokenFetched,
+          skipped: null,
+        };
+      }
+    }
+
     return {
       fetched: null,
-      skipped: { request, reason: scopedMethodResolution.reason || 'scoped-method-not-found' },
+      skipped: buildSkippedSeam(request, scopedMethodResolution.reason || 'scoped-method-not-found'),
     };
   }
 
@@ -756,7 +888,7 @@ function resolveSingleMissingSeam(request, options = {}) {
         skipped: null,
       };
     }
-    return { fetched: null, skipped: { request, reason: fileHintReason } };
+    return { fetched: null, skipped: buildSkippedSeam(request, fileHintReason) };
   }
 
   // Guard: reject bare PascalCase class-name requests — they resolve to class bodies, not method bodies.
@@ -766,13 +898,12 @@ function resolveSingleMissingSeam(request, options = {}) {
   if (/^[A-Z][A-Za-z0-9_]*$/.test(bareTarget) && !isLikelyDirectMemberRequest(request)) {
     return {
       fetched: null,
-      skipped: { request, reason: 'bare-class-request-rejected' },
+      skipped: buildSkippedSeam(request, 'bare-class-request-rejected'),
     };
   }
 
-  const normalizedFileHint = looksLikeRelativeFilePath(request?.fetchHint || '')
-    ? normalizeRelativePath(request?.fetchHint || '')
-    : '';
+  const normalizedFileHint = extractRelativeFileHint(request?.fetchHint || '')
+    || extractRelativeFileHint(request?.symbolOrSeam || '');
 
   const symbolResolution = resolveSymbolRequest(request, index, normalizedFileHint);
   let symbol = symbolResolution.symbol;
@@ -783,17 +914,37 @@ function resolveSingleMissingSeam(request, options = {}) {
     symbol = hinted.symbol;
     source = 'hint-file-primary-symbol';
     if (!symbol && symbolResolution.reason && hinted.reason) {
+      const tokenFetched = readHintedFileByTokenSearch(request, rootDir, normalizedFileHint, options);
+      if (tokenFetched) {
+        return {
+          fetched: tokenFetched,
+          skipped: null,
+        };
+      }
       return {
         fetched: null,
-        skipped: { request, reason: `${symbolResolution.reason}; ${hinted.reason}` },
+        skipped: buildSkippedSeam(request, `${symbolResolution.reason}; ${hinted.reason}`, {
+          candidateCount: Number(symbolResolution.candidateCount) || 0,
+        }),
       };
     }
   }
 
   if (!symbol) {
+    if (normalizedFileHint) {
+      const tokenFetched = readHintedFileByTokenSearch(request, rootDir, normalizedFileHint, options);
+      if (tokenFetched) {
+        return {
+          fetched: tokenFetched,
+          skipped: null,
+        };
+      }
+    }
     return {
       fetched: null,
-      skipped: { request, reason: symbolResolution.reason || 'symbol-not-found' },
+      skipped: buildSkippedSeam(request, symbolResolution.reason || 'symbol-not-found', {
+        candidateCount: Number(symbolResolution.candidateCount) || 0,
+      }),
     };
   }
 
@@ -806,7 +957,7 @@ function resolveSingleMissingSeam(request, options = {}) {
     options,
   );
   if (!ranged) {
-    return { fetched: null, skipped: { request, reason: 'resolved-symbol-content-missing' } };
+    return { fetched: null, skipped: buildSkippedSeam(request, 'resolved-symbol-content-missing') };
   }
 
   return {

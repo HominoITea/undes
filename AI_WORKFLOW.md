@@ -275,6 +275,50 @@ Why this matters:
 
 ### Context Configuration (`ai/context.json`)
 
+### Scaffold Contract & Drift Sync
+
+When the hub is updated (new agents, fields, stack detection), target projects can
+fall out of sync. The scaffold contract system detects and resolves this automatically.
+
+**How it works:**
+
+1. `npm run ai:init` writes `.ai/hub-contract.json` with a `contractVersion` and
+   SHA-256 hashes of every scaffolded file.
+2. On every `npm run ai` startup, the runtime compares the project contract against
+   the current `HUB_CONTRACT_VERSION`. If the contract is missing or outdated, drift
+   is detected.
+
+**Three file policies:**
+
+| Policy | Auto-sync on startup | Manual sync (`--sync`) | Examples |
+|--------|---------------------|----------------------|----------|
+| `generated` | Yes — always overwritten | Yes | `.ai/stack-profile.json`, `.ai/hub-contract.json` |
+| `derived` | Yes — always overwritten | Yes | `ai/llms.md` |
+| `merge-aware` | No — only warned | Yes (with `.bak` backup) | `ai/agents.json`, `ai/context.json` |
+
+**Special case:** `ai/context.json` is auto-synced even in generated-only mode,
+but only with project-local overrides (no hub merge). Bootstrap artifacts
+(`ai/llms.md`, `.ai/stack-profile.json`) are always injected into `fullFiles`
+and `lightFiles` — removing them manually has no effect, they will reappear.
+
+**Commands:**
+
+```bash
+# Auto-sync only (runs implicitly on every npm run ai)
+# Updates: stack-profile.json, llms.md, context.json refs, hub-contract.json
+# Does NOT touch: agents.json
+
+# Full sync with backup (explicit operator action)
+npm run ai:init -- --sync
+# Updates everything including agents.json (merges hub defaults + project overrides)
+# Creates .bak-<timestamp> before overwriting merge-aware files
+```
+
+**Console output:**
+- `Project scaffold drift detected. Auto-synced: ...` — safe files were updated
+- `Merge-aware drift detected in project config. Recommended: npm run ai:init -- --sync` — agents.json needs manual sync
+- `Scaffold drift check skipped: ...` — non-fatal error, run continues
+
 ```json
 {
   "limits": {

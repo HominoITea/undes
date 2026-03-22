@@ -140,8 +140,9 @@ function getRecommendedOutputTokensForStage(stage = 'unknown', estimatedInputTok
     return base;
   }
   if (stageKey === 'consensus' || stageKey === 'revision' || stageKey === 'da-revision') {
-    if (estimatedInputTokens > FORECAST_ANTHROPIC_ITPM_INPUT_THRESHOLDS.high) return 4096;
-    if (estimatedInputTokens > 9000) return 3072;
+    if (estimatedInputTokens > 22000) return 8192;
+    if (estimatedInputTokens > FORECAST_ANTHROPIC_ITPM_INPUT_THRESHOLDS.high) return 6144;
+    if (estimatedInputTokens > 9000) return 4096;
     return base;
   }
   if (estimatedInputTokens > FORECAST_ANTHROPIC_ITPM_INPUT_THRESHOLDS.medium) return base + 600;

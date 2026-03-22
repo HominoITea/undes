@@ -366,12 +366,18 @@ npm run ai:status
 | `--force` | Overwrite existing config files and create `.bak-*` backups. |
 | `--yes` | Suppress overwrite reminder message when files are skipped. |
 | `--audit` | Print project scan analysis and exit (no file generation). |
+| `--sync` | Sync project scaffold to the current hub contract. Safe derived files are refreshed; merge-aware config files are updated with backups. |
 | `--depth=N` | Max directory scan depth (default `3`). |
 | `--max-files=N` | Max number of files scanned during bootstrap. |
 | `--max-bytes=N` | Total read budget (bytes) for key file extraction. |
 | `--provider=...` | Parsed but currently not applied in runtime bootstrap logic. |
 | `--model=...` | Parsed but currently not applied in runtime bootstrap logic. |
 | `--api-key-env=...` | Parsed but currently not applied in runtime bootstrap logic. |
+
+Runtime note:
+- on `npm run ai`, the hub now checks a project scaffold contract in `.ai/hub-contract.json`;
+- if safe derived surfaces drift (`.ai/stack-profile.json`, `ai/llms.md`, context references), they are auto-synced before the run starts;
+- if merge-aware drift remains in `ai/context.json` / `ai/agents.json`, runtime warns and recommends `npm run ai:init -- --sync`.
 
 ### Flags for `npm run ai:memory -- ...`
 
@@ -732,7 +738,7 @@ Important:
 - when present, `.ai/prompts/patch-safe-result.md` is the strict apply-ready surface for that run;
 - if `COPYPASTE_READY: NO`, manual review, project-specific validation, and testing are mandatory before using generated code or config;
 - user-facing free-text outputs are expected to stay in the same natural language as the original user prompt unless the user explicitly requests another language;
-- see [docs/USER_AGREEMENT.md](/home/kair/ai_agents_coding/ai-hub-coding/docs/USER_AGREEMENT.md) for the current user-facing disclaimer and responsibility boundary.
+- see [docs/USER_AGREEMENT.md](docs/USER_AGREEMENT.md) for the current user-facing disclaimer and responsibility boundary.
 
 ### Logging Contract (No Duplicates)
 

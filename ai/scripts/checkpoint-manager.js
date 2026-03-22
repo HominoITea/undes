@@ -242,12 +242,20 @@ function updatePhaseAgent(layoutOrAiDataDir, phaseName, agentName, agentData) {
   if (!flow) return;
   if (!flow.phases[phaseName]) flow.phases[phaseName] = { status: 'partial', agents: {} };
   if (!flow.phases[phaseName].agents) flow.phases[phaseName].agents = {};
+  const expectedAgentsFromUpdate = Array.isArray(agentData?.expectedAgents)
+    ? agentData.expectedAgents.filter((name) => typeof name === 'string' && name.trim())
+    : null;
+  if (expectedAgentsFromUpdate && expectedAgentsFromUpdate.length > 0) {
+    flow.phases[phaseName].expectedAgents = Array.from(new Set(expectedAgentsFromUpdate));
+  }
   flow.phases[phaseName].agents[agentName] = {
     ...(flow.phases[phaseName].agents[agentName] || {}),
     ...(agentData || {}),
   };
 
-  const expectedAgents = Array.isArray(flow.agents) ? flow.agents : [];
+  const expectedAgents = Array.isArray(flow.phases[phaseName].expectedAgents) && flow.phases[phaseName].expectedAgents.length > 0
+    ? flow.phases[phaseName].expectedAgents
+    : (Array.isArray(flow.agents) ? flow.agents : []);
   const entries = flow.phases[phaseName].agents;
   let allDone = false;
   if (expectedAgents.length > 0) {

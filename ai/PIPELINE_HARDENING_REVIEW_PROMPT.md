@@ -139,7 +139,7 @@ unless it is part of a runtime multi-agent execution.
 ```markdown
 ## [YYYY-MM-DD HH:mm:ss UTC] - Model: <Model name>
 Project: ai-hub-coding
-Path: /home/kair/ai_agents_coding/ai-hub-coding
+Path: .
 Task ID: review-pipeline-hardening-mvp-<YYYYMMDD>
 Task Summary: Review pipeline hardening proposal for partial/truncated outputs
 Request: Review `Pipeline Hardening` design proposal

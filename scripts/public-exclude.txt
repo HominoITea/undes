@@ -1,0 +1,30 @@
+# Files excluded from the public repo (undes)
+# Used by scripts/sync-public.sh
+# One pattern per line, rsync --exclude-from format
+
+# Internal work logs (contain private project names and paths)
+UNIFIED_MODEL_CHANGE_LOG.md
+PROJECT_PLANNED_CHANGES.md
+
+# Internal roadmap (contains pilot project references)
+ai/ROADMAP.md
+
+# Internal design docs and article reviews
+ai/design/
+
+# Commercialization docs (strategy, pricing, KPIs)
+docs/commercialization/
+
+# Legacy archive (raw pilot logs with full paths)
+legacy/docs/archive/
+
+# Local hub config (user-specific project paths)
+config/projects.json
+config/hub-config.json
+
+# Claude Code local settings
+.claude/
+
+# Sync infrastructure (private-only)
+scripts/public-exclude.txt
+scripts/sync-public.sh

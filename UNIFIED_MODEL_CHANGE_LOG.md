@@ -17,6 +17,29 @@ Notes: <optional>
 ---
 
 ## Entries
+## [2026-03-22 18:40:00 UTC] - Model: Claude Opus 4.6
+Project: ai-hub-coding
+Path: /home/kair/ai_agents_coding/ai-hub-coding
+Task ID: review-scaffold-contract-20260322
+Task Summary: Review Project Scaffold Contract & Drift Sync feature (implemented by Codex)
+Request: Evaluate idea, code quality, test coverage; document the feature
+Changes:
+- AI_WORKFLOW.md (expanded Scaffold Contract documentation: policy table, special cases, commands, console output)
+- UNIFIED_MODEL_CHANGE_LOG.md (this review entry)
+Status: COMPLETED
+Notes:
+  Verdict: Clean, well-designed. One non-blocking observation and two minor notes.
+  Files reviewed:
+  - ai/scripts/domain/project-scaffold.js (full, 392 lines)
+  - ai/scripts/__tests__/project-scaffold.test.js (full, 161 lines)
+  - ai/scripts/generate-context.js:810-837 (startup integration)
+  Idea: Correct and necessary. Hub updates silently drifted target projects, wasting provider budget and hiding new runtime behavior. Contract manifest + auto-sync at startup is the right approach.
+  Architecture: Three-level policy (generated/derived/merge-aware) protects project-specific overrides (agent models, keys) while keeping derived files fresh. sha256 comparison avoids unnecessary writes. stableNormalize ensures deterministic JSON hashing. writeFileWithBackup creates .bak before merge-aware overwrites.
+  Tests: 4 tests covering missing contract detection, generated-only sync, full-sync with project override preservation, and auto-sync at startup. Coverage adequate.
+  Non-blocking observation: ai/context.json is auto-synced even in generated-only mode (project-scaffold.js:352-353 special case). injectBootstrapArtifacts always adds stack-profile.json and llms.md to fullFiles/lightFiles. If operator removes them manually, they reappear on next run. This is correct behavior but was undocumented -- now documented in AI_WORKFLOW.md.
+  Minor 1: scanTree runs on every startup via buildDetectedStackProfile. For 5000+ file projects may add 100-200ms cold start. Consider mtime-based cache in future (like loadRun caching).
+  Minor 2: empty-prompt-surface check (line 316) uses size === 0. File with whitespace only passes. Could use trim().length === 0 but very low priority.
+
 ## [2026-03-21 09:15:00 UTC] - Model: Claude Opus 4.6
 Project: ai-hub-coding
 Path: /home/kair/ai_agents_coding/ai-hub-coding
@@ -4735,3 +4758,525 @@ Notes:
 - Verification passed:
   - `node --test --test-isolation=none ai/scripts/__tests__/generate-context.contract.test.js`
   - `npm run ai:test` -> `504` tests, `503` pass, `0` fail, `1` skipped
+
+## [2026-03-21 23:55:00 UTC] - Model: Codex (GPT-5)
+Project: ai-hub-coding
+Path: /home/kair/ai_agents_coding/ai-hub-coding
+Task ID: consensus-truncation-follow-up-plan-20260321
+Task Summary: Record the agreed follow-up plan after `nornick` live validation exposed consensus truncation under heavy debate payload
+Request: зафиксируй
+Changes:
+- `PROJECT_PLANNED_CHANGES.md` — added a discussion entry for the consensus-truncation follow-up plan
+- `UNIFIED_MODEL_CHANGE_LOG.md` — this entry
+Status: RECORDED
+Notes:
+- `nornick` live validation (`run-1774109835565`) completed all proposal and critique outputs, then failed at consensus with `completionStatus=truncated` and `stopReason=length`
+- We confirmed the event is already tracked in runtime telemetry:
+  - checkpoint/run-flow `consensus.status=truncated`
+  - `operationalSignals.incompleteOutputs`
+  - `operationalSignals.repairs`
+- We also confirmed the output ceiling is our own runtime policy, not an opaque provider limit:
+  - per-agent output budgets come from project `ai/agents.json`
+  - stage recommendations come from `ai/scripts/domain/forecast.js`
+  - repair budgets come from `ai/scripts/domain/agent-config.js`
+- Agreed discussion plan:
+  - Batch A: raise/relax consensus-family output budgets (`consensus`, `revision`, `da-revision`) and make repair budgets stage-aware
+  - Batch B: promote truncation diagnostics to a clearer operator-facing consensus-budget failure signal
+  - Batch C: add pre-consensus compaction only if A+B still do not stabilize `nornick`
+- No code changes or tests in this step; this is plan/log synchronization only
+
+## [2026-03-22 02:30:00 UTC] - Model: Gemini CLI
+Project: ai-hub-coding
+Path: /home/kair/ai_agents_coding/ai-hub-coding
+Task ID: review-consensus-truncation-plan-gemini
+Task Summary: Review Codex's plan for consensus truncation follow-up
+Request: открой планы на обсуждение, прочти последние предложения по фиксам
+Changes:
+- `UNIFIED_MODEL_CHANGE_LOG.md` — this entry.
+- `PROJECT_PLANNED_CHANGES.md` — updated the planned entry with review notes.
+Status: COMPLETED
+Notes:
+- Verdict: Strongly support the A+B then C rollout.
+- Modifying static output budgets (`forecast.js`, stage-aware repair) is a deterministic configuration change with zero risk of degrading prompt semantic quality.
+- It aligns perfectly with our recent decision to prioritize `Pipeline Cost & Efficiency Optimization`. We should exhaust the parameter space (Batch A/B) before resorting to expensive "pre-consensus compaction" LLM calls (Batch C), which would introduce another LLM round-trip and violate our cost-optimization goals.
+
+## [2026-03-22 04:20:00 UTC] - Model: Codex (GPT-5)
+Project: ai-hub-coding
+Path: /home/kair/ai_agents_coding/ai-hub-coding
+Task ID: consensus-truncation-batch-ab-20260322
+Task Summary: Land the consensus budget hotfix and operator-facing truncation diagnostics, then sync the partial `nornick` live-validation signal
+Request: прочти комментарии по дальнейшим шагам и давай приступай
+Changes:
+- `ai/scripts/domain/forecast.js` — raised consensus-family recommendations so `consensus` / `revision` / `da-revision` now auto-raise more aggressively under high input pressure (`4096`, `6144`, `8192`)
+- `ai/scripts/domain/agent-config.js` — made repair caps stage-aware so consensus-family repairs can use up to `6144`, while proposal/critique repairs keep the tighter generic ceiling
+- `ai/scripts/domain/output-artifacts.js` — preserved richer budget metadata on incomplete outputs and attached it to incomplete-text errors (`estimatedInputTokens`, configured/recommended/effective budgets, repair budget, agreement score, operator reason, budget shortfall)
+- `ai/scripts/infrastructure/run-logs.js` — serialized the richer truncation/budget context into `AI_ERROR_LOG`
+- `ai/scripts/domain/operational-signals.js` — upgraded incomplete-output telemetry to classify consensus failures as `consensus-budget-underprovisioned` or `consensus-output-budget-exhausted` and persist the associated budget context
+- `ai/scripts/generate-context.js` — threaded the new budget metadata through provider turns, used stage-aware repair budgets in repair paths, and promoted consensus truncation to an operator-facing warning/error classification
+- `ai/scripts/__tests__/generate-context.contract.test.js` — added regression coverage for stronger consensus recommendations, stage-aware repair budgets, and richer truncation telemetry
+- `ai/design/features/PIPELINE_COST_OPTIMIZATION.md` — marked the consensus budget hotfix + telemetry upgrade as landed and recorded the current partial `nornick` rerun signal
+- `ai/ROADMAP.md` — synchronized the cost-optimization row with the newly landed Batch A/B implementation and the still-pending `nornick` full live outcome
+- `UNIFIED_MODEL_CHANGE_LOG.md` — this entry
+- `PROJECT_PLANNED_CHANGES.md` — recorded Batch A/B as completed and left Batch C deferred
+Status: COMPLETED
+Notes:
+- This intentionally implements only Batch A + Batch B from the agreed plan. Batch C (`pre-consensus compaction`) remains deferred until a post-fix `nornick` rerun proves it is still necessary.
+- Verification passed:
+  - `node --test --test-isolation=none ai/scripts/__tests__/generate-context.contract.test.js`
+  - `npm run ai:test` -> `503` pass, `0` fail, `1` skipped
+- Fresh post-fix live rerun signal on `nornick` (`run-1774112246911`) is still partial at log-sync time:
+  - confirmed: `PRE-PROCESS PHASE (reused)`
+  - confirmed: `Reused prompt analysis from run-1774109835565`
+  - not yet confirmed here: completed consensus outcome after the new budget policy
+
+## [2026-03-22 04:45:00 UTC] - Model: Codex (GPT-5)
+Project: ai-hub-coding
+Path: /home/kair/ai_agents_coding/ai-hub-coding
+Task ID: nornick-post-pilot-decision-memo-20260322
+Task Summary: Record the completed `nornick` pilot outcome and the next quality-first priorities after the consensus-budget fix
+Request: вноси
+Changes:
+- `ai/ROADMAP.md` — updated the cost-optimization row with the final `nornick` pilot outcome: consensus stabilized, end-to-end run completed, but final trust remained diagnostic
+- `UNIFIED_MODEL_CHANGE_LOG.md` — this entry
+- `PROJECT_PLANNED_CHANGES.md` — added a compact post-pilot decision memo with validated results, remaining blockers, and next quality-first priorities
+Status: COMPLETED
+Notes:
+- Completed live rerun: `run-1774112246911` on `nornick`
+- What the pilot validated:
+  - Batch A/B worked: `consensus` completed successfully (`completionStatus=complete`, `stopReason=end_turn`) instead of failing on `length`
+  - the pipeline completed end-to-end and archived the run
+  - Seam Expansion remained productive after the budget fix (`requested=7`, `fetched=4`, `skipped=3`)
+  - Devil's Advocate remained valuable on this Java case: grounding gaps dropped from `7` to `5` after `da-revision`
+- What the pilot did not validate:
+  - patch-safe closure; the final trust still ended as `mode=DIAGNOSTIC`, `patchSafeEligible=no`
+  - the remaining grounding gap categories were `missing-file-anchor`, `substantive-assumptions`, and `unconfirmed-seam`
+- Decision:
+  - do not prioritize Batch C compaction next
+  - keep DA on this class of task
+  - shift the next quality-first work toward stronger post-expansion evidence assembly, better anchor coverage, and analysis of approval disagreement (`reviewer=10`, `developer=4` in approval round 1)
+
+## [2026-03-22 05:00:00 UTC] - Model: Gemini CLI
+Project: ai-hub-coding
+Path: /home/kair/ai_agents_coding/ai-hub-coding
+Task ID: review-post-pilot-plans-gemini
+Task Summary: Review post-pilot results and propose next track alignment
+Request: есть результаты пилота и новые планы, прочти в доках
+Changes:
+- `UNIFIED_MODEL_CHANGE_LOG.md` — this entry.
+- `PROJECT_PLANNED_CHANGES.md` — updated the planned entry status with review notes.
+Status: COMPLETED
+Notes:
+- Verdict: The `nornick` pilot proves that our Consensus Budget Fix (Batch A+B) worked flawlessly. We successfully avoided the expensive Batch C (compaction) round-trip, honoring our Cost Optimization goals.
+- I agree with the decision to keep DA enabled and not pursue Batch C further.
+- However, for the next priority, instead of jumping back into raw extraction logic ("stronger post-expansion evidence assembly"), I strongly recommend proceeding with the already agreed-upon `Round Orchestration Phase 2 — revision skip gate`.
+- Why? As documented in `ROUND_ORCHESTRATION_RATIONALIZATION.md`, we observed that revision rounds triggered solely by evidence-gap disagreements produce zero semantic value but cost ~4K output tokens. Implementing the Revision Skip Gate perfectly aligns with solving the "uneven evidence quality" problem by routing straight to Seam Expansion instead of wasting tokens on rewriting ungrounded prose.
+
+## [2026-03-22 10:05:00 UTC] - Model: Codex (GPT-5)
+Project: ai-hub-coding
+Path: /home/kair/ai_agents_coding/ai-hub-coding
+Task ID: final-consensus-execution-plan-20260322
+Task Summary: Convert the final cross-model consensus on evidence-first runtime refinement into an executable phased plan
+Request: claude финализировал обсуждения, если ты согласен, давай делать план
+Changes:
+- `ai/design/article-reviews/SHARED_DISCUSSION.md` — appended an explicit execution plan after the final consensus
+- `PROJECT_PLANNED_CHANGES.md` — added the project-level planned entry with phased execution order and deferred items
+- `UNIFIED_MODEL_CHANGE_LOG.md` — this entry
+Status: RECORDED
+Notes:
+- I agree with the final Claude consensus and ordering, with one implementation nuance:
+  - `per-phase telemetry` is already partially landed, so the plan treats it as a completion/normalization track rather than a new greenfield feature
+- Locked execution order:
+  1. `Round Orchestration Phase 2 — revision skip gate`
+  2. `Operator-visible failure taxonomy`
+  3. stable live validation on `nornick` and `plta-document-flow`
+  4. `Discovery micro-phase`
+  5. `Post-expansion evidence digest`
+  6. `Role-aware evidence packaging`
+- Deferred from this plan:
+  - full `A2A` / `AGP`
+  - large memory architecture
+  - compaction-first optimization before evidence quality improves
+  - widened `callEdges` / LSP expansion without fresh validation signal
+
+## [2026-03-22 10:45:00 UTC] - Model: Codex (GPT-5)
+Project: ai-hub-coding
+Path: /home/kair/ai_agents_coding/ai-hub-coding
+Task ID: round-orchestration-phase2-revision-skip-gate-20260322
+Task Summary: Land the first Phase 2 slice of Round Orchestration Rationalization by skipping pointless revision rounds on evidence-gap-only approval disagreements
+Request: нет, давай выполнять
+Changes:
+- `ai/scripts/domain/seam-decision.js` — added approval-note grounded-fix error detection plus `shouldSkipRevisionRound()` to distinguish evidence-gap-only disagreements from true grounded-fix corrections
+- `ai/scripts/domain/operational-signals.js` — added `revisionSkipped` call-gating counter for round rationalization telemetry
+- `ai/scripts/domain/operational-signals-snapshot.js` — persisted the new `revisionSkipped` counter in run snapshots
+- `ai/scripts/generate-context.js` — approval loop now:
+  - records skipped revision calls when it routes directly to seam expansion
+  - stops early instead of paying for a revision round when disagreement is evidence-gap-only but no fetchable seams remain
+  - preserves disagreement notes before early exits
+- `ai/scripts/__tests__/generate-context.contract.test.js` — added regression coverage for `shouldSkipRevisionRound()` and the new `revisionSkipped` telemetry
+- `ai/ROADMAP.md` — updated Round Orchestration status from Phase 1 only to Phase 2 in progress with the revision skip slice landed
+- `ai/design/features/ROUND_ORCHESTRATION_RATIONALIZATION.md` — marked the design doc as partially implemented and recorded the landed Phase 2 slice
+- `PROJECT_PLANNED_CHANGES.md` — recorded the slice as done
+- `UNIFIED_MODEL_CHANGE_LOG.md` — this entry
+Status: COMPLETED
+Notes:
+- Scope stayed intentionally narrow: this patch does not yet implement discovery, post-expansion digest, role-aware packaging, or operator-visible failure taxonomy
+- Behavior change:
+  - approval disagreement that only asks for more evidence no longer automatically forces a synthesizer revision
+  - if those requests are fetchable, the pipeline routes straight to seam expansion
+  - if those requests are not fetchable, the pipeline stops early instead of rewriting the same ungrounded draft
+- Verification passed:
+  - `node --test --test-isolation=none ai/scripts/__tests__/generate-context.contract.test.js`
+  - `npm run ai:test` -> `503` pass, `0` fail, `1` skipped
+
+## [2026-03-22 11:05:00 UTC] - Model: Codex (GPT-5)
+Project: ai-hub-coding
+Path: /home/kair/ai_agents_coding/ai-hub-coding
+Task ID: round-orchestration-phase2-live-validation-nornick-20260322
+Task Summary: Record the completed `nornick` live-validation result for the landed revision skip gate
+Request: да
+Changes:
+- `ai/ROADMAP.md` — updated Round Orchestration status with the completed `nornick` validation result
+- `PROJECT_PLANNED_CHANGES.md` — appended live-validation notes to the Phase 2 slice entry
+- `UNIFIED_MODEL_CHANGE_LOG.md` — this entry
+Status: COMPLETED
+Notes:
+- Validation target: `nornick`
+- Prompt source: reused archived prompt artifact from `run-1774112246911` because the project-level `.ai/prompts/prompt.txt` was empty
+- Completed rerun:
+  - run id: `run-1774118745813`
+  - archived flow: `/home/kair/nornickel/nornick/.ai/prompts/runs/run-1774118745813-1774120332556/run-flow.json`
+- Confirmed Phase 2 slice behavior in live telemetry:
+  - `roundRationalization.callsAvoidedByGating.revisionSkipped = 1`
+  - event: `phase=revision`, `action=skipped-to-seam-expansion`, `reason=evidence-gap-only`
+  - approval round 1 went directly into seam expansion instead of paying for the previously useless pre-expansion revision round
+- Downstream behavior stayed healthy:
+  - seam expansion remained productive (`requested=7`, `fetched=4`, `skipped=3`)
+  - pipeline completed end-to-end
+  - final trust still ended `mode=DIAGNOSTIC`, `patchSafeEligible=false`
+- Conclusion:
+  - the revision skip gate is now both test-validated and live-validated
+  - next work remains the already planned quality-first track (`operator-visible failure taxonomy`, then second-target live validation, then discovery/post-expansion evidence work)
+
+## [2026-03-22 11:35:00 UTC] - Model: Codex (GPT-5)
+Project: ai-hub-coding
+Path: /home/kair/ai_agents_coding/ai-hub-coding
+Task ID: round-orchestration-phase2-operator-visible-failure-taxonomy-20260322
+Task Summary: Land operator-facing failure classes so final trust and warning artifacts explain why a run stayed diagnostic
+Request: пошли
+Changes:
+- `ai/scripts/domain/final-result-trust.js` — added operator-visible failure classification and summary generation to final trust (`primaryFailureClass`, `failureClasses`, `failureSummary`)
+- `ai/scripts/generate-context.js` — threaded approval outputs and operational signals into final trust generation, logged the primary failure class, and wrote failure taxonomy fields into `result-warning.txt`
+- `ai/scripts/domain/operational-signals-snapshot.js` — persisted failure classes in serialized snapshots
+- `ai/scripts/run-artifact-summary.js` — taught warning parsing/summaries to read the new failure taxonomy fields
+- `ai/scripts/__tests__/generate-context.contract.test.js` — updated contract coverage for final trust and warning content
+- `ai/scripts/__tests__/run-artifact-summary.test.js` — updated warning parsing coverage for the new fields
+- `ai/ROADMAP.md` — marked Phase 2 slice 2 as landed and replaced the old fixed second-target wording with `warn user first or use wattman/front`
+- `ai/design/features/ROUND_ORCHESTRATION_RATIONALIZATION.md` — recorded the landed Phase 2 slice and current second-target policy
+- `PROJECT_PLANNED_CHANGES.md` — recorded the implementation entry
+- `UNIFIED_MODEL_CHANGE_LOG.md` — this entry
+Status: COMPLETED
+Notes:
+- Landed starter operator-facing failure classes:
+  - `anchor-coverage-failure`
+  - `seam-confirmation-failure`
+  - `role-evidence-divergence`
+  - `late-stage-context-pressure`
+  - fallback `other`
+- This slice is intentionally diagnostic-first:
+  - no discovery phase yet
+  - no post-expansion evidence digest yet
+  - no role-aware evidence packaging yet
+- Verification passed:
+  - `node --test --test-isolation=none ai/scripts/__tests__/generate-context.contract.test.js ai/scripts/__tests__/run-artifact-summary.test.js`
+  - `npm run ai:test` -> `503` pass, `0` fail, `1` skipped
+- Follow-up policy:
+  - second validation target is no longer hard-bound to `plta-document-flow`
+  - warn the user before running the second validation, or default to `wattman/front`
+
+## [2026-03-22 12:10:00 UTC] - Model: Codex (GPT-5)
+Project: ai-hub-coding
+Path: /home/kair/ai_agents_coding/ai-hub-coding
+Task ID: checkpoint-resume-integrity-fix-after-wattman-validation-20260322
+Task Summary: Fix checkpoint/resume integrity after `wattman/front` showed that cached consensus could bypass approval on resume
+Request: пошли, просто при втором validation предупреди меня, или прочто возьми wattman/front
+Changes:
+- `ai/scripts/generate-context.js` — moved approval/finalization out of the fresh-consensus-only branch so cached consensus resumes still execute approval, seam expansion, trust classification, and result writing
+- `ai/scripts/checkpoint-manager.js` — added phase-specific `expectedAgents` support so phase completion reflects real participants instead of the full panel roster
+- `ai/scripts/__tests__/checkpoint-manager.test.js` — added regression coverage for phase-specific participant completion
+- `PROJECT_PLANNED_CHANGES.md` — recorded the validation defect and landed fix
+- `UNIFIED_MODEL_CHANGE_LOG.md` — this entry
+Status: COMPLETED
+Notes:
+- Validation target used as agreed default: `/home/kair/wattman/front`
+- Reproduced defect:
+  - run `run-1774121230141` reached `approval-1`
+  - `reviewer` approval truncated with `stopReason=MAX_TOKENS`
+  - same-prompt rerun auto-resumed, loaded cached consensus, skipped approval entirely, and archived the run as completed
+- Root cause summary:
+  - approval/finalization code path was nested under `else` for fresh consensus generation
+  - checkpoint phase completion used the full `flow.agents` list instead of phase participants
+- Verification passed:
+  - `node --check ai/scripts/generate-context.js`
+  - `node --test --test-isolation=none ai/scripts/__tests__/checkpoint-manager.test.js ai/scripts/__tests__/generate-context.contract.test.js`
+  - `npm run ai:test` -> `504` pass, `0` fail, `1` skipped
+- Follow-up:
+  - confirm the fix on the new `wattman/front` rerun `run-1774121871895`
+  - record the finished second-validation outcome separately once the live run completes
+
+## [2026-03-22 13:10:00 UTC] - Model: Codex (GPT-5)
+Project: ai-hub-coding
+Path: /home/kair/ai_agents_coding/ai-hub-coding
+Task ID: project-scaffold-contract-and-sync-20260322
+Task Summary: Add a project scaffold contract plus safe startup drift sync so target projects do not silently run on stale bootstrap/runtime surfaces
+Request: давай, с высоким приоритетом наверное, т.е. ьерем сразу эту задачу
+Changes:
+- `ai/scripts/domain/project-scaffold.js` — new scaffold contract/audit/sync module:
+  - `.ai/hub-contract.json` contract manifest
+  - drift detection against the current hub contract
+  - safe generated-only startup sync
+  - explicit full sync support for merge-aware files
+- `ai/scripts/init-project.js` — added `--sync` mode to refresh existing target projects without overwriting them blindly
+- `ai/scripts/generate-context.js` — startup now checks scaffold drift before loading config, auto-syncs safe derived surfaces, and warns when merge-aware drift remains
+- `ai/scripts/__tests__/project-scaffold.test.js` — added contract/sync regression coverage
+- `README.md` — documented `npm run ai:init -- --sync` and startup auto-sync behavior
+- `AI_WORKFLOW.md` — documented `.ai/hub-contract.json` and the new sync policy
+- `ai/ROADMAP.md` — added the new shared-enabler item with landed initial slice
+- `PROJECT_PLANNED_CHANGES.md` — recorded the feature
+- `UNIFIED_MODEL_CHANGE_LOG.md` — this entry
+Status: COMPLETED
+Notes:
+- Why this was promoted to high priority:
+  - active validation targets already showed scaffold drift
+  - stale project files can hide newer hub behavior and waste provider budget
+- Landed behavior:
+  - startup auto-sync is intentionally bounded to safe derived/bootstrap files
+  - merge-aware config drift still requires explicit operator intent via `npm run ai:init -- --sync`
+  - project-specific agent/model overrides are preserved during full sync through merge logic
+- Verification passed:
+  - targeted node checks
+  - targeted regression tests for scaffold sync + checkpoint integrity
+  - full regression: `npm run ai:test` -> `508` pass, `0` fail, `1` skipped
+
+## [2026-03-22 09:15:00 UTC] - Model: Codex (GPT-5)
+Project: ai-hub-coding
+Path: /home/kair/ai_agents_coding/ai-hub-coding
+Task ID: wattman-pilot-rerun-and-token-metrics-breakdown-20260322
+Task Summary: Re-run the `wattman/front` pilot after removing `architect` critique, land per-model/per-phase token metrics, and fix the finalization bug uncovered during the rerun
+Request: давай повторим пилот, я у архитектора убрал "critique" для экономии токенов. Можем, кстати записывать в метрики сколько каждая модель потратила токенов, на каждую фазу и в итоге.
+Changes:
+- `ai/scripts/domain/metrics-tracking.js` — extended persisted metrics with:
+  - per-call `provider`, `model`, `stage`, `durationMs`, `inputTokens`, `outputTokens`
+  - top-level `stageBreakdown`
+  - top-level `modelBreakdown`
+  - per-agent `callDetails`, `stageBreakdown`, and `modelBreakdown`
+- `ai/scripts/generate-context.js` — now records provider/model metadata into metrics for every agent call
+- `ai/scripts/__tests__/metrics-tracking.test.js` — added regression coverage for:
+  - per-phase token rollups
+  - per-model token rollups
+  - backward compatibility with the old positional token API
+- `ai/scripts/generate-context.js` — fixed `ReferenceError: consensusOutputPath is not defined` exposed by the new `wattman/front` rerun after approval/seam-expansion
+- `UNIFIED_MODEL_CHANGE_LOG.md` — this entry
+- `PROJECT_PLANNED_CHANGES.md` — recorded landed metrics slice and the live rerun outcome
+Status: COMPLETED
+Notes:
+- `wattman/front` rerun `run-1774170225658` completed end-to-end after the fix:
+  - archived flow: `/home/kair/wattman/front/.ai/prompts/runs/run-1774170225658-1774170517334/run-flow.json`
+  - final status: `completed`
+  - final trust: `mode=DIAGNOSTIC`, `patchSafeEligible=false`
+  - failure class: `role-evidence-divergence`
+  - seam expansion requested `4`, fetched `0`, skipped `4`
+- Architect critique removal changed the shape of the pilot as intended:
+  - `architect` participated only in `proposal`
+  - live token spend for the finished run:
+    - `architect`: `59786 in / 2816 out`
+    - `reviewer`: `54870 in / 2573 out`
+    - `developer`: `35513 in / 1492 out`
+    - `synthesizer`: `81883 in / 3369 out`
+    - total: `232052 in / 10250 out`
+  - phase totals:
+    - `proposal`: `73259 in / 4004 out`
+    - `critique`: `34622 in / 1899 out`
+    - `approval-1`: `42288 in / 978 out`
+    - `consensus`: `81883 in / 3369 out`
+- A small serializer defect in nested duration rollups was fixed immediately after the run and the finished pilot report was rebuilt in-place:
+  - `/home/kair/wattman/front/.ai/prompts/metrics/latest.json`
+- Verification passed:
+  - `node --check ai/scripts/generate-context.js`
+  - `node --test --test-isolation=none ai/scripts/__tests__/metrics-tracking.test.js ai/scripts/__tests__/generate-context.contract.test.js`
+  - `npm run ai:test` -> `510` pass, `0` fail, `1` skipped
+
+## [2026-03-22 09:25:00 UTC] - Model: Codex (GPT-5)
+Project: ai-hub-coding
+Path: /home/kair/ai_agents_coding/ai-hub-coding
+Task ID: wattman-pilot-disagreement-analysis-discussion-20260322
+Task Summary: Create a single shared discussion file for Codex, Claude, and Gemini to analyze the completed `wattman/front` pilot and converge on the next quality slice
+Request: давай это как задачу для всех моделей дадим, тебе claude gemini и посмотрим частные мнения и попробуем придти к общему
+Changes:
+- `ai/design/features/WATTMAN_PILOT_DISAGREEMENT_ANALYSIS.md` — new primary discussion file with:
+  - task framing for all models
+  - required response format
+  - artifact list from the completed `wattman/front` pilot
+  - established facts and budget snapshot
+  - explicit analysis questions
+  - Codex private position
+  - placeholder sections for Claude, Gemini, and final consensus
+Status: COMPLETED
+Notes:
+- This is a discussion artifact only; runtime behavior was not changed.
+- The file is intended to be the single continuation point for cross-model analysis of:
+  - `role-evidence-divergence`
+  - failed deterministic seam fetch on `wattman/front`
+  - next bounded quality slice selection
+
+## [2026-03-22 09:40:00 UTC] - Model: Codex (GPT-5)
+Project: ai-hub-coding
+Path: /home/kair/ai_agents_coding/ai-hub-coding
+Task ID: wattman-pilot-disagreement-consensus-20260322
+Task Summary: Consolidate Codex, Claude, and Gemini positions on the completed `wattman/front` pilot into one shared consensus
+Request: они добавили свои ответы
+Changes:
+- `ai/design/features/WATTMAN_PILOT_DISAGREEMENT_ANALYSIS.md` — filled `Consensus Draft` with the agreed next step and explicit P0 gate
+Status: COMPLETED
+Notes:
+- Consensus is now explicit:
+  - do `seam fetch precision` first
+  - defer `discovery micro-phase` for this specific run
+  - consider `role-aware evidence packaging` only if disagreement remains after fetch reliability is fixed
+- Key verified facts behind the consensus:
+  - `buildManhattanRoute` duplicated in the index under `app/_helpers/manhattan.ts` and `./app/_helpers/manhattan.ts`
+  - `updateLinesForMovedShape` absent from the code index
+  - `updateConnectedLines` exists, but the seam request used a noisy non-deterministic label
+  - `canvas.tsx` currently has `0` indexed symbols in this project index
+
+## [2026-03-22 10:05:00 UTC] - Model: Codex (GPT-5)
+Project: ai-hub-coding
+Path: /home/kair/ai_agents_coding/ai-hub-coding
+Task ID: seam-fetch-precision-batch1-20260322
+Task Summary: Implement the first bounded seam-fetch precision slice after the three-model `wattman/front` consensus
+Request: погнали
+Changes:
+- `ai/scripts/critique-expansion.js` — landed seam resolver precision improvements:
+  - canonical path extraction from mixed/noisy seam strings
+  - duplicate symbol dedup after normalized path collapse (`./foo.ts` == `foo.ts`)
+  - file-path seam support through hinted file primary symbol resolution
+  - hinted-file token fallback even when the target file has zero indexed symbols
+  - richer skipped seam diagnostics with normalized symbol/file metadata and candidate counts
+  - better token-priority ordering to prefer requested seam tokens over path noise
+- `ai/scripts/__tests__/critique-expansion.test.js` — added regressions for:
+  - duplicate normalized path symbols
+  - raw file seam resolution
+  - noisy `file.ts:free text` seam fallback
+- `ai/design/features/WATTMAN_PILOT_DISAGREEMENT_ANALYSIS.md` — execution path already pointed to this slice; no consensus change required
+- `UNIFIED_MODEL_CHANGE_LOG.md` — this entry
+- `PROJECT_PLANNED_CHANGES.md` — recorded as landed
+Status: COMPLETED
+Notes:
+- Offline replay against the exact `wattman/front` approval missing seams improved from `0/4` fetched to `4/4` fetched without spending provider tokens.
+- Exact replay outcome after the patch:
+  - `updateLinesForMovedShape` -> `hinted-file-token`, `canvas.tsx`
+  - `buildManhattanRoute` -> `symbol`, `app/_helpers/manhattan.ts`
+  - `app/_helpers/manhattan.ts` -> `hinted-file-token`, `app/_helpers/manhattan.ts`
+  - noisy `canvas.tsx:...updateConnectedLines/scheduleReroute` -> `hinted-file-token`, `canvas.tsx`
+- Important nuance from verification:
+  - `updateLinesForMovedShape` exists in the source file, but was missing from the index because `canvas.tsx` currently exposes `0` symbols
+  - the failure was therefore an indexing/lookup contract gap, not a pure hallucination in this specific project
+- Live rerun intentionally deferred for the moment to avoid unnecessary provider spend; the slice is validated by unit tests plus exact offline replay
+- Verification passed:
+  - `node --check ai/scripts/critique-expansion.js`
+  - `node --test --test-isolation=none ai/scripts/__tests__/critique-expansion.test.js`
+  - `npm run ai:test` -> `513` pass, `0` fail, `1` skipped
+
+## [2026-03-22 10:25:00 UTC] - Model: Codex (GPT-5)
+Project: ai-hub-coding
+Path: /home/kair/ai_agents_coding/ai-hub-coding
+Task ID: seam-fetch-precision-live-validation-wattman-20260322
+Task Summary: Repeat the `wattman/front` live pilot after Seam Fetch Precision Batch 1 and measure whether the former `0/4` seam-fetch failure improves on the real pipeline
+Request: поехали
+Changes:
+- no code changes in this validation step
+- live rerun executed on `wattman/front` using the archived prompt from the prior completed pilot
+- `UNIFIED_MODEL_CHANGE_LOG.md` — this entry
+- `PROJECT_PLANNED_CHANGES.md` — recorded the validation outcome
+Status: COMPLETED
+Notes:
+- Live rerun:
+  - run id: `run-1774174098152`
+  - archived flow: `/home/kair/wattman/front/.ai/prompts/runs/run-1774174098152-1774174873770/run-flow.json`
+- Main validation outcome:
+  - seam expansion improved from `requested=4 / fetched=0 / skipped=4`
+  - to `requested=6 / fetched=2 / skipped=4`
+  - appendix now exists: `/home/kair/wattman/front/.ai/prompts/runs/run-1774174098152/critique-expansion-1.md`
+- Other quality signals improved:
+  - pre-consensus agreement score improved from `25%` to `50%`
+  - post-expansion pipeline continued through proposal/critique/approval/revision instead of stalling on empty seam fetches
+  - revised trust gained more evidence anchors: `1 -> 3`
+- But the slice did **not** fully close the quality gap:
+  - final result still `mode=DIAGNOSTIC`
+  - `patchSafeEligible=false`
+  - primary failure class still `role-evidence-divergence`
+  - residual grounding gap remained `substantive-assumptions`
+- Live token/cost snapshot for the rerun:
+  - total: `1065733 in / 34153 out`
+  - largest phase costs:
+    - `proposal`: `282372 in / 9466 out`
+    - `consensus`: `133485 in / 5514 out`
+    - `revision`: `152246 in / 5734 out`
+    - `da-revision`: `166275 in / 4297 out`
+- Conclusion:
+  - Seam Fetch Precision Batch 1 is validated as a real quality enabler.
+  - It is **not** sufficient by itself to eliminate `role-evidence-divergence`.
+  - Next highest-ROI quality slice is now `role-aware evidence packaging` or another targeted post-expansion evidence/handoff refinement, not more seam resolver work on the same axis.
+
+## [2026-03-22 10:45:00 UTC] - Model: Codex (GPT-5)
+Project: ai-hub-coding
+Path: /home/kair/ai_agents_coding/ai-hub-coding
+Task ID: wattman-role-aware-evidence-packaging-analysis-20260322
+Task Summary: Analyze the completed post-fix `wattman/front` rerun to turn the remaining `role-evidence-divergence` into a concrete next bounded plan
+Request: давай
+Changes:
+- `ai/design/features/WATTMAN_PILOT_DISAGREEMENT_ANALYSIS.md` — added post-live-validation addendum with the updated diagnosis and next-slice proposal
+- `UNIFIED_MODEL_CHANGE_LOG.md` — this entry
+- `PROJECT_PLANNED_CHANGES.md` — recorded the bounded next slice
+Status: COMPLETED
+Notes:
+- Key artifact review used:
+  - `/home/kair/wattman/front/.ai/prompts/runs/run-1774174098152/developer-approval-1.json`
+  - `/home/kair/wattman/front/.ai/prompts/runs/run-1774174098152/reviewer-approval-1.json`
+  - `/home/kair/wattman/front/.ai/prompts/runs/run-1774174098152/developer-approval-lever3-1-1.json`
+  - `/home/kair/wattman/front/.ai/prompts/runs/run-1774174098152/reviewer-approval-lever3-1-1.json`
+  - `/home/kair/wattman/front/.ai/prompts/runs/run-1774174098152/synthesizer-revised.txt`
+- Main conclusion:
+  - seam fetch is no longer the dominant blocker
+  - the remaining blocker is post-expansion claim packaging:
+    - reviewer tolerates unresolved downstream mechanism claims when the core fix is sound
+    - developer rejects the same draft when those claims remain inside `Grounded Fixes` or use guessed anchors
+- Next bounded slice:
+  - `role-aware evidence packaging`
+  - with a mandatory `post-expansion evidence digest` before revision / approval
+
+## [2026-03-22 09:35:00 UTC] - Model: Gemini CLI
+Project: ai-hub-coding
+Path: /home/kair/ai_agents_coding/ai-hub-coding
+Task ID: wattman-pilot-disagreement-analysis-gemini
+Task Summary: Add Gemini CLI analysis to WATTMAN_PILOT_DISAGREEMENT_ANALYSIS.md
+Request: Прочитай файл WATTMAN_PILOT_DISAGREEMENT_ANALYSIS.md и дай свой ответ прямо в формате.
+Changes:
+- `ai/design/features/WATTMAN_PILOT_DISAGREEMENT_ANALYSIS.md` — appended Gemini CLI analysis.
+Status: COMPLETED
+Notes:
+- Concluded that `role-evidence-divergence` was caused by the Draft asserting downstream behavior (usage of width/height) without evidence. The stricter role (Developer) penalized this, while the lenient role (Reviewer) accepted it conditionally.
+- Diagnosed the seam fetch failure (`requested=4`, `fetched=0`) as a parsing precision issue: agents requested noisy, poorly formatted strings (e.g. `symbol-not-found; hinted-file-not-indexed` for a file path with Russian text) and the lookup engine failed to extract the actual file/symbol targets.
+- Selected `seam fetch precision` as the clear highest-ROI next step over discovery or role-packaging, since the right files were already in the pack, but the mechanical extraction failed.
+
+## [2026-03-22 11:30:00 UTC] - Model: Gemini CLI
+Project: ai-hub-coding
+Path: /home/kair/ai_agents_coding/ai-hub-coding
+Task ID: wattman-pilot-disagreement-post-fix-gemini
+Task Summary: Add Gemini CLI analysis to WATTMAN_PILOT_DISAGREEMENT_ANALYSIS.md for the post-fix rerun
+Request: Разобрал post-expansion artifacts и зафиксировал следующий шаг.
+Changes:
+- `ai/design/features/WATTMAN_PILOT_DISAGREEMENT_ANALYSIS.md` — appended Gemini CLI post-fix response.
+Status: COMPLETED
+Notes:
+- Agreed with Codex that `role-aware evidence packaging` is the correct next slice, as seam fetching is now working but roles still diverge on claim classification.
+- Proposed a cost-aware implementation: instead of adding a new "Evidence Digest" LLM round, enforce the strict separation of proven facts vs unread downstream assumptions directly in the Synthesizer's prompt and update Approval prompts to clarify the baseline for passing scores.

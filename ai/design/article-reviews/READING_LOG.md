@@ -85,3 +85,37 @@ Scope: Review the newly added article about replacing tree-sitter / vector searc
 Results:
 - `https://habr.com/ru/companies/ecom_tech/articles/1005610/` | Status: READ | Notes: reviewed successfully, grep-ast as structural search layer
 Summary: 1 new link reviewed, analytical addendum appended to `resume_Codex.txt`.
+
+
+## [2026-03-22 05:30:00 UTC] - Model: Gemini CLI
+Resume File: `resume_Gemini_CLI.txt`
+Scope: Review pass over the new article batch from links.txt (under ---21,03,2026---).
+Results:
+- `https://habr.com/ru/articles/1012106` | Status: READ | Notes: Documentation-Driven Development, claude.md as entrypoint.
+- `https://habr.com/ru/companies/cloud_ru/articles/1011868/` | Status: READ | Notes: Context clearing practices, one task = one context.
+- `https://ai-manual.ru/article/30-patternov-inzhenerii-ii-sistem-razbor-antipatternov-i-luchshih-praktik-ot-ekspertov/` | Status: READ | Notes: Engineering patterns (Sequential Thinking, Critical Stance).
+- `https://habr.com/ru/companies/ostrovok/articles/1008652/` | Status: READ | Notes: Navigation agents (Serena MCP style).
+- `https://habr.com/ru/articles/1010522/` | Status: READ | Notes: Local RAG via Markdown, Role-specific instructions.
+Summary: 5 new links reviewed successfully, analytical verdict saved in `resume_Gemini_CLI.txt`.
+
+## [2026-03-21 18:25:00 UTC] - Model: Codex
+Resume File: `resume_Codex.txt`
+Scope: Independent reread of the fresh 21.03.2026 batch using direct page fetch/open only.
+Results:
+- `https://habr.com/ru/articles/1012106` | Status: READ | Notes: docs-first workflow, Claude.md, Sequential thinking, Serena
+- `https://habr.com/ru/companies/cloud_ru/articles/1011868/` | Status: READ | Notes: A2A / AGP, AgentCard, capability-policy-cost routing
+- `https://ai-manual.ru/article/30-patternov-inzhenerii-ii-sistem-razbor-antipatternov-i-luchshih-praktik-ot-ekspertov/` | Status: READ | Notes: blind RAG, observability, router-specialist-synthesizer, fallback cascade
+- `https://habr.com/ru/companies/ostrovok/articles/1008652/` | Status: READ | Notes: evals, semantic monitoring, flywheel, granular feedback
+- `https://habr.com/ru/articles/1010522/` | Status: READ | Notes: autonomous agent architecture, GraphRAG, EventBus, Docker sandbox
+Summary: 5 fresh links independently reviewed; analytical addendum appended to `resume_Codex.txt` with quality-first and cost-aware recommendations for the hub.
+
+## [2026-03-22 09:15:00 UTC] - Model: Claude Opus 4.6
+Resume File: `resume_Claude.txt`
+Scope: Review pass over the new article batch from links.txt (under ---21,03,2026---).
+Results:
+- `https://habr.com/ru/articles/1012106` | Status: READ | Notes: Documentation-driven dev, claude.md as entrypoint, MCP plugins.
+- `https://habr.com/ru/companies/cloud_ru/articles/1011868/` | Status: READ | Notes: A2A Protocol (Agent-to-Agent), NOT context clearing as Gemini noted.
+- `https://ai-manual.ru/article/30-patternov-inzhenerii-ii-sistem-razbor-antipatternov-i-luchshih-praktik-ot-ekspertov/` | Status: READ | Notes: 30 AI engineering patterns, Router->Specialist->Synthesizer, Fallback Cascade.
+- `https://habr.com/ru/companies/ostrovok/articles/1008652/` | Status: READ | Notes: 30 patterns in 5 layers (Interface, Context, Flow, Cognitive, Observability).
+- `https://habr.com/ru/articles/1010522/` | Status: READ | Notes: AAF framework, Reverse Graph-RAG, Docker-isolated subagents.
+Summary: 5 new links reviewed, 2 attribution corrections vs Gemini's analysis, analytical verdict appended to `resume_Claude.txt`.

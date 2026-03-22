@@ -110,6 +110,102 @@ function summarizeGapSamples(warnings = [], limit = 3) {
   return samples;
 }
 
+function summarizeApprovalScores(approvalOutputs = []) {
+  const scores = [];
+  let agreedCount = 0;
+  let disagreedCount = 0;
+  for (const item of Array.isArray(approvalOutputs) ? approvalOutputs : []) {
+    const approval = item?.approval || {};
+    if (approval.agreed === true) agreedCount += 1;
+    if (approval.agreed === false) disagreedCount += 1;
+    const score = Number(approval.score);
+    if (Number.isFinite(score)) scores.push(score);
+  }
+  const min = scores.length > 0 ? Math.min(...scores) : null;
+  const max = scores.length > 0 ? Math.max(...scores) : null;
+  return {
+    count: scores.length,
+    min,
+    max,
+    spread: Number.isFinite(min) && Number.isFinite(max) ? max - min : null,
+    agreedCount,
+    disagreedCount,
+  };
+}
+
+function hasLateStageContextPressure(operationalSignals = {}) {
+  const incompleteEvents = Array.isArray(operationalSignals?.incompleteOutputs?.events)
+    ? operationalSignals.incompleteOutputs.events
+    : [];
+  for (const event of incompleteEvents) {
+    const stage = String(event?.stage || '').trim();
+    if (!['consensus', 'revision', 'da-revision'].includes(stage)) continue;
+    if (String(event?.operatorReason || '').trim()) return true;
+    if (String(event?.completionStatus || '').trim() === 'truncated') return true;
+  }
+  return false;
+}
+
+function classifyOperatorFailure(signal = {}, options = {}) {
+  const failureClasses = new Set();
+  const contractGapCategories = Array.isArray(signal.contractGapCategories)
+    ? signal.contractGapCategories
+    : [];
+  const groundingGapCategories = Array.isArray(signal.groundingGapCategories)
+    ? signal.groundingGapCategories
+    : [];
+  const approvalStats = summarizeApprovalScores(options.approvalOutputs);
+
+  if (contractGapCategories.includes('missing-evidence-anchor')
+    || groundingGapCategories.includes('missing-file-anchor')
+    || groundingGapCategories.includes('unobserved-file-anchor')) {
+    failureClasses.add('anchor-coverage-failure');
+  }
+
+  if (groundingGapCategories.includes('unconfirmed-seam')
+    || (signal.hasSubstantiveAssumptions === true && Number(signal.candidateSeamCount) > 0)) {
+    failureClasses.add('seam-confirmation-failure');
+  }
+
+  if ((approvalStats.agreedCount > 0 && approvalStats.disagreedCount > 0)
+    || (Number.isFinite(approvalStats.spread) && approvalStats.spread >= 4)) {
+    failureClasses.add('role-evidence-divergence');
+  }
+
+  if (hasLateStageContextPressure(options.operationalSignals)) {
+    failureClasses.add('late-stage-context-pressure');
+  }
+
+  const orderedClasses = Array.from(failureClasses);
+  const primaryFailureClass = orderedClasses[0] || (signal.resultMode === RESULT_MODE_DIAGNOSTIC ? 'other' : 'none');
+  let failureSummary = '';
+  switch (primaryFailureClass) {
+    case 'anchor-coverage-failure':
+      failureSummary = 'Evidence anchors do not align cleanly with files observed in this run.';
+      break;
+    case 'seam-confirmation-failure':
+      failureSummary = 'Grounded fixes still rely on seams that were not directly confirmed by fetched evidence.';
+      break;
+    case 'role-evidence-divergence':
+      failureSummary = 'Approval roles ended with materially different confidence on the same draft and evidence set.';
+      break;
+    case 'late-stage-context-pressure':
+      failureSummary = 'Late synthesis stages showed output/context pressure that materially affected the run.';
+      break;
+    case 'other':
+      failureSummary = 'The run remained diagnostic without matching a known primary failure class.';
+      break;
+    default:
+      failureSummary = '';
+  }
+
+  return {
+    primaryFailureClass,
+    failureClasses: orderedClasses,
+    failureSummary,
+  };
+}
+
 function buildFinalTrustSignal(trust = {}, options = {}) {
   const groundedAnalysis = trust?.groundedAnalysis && typeof trust.groundedAnalysis === 'object'
     ? trust.groundedAnalysis
@@ -125,7 +221,7 @@ function buildFinalTrustSignal(trust = {}, options = {}) {
     : [];
   const resultMode = normalizeResultMode(trust.resultMode);
 
-  return {
+  const signal = {
     resultMode,
     copyPasteReady: resultMode === RESULT_MODE_PATCH_SAFE,
     allAgreed: options.allAgreed !== false,
@@ -142,6 +238,13 @@ function buildFinalTrustSignal(trust = {}, options = {}) {
     candidateSeamCount: Array.isArray(groundingValidation.candidateSeams) ? groundingValidation.candidateSeams.length : 0,
     hasSubstantiveAssumptions: groundingValidation.hasSubstantiveAssumptions === true,
     hasAssumedImplementation: groundingValidation.hasAssumedImplementation === true,
+  };
+  const classification = classifyOperatorFailure(signal, options);
+  return {
+    ...signal,
+    primaryFailureClass: classification.primaryFailureClass,
+    failureClasses: classification.failureClasses,
+    failureSummary: classification.failureSummary,
   };
 }
 
@@ -379,10 +482,17 @@ function buildResultWarningFileContent(options = {}) {
     : [];
   const contractGapCategories = summarizeGapCategories(contractWarnings, CONTRACT_GAP_CATEGORY_RULES);
   const groundingGapCategories = summarizeGapCategories(validationWarnings, GROUNDING_GAP_CATEGORY_RULES);
+  const failureClasses = Array.isArray(options.failureClasses)
+    ? options.failureClasses.map((item) => String(item || '').trim()).filter(Boolean)
+    : [];
+  const primaryFailureClass = String(options.primaryFailureClass || '').trim() || (failureClasses[0] || 'none');
+  const failureSummary = String(options.failureSummary || '').trim();
   const lines = [
     'WARNING: Generated output is not guaranteed copy-paste-safe.',
     `RESULT_MODE: ${resultMode}`,
     'MANUAL_REVIEW_REQUIRED: YES',
+    `PRIMARY_FAILURE_CLASS: ${primaryFailureClass}`,
+    `FAILURE_CLASSES: ${failureClasses.length > 0 ? failureClasses.join(', ') : 'none'}`,
     `PATCH_SAFE_CONTRACT_GAP_COUNT: ${contractWarnings.length}`,
     `PATCH_SAFE_GROUNDING_GAP_COUNT: ${validationWarnings.length}`,
     `PATCH_SAFE_CONTRACT_GAP_CATEGORIES: ${contractGapCategories.length > 0 ? contractGapCategories.join(', ') : 'none'}`,
@@ -392,6 +502,9 @@ function buildResultWarningFileContent(options = {}) {
 
   if (disagreementNotes.length > 0) {
     lines.push('', 'Disagreements:', ...disagreementNotes);
+  }
+  if (failureSummary) {
+    lines.push('', `Failure summary: ${failureSummary}`);
   }
   if (contractWarnings.length > 0) {
     lines.push('', 'Patch-safe contract gaps:', ...contractWarnings.map((note) => `- ${note}`));

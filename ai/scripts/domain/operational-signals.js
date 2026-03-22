@@ -41,6 +41,7 @@ function createOperationalSignalsState() {
       trustDeltaPerRound: [],
       callsAvoidedByGating: {
         devilsAdvocateSkipped: 0,
+        revisionSkipped: 0,
         testerDiagnosticSkipped: 0,
         testerDiagnosticMode: 0,
         testerPatchValidationMode: 0,
@@ -146,7 +147,21 @@ function recordToolLoopSignal(state, details = {}) {
 
 function recordIncompleteOutputSignal(state, details = {}) {
   if (!state || !state.incompleteOutputs) return;
-  const stage = String(details.stage || 'unknown').trim() || 'unknown';
+  const stage = normalizeForecastStage(details.stage || 'unknown');
+  const completionStatus = String(details.completionStatus || '').trim();
+  const stopReason = String(details.stopReason || '').trim();
+  const maxOutputTokens = Number(details.maxOutputTokens) || 0;
+  const configuredMaxOutputTokens = Number(details.configuredMaxOutputTokens) || 0;
+  const recommendedOutputTokens = Number(details.recommendedOutputTokens) || 0;
+  const budgetShortfallTokens = recommendedOutputTokens > maxOutputTokens
+    ? (recommendedOutputTokens - maxOutputTokens)
+    : 0;
+  let operatorReason = String(details.operatorReason || '').trim();
+  if (!operatorReason && stage === 'consensus' && completionStatus === 'truncated' && stopReason === 'length') {
+    operatorReason = budgetShortfallTokens > 0
+      ? 'consensus-budget-underprovisioned'
+      : 'consensus-output-budget-exhausted';
+  }
   state.incompleteOutputs.count += 1;
   state.incompleteOutputs.byStage[stage] = (state.incompleteOutputs.byStage[stage] || 0) + 1;
   pushBoundedSignalEvent(state.incompleteOutputs, {
@@ -154,9 +169,18 @@ function recordIncompleteOutputSignal(state, details = {}) {
     agent: details.agent || 'agent',
     provider: details.provider || 'other',
     stage,
-    completionStatus: String(details.completionStatus || '').trim(),
-    stopReason: String(details.stopReason || '').trim(),
+    completionStatus,
+    stopReason,
     outputPath: String(details.outputPath || '').trim(),
+    estimatedInputTokens: Number(details.estimatedInputTokens) || 0,
+    contextBudget: Number(details.contextBudget) || 0,
+    maxOutputTokens,
+    configuredMaxOutputTokens,
+    recommendedOutputTokens,
+    repairBudgetTokens: Number(details.repairBudgetTokens) || 0,
+    agreementScore: Number(details.agreementScore) || 0,
+    budgetShortfallTokens,
+    operatorReason,
   });
 }
 
@@ -271,6 +295,9 @@ function recordCallGatingSignal(state, details = {}) {
   const action = String(details.action || '').trim();
   if (phase === 'devils-advocate' && action === 'skipped') {
     state.roundRationalization.callsAvoidedByGating.devilsAdvocateSkipped += 1;
+  }
+  if (phase === 'revision' && action.startsWith('skipped')) {
+    state.roundRationalization.callsAvoidedByGating.revisionSkipped += 1;
   }
   if (phase === 'tester' && action === 'skipped' && String(details.reason || '').trim() === 'diagnostic-result') {
     state.roundRationalization.callsAvoidedByGating.testerDiagnosticSkipped += 1;

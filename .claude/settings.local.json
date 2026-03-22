@@ -19,7 +19,9 @@
       "Bash(python3:*)",
       "Bash(git status:*)",
       "Bash(sort:*)",
-      "Bash(git:*)"
+      "Bash(git:*)",
+      "WebFetch(domain:ai-manual.ru)",
+      "Bash(/dev/null:*)"
     ]
   }
 }

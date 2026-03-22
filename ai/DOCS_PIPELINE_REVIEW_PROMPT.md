@@ -118,7 +118,7 @@ Append a compressed summary like this to `UNIFIED_MODEL_CHANGE_LOG.md`:
 ```markdown
 ## [YYYY-MM-DD HH:mm:ss UTC] - Model: <Model name>
 Project: ai-hub-coding
-Path: /home/kair/ai_agents_coding/ai-hub-coding
+Path: .
 Task ID: review-docs-pipeline-mvp-<YYYYMMDD>
 Task Summary: Review Jira + Hub + NotebookLM docs pipeline proposal
 Request: Review `Documentation Compiler + NotebookLM Publishing Layer` design proposal

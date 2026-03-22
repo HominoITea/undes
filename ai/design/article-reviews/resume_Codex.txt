@@ -386,3 +386,264 @@
 - **Сейчас мы уже сильные в orchestration, governance и runtime reliability.**
 - **Сейчас мы слабы в memory, spec-first artifacts и edit reliability.**
 - **Именно туда и надо вкладывать следующий прирост эффективности.**
+
+---
+
+## Addendum: Batch `21.03.2026` (independent read)
+
+Дата: 2026-03-21  
+Проект: `ai-hub-coding`
+
+### Scope
+
+Самостоятельно прочитаны:
+- `1012106` — про `Claude.md`, `Sequential thinking`, `Serena`, `one task = one context`
+- `1011868` — про `A2A` / `AGP`, `AgentCard`, capability/policy/cost routing
+- `ai-manual` — про 30 паттернов, с акцентом на `blind RAG`, observability, router/specialist/synthesizer, fallback cascade
+- `1008652` — про инженерные паттерны: evals, semantic monitoring, data flywheel, granular feedback
+- `1010522` — про автономного агента `AAF` с hybrid memory, `EventBus`, `PriorityQueue`, `GraphRAG`, Docker sandbox
+
+### Short Verdict
+
+Свежий батч подтверждает: **главный следующий прирост для хаба лежит не в “ещё больше debate”, а в качестве evidence pipeline, memory discipline и feedback loops**.
+
+По текущим задачам проекта самый сильный practical overlap такой:
+1. `discovery / navigation` до основного reasoning;
+2. `post-expansion evidence assembly` и явные handoff-артефакты;
+3. `typed memory + better recall discipline`;
+4. `granular eval/feedback taxonomy`;
+5. `internal capability metadata` для routing и stack-aware behavior.
+
+### Что из статей нам реально полезно
+
+#### 1. `1012106`: docs-first + navigation + clean context discipline
+
+Из статьи полезно:
+- `Claude.md` как короткий entrypoint с ссылками, а не как dump всего знания;
+- `Sequential thinking` для многомодульных задач;
+- `Serena` как navigation layer;
+- правило `one task = one context` и `clear` после задачи;
+- role split по областям (`backend`, `frontend`, `database`).
+
+Что взять нам:
+- не `claude.md` как основной формат, а короткий human-readable слой поверх `stack-profile.json`;
+- отдельную bounded `navigation/discovery` фазу перед proposals;
+- более жесткий handoff между большими фазами вместо накопления сырой истории.
+
+#### 2. `1011868`: capability/policy/cost contract
+
+Из статьи про `A2A` / `AGP` полезно:
+- `AgentCard` как machine-readable описание возможностей;
+- `Task` и `Artifact` как явные базовые сущности;
+- capability metadata;
+- policy metadata;
+- cost-aware routing.
+
+Что взять нам:
+- не строить сейчас внешний `A2A` слой,
+- а завести **внутренний capability contract** для наших агентов/ролей/фаз:
+  - capability
+  - trust expectations
+  - policy/safety constraints
+  - cost band
+
+Это хорошо ложится на:
+- `stack-profile.json`
+- `agents.json`
+- `Stack-Aware Dynamic Skills`
+- будущий provider-aware scheduling
+
+#### 3. `ai-manual`: anti-patterns and practical system patterns
+
+Из статьи реально полезно:
+- антипаттерн `blind RAG`;
+- `Hybrid Search + reranking`;
+- `Query Expansion / Step-Back Prompting`;
+- `Observability Chain`;
+- `Router -> Specialist -> Synthesizer`;
+- `Fallback Cascade`;
+- запрет на `2000-line prompt monolith`;
+- prompt versioning in Git;
+- `dynamic context optimization`;
+- `simulate doubt`.
+
+Что взять нам:
+- сильнее бить по `blind retrieval` после seam expansion;
+- считать prompts/config/contracts versioned artifacts;
+- развивать не просто telemetry, а quality observability;
+- продолжать переносить логику из prompt в код и runtime policy.
+
+#### 4. `1008652`: strongest practical article in the batch
+
+Наиболее ценные для нас паттерны:
+- `Evals`
+- `Semantic Monitoring`
+- `Synthetic Data Pipelines`
+- `Data Flywheel`
+- `Side-by-Side Evaluation`
+- `Granular Feedback Collection`
+- `Memory & Summarization`
+- `Dynamic Few-Shot`
+
+Что это значит для нас:
+- пилоты надо превращать в классифицированный improvement loop;
+- outcome feedback должен быть не просто thumbs up/down, а с категориями;
+- live regressions надо видеть не только по latency/token metrics, но и по semantic drift of failures.
+
+#### 5. `1010522`: autonomous agent architecture as cautionary reference
+
+Из статьи полезно:
+- event-driven architecture;
+- `PriorityQueue`;
+- независимые loops (`event`, `proactivity`, `thoughts`);
+- hybrid memory (`SQL + vector + graph`);
+- sandboxed execution через Docker;
+- явное признание проблем `amnesia`, `ReAct loops`, unsafe execution.
+
+Что брать нам:
+- не весь автономный always-on agent model,
+- а отдельные bounded идеи:
+  - better memory tiering
+  - explicit sandbox contracts
+  - stronger separation between sensors/events and reasoning core
+
+Что не брать:
+- не превращать hub в постоянно живущий autonomous agent runtime; это другая продуктовая форма и другой risk surface.
+
+### Где проект уже лучше
+
+- Multi-agent debate, critique, consensus, DA и trust gating у нас уже инженерно зрелее, чем в большинстве свежих статей.
+- `Evidence-Grounded Patch Mode` сильнее generic “critical stance”, потому что grounded/assumed уже разделены.
+- `Context Pack` + `Semantic Context Bridge` уже глубже, чем просто docs-first, markdown-first или vanilla RAG.
+- `checkpoint/resume`, runtime telemetry и phase gating у нас сильнее типового “вайбкодинг” workflow из `1012106`.
+
+### Где мы слабее
+
+#### 1. Navigation before reasoning
+
+Статьи `1012106` и `1010522` подсветили то, что мы сейчас видим и в `nornick`:
+- reasoning часто стартует до того, как собрана идеальная evidence base;
+- отсюда `missing-file-anchor`, `unconfirmed-seam`, file-reader loops и disagreement.
+
+#### 2. Memory discipline
+
+У нас есть memory MVP, но пока он слабее layered memory thinking из `1010522` и weaker than what our own pipeline now needs for hard cases.
+
+#### 3. Feedback taxonomy
+
+`1008652` правильно давит на granular feedback. Нам этого не хватает для systematic quality learning.
+
+#### 4. Capability metadata
+
+У нас пока нет явного internal `AgentCard`-подобного слоя.
+Это делает routing и stack-aware behavior менее прозрачными, чем могли бы быть.
+
+### Рекомендации: max-quality
+
+#### P1. Navigation / Discovery micro-phase
+
+Самый сильный кандидат под текущие bottlenecks.
+
+Перед proposals запускать bounded phase, которая:
+- находит likely owners;
+- собирает candidate seams;
+- выделяет anchor-worthy ranges;
+- формирует evidence-ready discovery artifact.
+
+Это прямо бьет по:
+- `missing-file-anchor`
+- `unconfirmed-seam`
+- uneven approval evidence
+
+#### P2. Post-expansion evidence digest
+
+После seam expansion нужен не просто новый большой круг,
+а curated evidence digest:
+- what new seams were fetched
+- what was confirmed
+- what remains uncertain
+- which anchors support which claim
+
+#### P3. Granular pilot feedback taxonomy
+
+Категории вроде:
+- `missing-file-anchor`
+- `unconfirmed-seam`
+- `substantive-assumptions`
+- `routing waste`
+- `review disagreement`
+- `insufficient context precision`
+
+Дальше эти категории должны уходить в roadmap/logs/metrics, а не только в narrative notes.
+
+#### P4. Role-specific instruction bundles
+
+Не generic prompt-only roles, а generated overlays:
+- by stack
+- by framework
+- by language
+- by test/runtime platform
+
+Это логичное развитие для `Stack-Aware Dynamic Skills`.
+
+#### P5. Internal capability contract
+
+Ввести внутренний `AgentCard`-like metadata layer:
+- capability
+- policy
+- cost band
+- trust role
+- preferred task shapes
+
+### Рекомендации: cost-aware
+
+#### P1. Discovery first, not more late rounds
+
+Cheap discovery phase потенциально выгоднее, чем дорогой extra revision circle.
+
+#### P2. Dynamic context optimization with anchors preserved
+
+Не глобальный compaction, а selective handoff compression:
+- только между major phases;
+- только с сохранением evidence anchors;
+- только там, где input pressure мешает качеству.
+
+#### P3. Fallback cascade for stable-provider paths
+
+Идея из `ai-manual` полезна: часть routing можно осознанно делать по cost/latency/reliability band, а не только по статическому model assignment.
+
+#### P4. Prompt/version contracts as code
+
+Промпты, contracts и quality heuristics должны жить как versioned code artifacts с eval loop, а не только как “промпт-текст”.
+
+### Краткие notes по каждой ссылке
+
+| Link | Main idea | Что брать | Verdict for us |
+|---|---|---|---|
+| `1012106` | docs-first workflow, `Claude.md`, `Sequential thinking`, `Serena`, `one context per task` | navigation layer, clearer context isolation, short entrypoint docs | useful, especially for discovery/handoff discipline |
+| `1011868` | `A2A` / `AGP`, `AgentCard`, capability/policy/cost metadata | internal capability contract first; no urgent need for external protocol | strategically useful, not immediate feature |
+| `ai-manual` | anti-patterns and runtime patterns: blind RAG, observability, router/specialist/synthesizer, dynamic context optimization | observability, better retrieval discipline, fallback routing, doubt signaling | useful as practical system checklist |
+| `1008652` | evals, semantic monitoring, synthetic data, flywheel, granular feedback | strongest direct input into our quality loop | highest value |
+| `1010522` | always-on autonomous agent with hybrid memory, EventBus, GraphRAG, Docker sandbox | memory tiering, event/reasoning separation, safer execution ideas | useful as reference, but not as product direction wholesale |
+
+### Final Recommendation
+
+Если брать только 3 вещи из этого свежего батча для наших текущих задач:
+
+1. `Navigation / Discovery micro-phase`
+2. `Granular feedback + semantic monitoring`
+3. `Post-expansion evidence digest with stronger anchor coverage`
+
+Если брать 5-item rollout:
+
+1. discovery phase
+2. feedback taxonomy
+3. capability metadata
+4. role-specific instruction bundles
+5. selective context optimization between major phases
+
+Итог:
+
+- **мы уже сильнее статей в orchestration discipline;**
+- **мы все еще слабее в evidence handoff precision, memory discipline и feedback learning;**
+- **следующий реальный quality gain лежит именно там.**

@@ -261,4 +261,70 @@
 - Именно туда нужно направлять следующий прирост эффективности.
 - Совпадение с выводами Codex по направлениям ~90%, расхождения в деталях приоритизации и тактике.
 
+---
+
+# Батч 21.03.2026 — Анализ 5 статей (Claude Opus 4.6)
+
+Дата: 2026-03-22
+Модель: Claude Opus 4.6
+Контекст: проект после SCB freeze, Pipeline Cost Optimization landed, Round Orchestration Phase 2 следующий.
+
+## Что из статей нам реально полезно
+
+1. **A2A Protocol (Agent-to-Agent) как стандарт интеграции.** Статья cloud.ru описывает протокол A2A (Linux Foundation, Google, AWS) — AgentCard для discovery, Task lifecycle (submitted->working->completed), AGP-маршрутизация. Если мы планируем коммерческие интеграции (GitLab add-ons, плагины для IDE), A2A дает готовый контракт для взаимодействия с внешними агентами. Наш пайплайн сейчас закрытый — A2A мог бы стать интерфейсом для подключения внешних агентов без изменения ядра.
+
+2. **Reverse Graph-RAG (из AAF).** Статья про Autonomous Agent Framework описывает подход, где граф знаний строится не от документов к чанкам, а от сущностей к связям (PostgreSQL + KuzuDB + ChromaDB). Это резонирует с нашим L2 callEdges — мы уже строим граф вызовов. Следующий шаг: если callEdges дополнить семантическими связями (наследование, имплементация интерфейсов), мы получим мини-Graph-RAG без тяжелых внешних баз.
+
+3. **Router -> Specialist -> Synthesizer (из 30 паттернов).** Паттерн из ai-manual.ru: вместо одного универсального агента — маршрутизатор, который отправляет задачу специализированным агентам, а синтезатор собирает результат. У нас оркестратор уже делает это для proposal/critique/consensus, но маршрутизация жесткая (все агенты получают одну задачу). Для cost-aware режима можно добавить легкий роутер, который определяет: "это чисто фронтенд — достаточно 2 агентов" vs "это cross-cutting — нужны все 7".
+
+4. **Fallback Cascade.** Из тех же 30 паттернов — цепочка fallback при отказе провайдера: основная модель -> резервная -> упрощенный fallback. У нас `withRetry` уже перехватывает ошибки, но fallback на другого провайдера нет. При отказе Gemini можно было бы переключить на запасной слот Anthropic вместо полного краша агента.
+
+5. **Observability Layer (5-уровневая модель).** Статья ostrovok описывает 5 слоев: interface -> context -> flow -> cognitive -> observability. Наш observability — это `metrics-tracking.js` + telemetry в forecast. Но нет единого dashboard: сколько токенов потрачено на каждую фазу, где bottleneck, какой агент чаще всего триггерит seam expansion. Напрямую нужно для Pipeline Cost Optimization.
+
+6. **Docker-изолированные субагенты (из AAF).** AAF запускает каждого агента в Docker-контейнере с собственным набором инструментов. Для max-quality режима интересно: агент-developer мог бы иметь доступ к реальному `npm test`, а агент-reviewer — только к статическому анализу. Но overhead для cost-aware.
+
+## Где проект уже лучше
+
+- **Context Pack L0/L1/L2 > "Local RAG via Markdown":** Несколько статей предлагают Markdown-файлы как замену векторных баз. Мы уже реализовали и ушли дальше — наш Context Pack обогащен AST-информацией (сигнатуры, callEdges, trust-labels). Это не просто файлы — это структурированный граф знаний.
+
+- **Evidence-Grounded Patch Mode > "Critical Stance":** Статьи рекомендуют "критический подход" и "альтернативы". Мы требуем строгие file anchors, разделяем Grounded Fixes / Assumptions, и автоматически блокируем patch если есть substantive-assumptions. Это формализовано, а не просто prompt-инструкция.
+
+- **Seam Expansion > "Navigation Agent":** Gemini правильно выделил Navigation Agents как полезную идею. Но наш Seam Expansion уже делает это автоматически: когда critique указывает на missing context, система находит и подгружает конкретные method bodies. Это целенаправленное разрешение информационных пробелов, а не просто "поиск файлов".
+
+- **Multi-provider resilience > Fallback Cascade из статей:** У нас `Promise.allSettled` + `retryable` флаги + partial-results continuation. Статьи описывают линейный fallback, мы уже делаем параллельный запуск с graceful degradation.
+
+## Где мы слабее
+
+- **Context Compaction между фазами:** Согласен с Gemini. Мы передаем полный контекст через весь пайплайн. Consensus truncation fix (Batch A/B) решил острую проблему, но архитектурно мы все еще накапливаем. Паттерн "One Context = One Task" — то, к чему нужно стремиться. Конкретно: после consensus передавать в approval только patch + summary, без полной истории debate.
+
+- **Observability dashboard:** Есть метрики (токены, время, стоимость), но нет единого места для анализа. Для Pipeline Cost Optimization нужна хотя бы CSV/JSON-выгрузка per-phase метрик.
+
+- **Cross-provider Fallback:** `withRetry` повторяет вызов к тому же провайдеру. Если Gemini лежит, мы не переключимся на Anthropic. Для production-ready сервиса критично.
+
+- **Agent Routing по сложности задачи:** Все задачи проходят полный пайплайн из 7 агентов. Router-паттерн мог бы сократить стоимость на 50-70% для простых задач.
+
+## Рекомендации для режимов
+
+### Max-quality
+- **A2A-compatible AgentCard:** Описать наши агенты в формате A2A AgentCard (capabilities, input/output schema). Это не требует полной интеграции — просто JSON-описание для коммерческого слоя.
+- **Enriched callEdges -> mini-Graph-RAG:** Дополнить L2 callEdges информацией о наследовании и имплементации интерфейсов. Даст "граф типов" поверх "графа вызовов" для seam resolution абстрактных методов.
+- **Per-phase observability:** Structured JSON лог per-phase (tokens_in, tokens_out, cost, duration, seam_requests, seam_hits).
+
+### Cost-aware
+- **Complexity Router:** Быстрый LLM-вызов (Haiku/Flash) перед пайплайном для классификации задачи: trivial / moderate / complex. Для trivial — skip critique и DA. Потенциальная экономия: 50-70%.
+- **Context Compaction Gate:** Между consensus и approval — компактор, сжимающий debate-историю до structured summary. Передает только: final patch, key decisions, unresolved assumptions.
+- **Cross-provider Fallback Map:** В agents.json добавить `fallbackProvider`. При 3x retry failure — автопереключение. ~30 строк в `withRetry`.
+
+## Краткие notes по каждой ссылке
+
+- `https://habr.com/ru/articles/1012106`: "46K строк на Claude Code" — documentation-driven dev, claude.md как entrypoint, MCP-плагины (Sequential Thinking, Serena), "one context = one task". Валидация нашего подхода с llms.md, но мы уже дальше (machine-readable stack-profile.json).
+
+- `https://habr.com/ru/companies/cloud_ru/articles/1011868/`: **A2A Protocol** (Agent-to-Agent) — НЕ про очистку контекста (как указал Gemini), а про стандарт межагентного взаимодействия от Linux Foundation/Google/AWS. AgentCard, Task lifecycle, AGP маршрутизация, Squads. Прямое применение для коммерческого слоя.
+
+- `https://ai-manual.ru/article/30-patternov-inzhenerii-ii-sistem-razbor-antipatternov-i-luchshih-praktik-ot-ekspertov/`: 30 паттернов инженерии ИИ-систем. Ключевые: Router->Specialist->Synthesizer, Fallback Cascade, CoT enforcement, Prompt Versioning, Observability. Антипаттерны: Mega-Prompt, Blind Trust.
+
+- `https://habr.com/ru/companies/ostrovok/articles/1008652/`: 30 паттернов в 5 слоях: Interface, Context, Flow, Cognitive, Observability. НЕ про Serena MCP конкретно (Gemini ошибся в атрибуции). Полезна как чек-лист: у нас сильные Flow и Cognitive, слабый Observability.
+
+- `https://habr.com/ru/articles/1010522/`: AAF (Autonomous Agent Framework) — 5-уровневая архитектура, Reverse Graph-RAG (PostgreSQL + KuzuDB + ChromaDB), 3 независимых ReAct-цикла, Docker-изолированные субагенты. Самая технически глубокая статья в батче.
+
 === END OF DOCUMENT ===

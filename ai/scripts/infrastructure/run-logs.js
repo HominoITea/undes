@@ -242,6 +242,17 @@ ${errorTemplate}
       safeAssign('requestId', error.requestId);
       safeAssign('retryAfter', error.retryAfter);
       safeAssign('responseBody', error.responseBody);
+      safeAssign('completionStatus', error.completionStatus);
+      safeAssign('outputPath', error.outputPath);
+      safeAssign('operatorReason', error.operatorReason);
+      safeAssign('estimatedInputTokens', error.estimatedInputTokens);
+      safeAssign('contextBudget', error.contextBudget);
+      safeAssign('maxOutputTokens', error.maxOutputTokens);
+      safeAssign('configuredMaxOutputTokens', error.configuredMaxOutputTokens);
+      safeAssign('recommendedOutputTokens', error.recommendedOutputTokens);
+      safeAssign('repairBudgetTokens', error.repairBudgetTokens);
+      safeAssign('agreementScore', error.agreementScore);
+      safeAssign('budgetShortfallTokens', error.budgetShortfallTokens);
       if (error.headers && typeof error.headers === 'object' && Object.keys(error.headers).length > 0) {
         details.headers = error.headers;
       }

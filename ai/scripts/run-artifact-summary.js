@@ -88,6 +88,8 @@ function parseResultWarningContent(text = '') {
   return {
     resultMode: String(values.RESULT_MODE || '').trim() || 'unknown',
     manualReviewRequired: parseBooleanFlag(values.MANUAL_REVIEW_REQUIRED),
+    primaryFailureClass: String(values.PRIMARY_FAILURE_CLASS || '').trim() || 'none',
+    failureClasses: parseCsvList(values.FAILURE_CLASSES || ''),
     contractGapCount: Number.parseInt(values.PATCH_SAFE_CONTRACT_GAP_COUNT || '0', 10) || 0,
     groundingGapCount: Number.parseInt(values.PATCH_SAFE_GROUNDING_GAP_COUNT || '0', 10) || 0,
     contractGapCategories: parseCsvList(values.PATCH_SAFE_CONTRACT_GAP_CATEGORIES || ''),

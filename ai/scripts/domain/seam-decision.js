@@ -19,6 +19,17 @@ function deriveApprovalOutcomeType(approval = {}) {
   return 'revise-text';
 }
 
+function approvalNotesFlagGroundedFixError(notes = '') {
+  const normalized = String(notes || '').trim().toLowerCase();
+  if (!normalized) return false;
+  const mentionsGroundedFixes = normalized.includes('grounded fixes')
+    || normalized.includes('grounded fix')
+    || normalized.includes('grounded patch')
+    || normalized.includes('grounded code');
+  if (!mentionsGroundedFixes) return false;
+  return /(incorrect|wrong|contradict|conflict|false|invalid|non-?existent|nonexistent|broken|cannot compile|can't compile|won't compile|compile error|syntax error|mismatch|does not match)/.test(normalized);
+}
+
 function buildApprovalSeamKey(request = {}) {
   const normalized = normalizeMissingSeams([request], { maxItems: 1 });
   if (normalized.length === 0) return '';
@@ -107,6 +118,62 @@ function computeAverageApprovalScore(approvalOutputs = []) {
   return Number((scores.reduce((sum, value) => sum + value, 0) / scores.length).toFixed(1));
 }
 
+function shouldSkipRevisionRound(options = {}) {
+  const approvalOutputs = Array.isArray(options.approvalOutputs) ? options.approvalOutputs : [];
+  let disagreementCount = 0;
+  let fetchEvidenceCount = 0;
+  let editorialOnlyCount = 0;
+
+  for (const output of approvalOutputs) {
+    const approval = output?.approval || {};
+    if (approval?.agreed === true) continue;
+    disagreementCount += 1;
+    if (approvalNotesFlagGroundedFixError(approval?.notes || '')) {
+      return {
+        skip: false,
+        reason: 'grounded-fix-error',
+        disagreementCount,
+        fetchEvidenceCount,
+        editorialOnlyCount,
+      };
+    }
+    const outcomeType = deriveApprovalOutcomeType(approval);
+    if (outcomeType === 'fetch-evidence') {
+      fetchEvidenceCount += 1;
+      continue;
+    }
+    editorialOnlyCount += 1;
+  }
+
+  if (disagreementCount === 0) {
+    return {
+      skip: false,
+      reason: 'all-approved',
+      disagreementCount,
+      fetchEvidenceCount,
+      editorialOnlyCount,
+    };
+  }
+
+  if (fetchEvidenceCount === 0) {
+    return {
+      skip: false,
+      reason: 'no-evidence-gap-requests',
+      disagreementCount,
+      fetchEvidenceCount,
+      editorialOnlyCount,
+    };
+  }
+
+  return {
+    skip: true,
+    reason: editorialOnlyCount > 0 ? 'evidence-gap-with-editorial-notes' : 'evidence-gap-only',
+    disagreementCount,
+    fetchEvidenceCount,
+    editorialOnlyCount,
+  };
+}
+
 function shouldSkipDevilsAdvocate(options = {}) {
   const trust = options.trust || {};
   const remainingFetchableSeamCount = Number(options.remainingFetchableSeamCount) || 0;
@@ -174,6 +241,8 @@ module.exports = {
   shouldTriggerSeamExpansion,
   buildTrustGapSnapshot,
   computeAverageApprovalScore,
+  approvalNotesFlagGroundedFixError,
+  shouldSkipRevisionRound,
   shouldSkipDevilsAdvocate,
   resolveTesterMode,
   resolveTesterGate,

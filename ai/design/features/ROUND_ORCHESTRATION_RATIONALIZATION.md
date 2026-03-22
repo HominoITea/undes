@@ -1,6 +1,6 @@
 # Round Orchestration Rationalization
 
-Status: discussion
+Status: partial-implementation
 Priority: P0
 
 Implementation note (2026-03-21): the original Phase 1 discussion accepted a
@@ -10,6 +10,13 @@ tester is now skipped for `DIAGNOSTIC` results and runs only for
 `patch-validation` cases. Historical discussion below is preserved for context;
 current source of truth is `ai/scripts/generate-context.js` plus
 `ai/design/features/PIPELINE_COST_OPTIMIZATION.md`.
+
+Implementation note (2026-03-22): the first Phase 2 slice is now landed.
+`generate-context.js` skips synthesizer revision when approval disagreement is
+classified as evidence-gap-only, records the avoided revision call in
+operational telemetry, and stops early instead of rewriting ungrounded prose
+when the disagreement requests more evidence but does not provide fetchable
+seams.
 
 ## Why This Exists
 
@@ -781,3 +788,9 @@ Phase 1 is approved for implementation. Scope:
 
 Implementation owner: Codex (GPT-5).
 Review: Claude Opus + Gemini CLI.
+
+Post-approval implementation status:
+- Phase 1 landed on `2026-03-17` and was refined on `2026-03-21`.
+- Phase 2 slice 1 landed on `2026-03-22`: `revision` is skipped when approval disagreement is evidence-gap-only and seam expansion should happen first.
+- Phase 2 slice 2 landed on `2026-03-22`: final trust and `result-warning.txt` now carry operator-visible failure taxonomy (`primaryFailureClass`, `failureClasses`, `failureSummary`) so end-state diagnostics surface the real failure shape directly.
+- Latest live validation: `nornick` run `run-1774118745813` confirmed the revision-skip route end-to-end; the next live validation target should be chosen explicitly with the user, with `wattman/front` as the default second target.

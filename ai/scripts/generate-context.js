@@ -92,6 +92,9 @@ const {
   loadRecentOperationalSignalRuns,
 } = require('./domain/operational-signals-snapshot');
 const {
+  ensureProjectScaffoldUpToDate,
+} = require('./domain/project-scaffold');
+const {
   DEFAULT_PROVIDER_EXECUTION_MODE,
   DEFAULT_MAX_OUTPUT_TOKENS_BY_PROVIDER,
   AUTO_MAX_OUTPUT_TOKENS_CEILING_BY_PROVIDER,
@@ -163,6 +166,7 @@ const {
   shouldTriggerSeamExpansion,
   buildTrustGapSnapshot,
   computeAverageApprovalScore,
+  shouldSkipRevisionRound,
   shouldSkipDevilsAdvocate,
   resolveTesterMode,
   resolveTesterGate,
@@ -529,8 +533,8 @@ function persistOperationalSignals(layout, overrides = {}) {
   checkpoint.writeFlowAtomic(layout, flow);
 }
 
-function trackAgentCall(agentName, stage, duration, inputTokens = 0, outputTokens = 0) {
-  trackAgentCallBase(metrics, agentName, stage, duration, inputTokens, outputTokens);
+function trackAgentCall(agentName, stage, duration, usage = 0, outputTokens = 0) {
+  trackAgentCallBase(metrics, agentName, stage, duration, usage, outputTokens);
 }
 
 function printMetrics(promptText = '') {
@@ -637,6 +641,8 @@ async function executeProviderTurn(agent, contextBundle, messages, stage, provid
   if (providerResult && typeof providerResult === 'object') {
     providerResult.meta = {
       ...(providerResult.meta && typeof providerResult.meta === 'object' ? providerResult.meta : {}),
+      estimatedInputTokens,
+      contextBudget: Number(effectiveAgent?.contextBudget) || 0,
       maxOutputTokens: budgeted.budget.effectiveTokens,
       configuredMaxOutputTokens: budgeted.budget.configuredTokens,
       recommendedOutputTokens: budgeted.budget.recommendedTokens,
@@ -805,6 +811,29 @@ function saveContextCache(hash, bundle) {
 // Load .ai.env before reading limits/runtime flags derived from environment variables.
 if (IS_ENTRYPOINT) {
   loadAiEnv(AI_ENV_PATH);
+  try {
+    const scaffoldState = ensureProjectScaffoldUpToDate(PROJECT_ROOT, PROJECT_LAYOUT, {
+      hubRoot: HUB_ROOT,
+      includeMergeAware: false,
+    });
+    if (scaffoldState.updated.length > 0) {
+      console.warn(`⚠️ Project scaffold drift detected. Auto-synced: ${scaffoldState.updated.join(', ')}`);
+    }
+    const remainingScaffoldIssues = scaffoldState.plan.issues
+      .filter((issue) => issue.type !== 'missing-contract' && issue.type !== 'outdated-contract');
+    const hasMergeAwareDrift = scaffoldState.plan.syncable.some((item) => item.policy === 'merge-aware' && !scaffoldState.updated.includes(item.path));
+    if (remainingScaffoldIssues.length > 0 || hasMergeAwareDrift) {
+      console.warn('⚠️ Project scaffold is older than the current hub contract.');
+      if (hasMergeAwareDrift) {
+        console.warn('   Merge-aware drift detected in project config. Recommended: `npm run ai:init -- --sync`');
+      }
+      remainingScaffoldIssues.forEach((issue) => {
+        console.warn(`   - ${issue.message}`);
+      });
+    }
+  } catch (scaffoldError) {
+    console.warn(`⚠️ Scaffold drift check skipped: ${scaffoldError.message}`);
+  }
 }
 
 let contextConfig;
@@ -978,6 +1007,9 @@ function logFinalTrustSignal(signal = {}, options = {}) {
   }
   if (Array.isArray(signal.groundingGapCategories) && signal.groundingGapCategories.length > 0) {
     console.log(`   Grounding gap categories: ${signal.groundingGapCategories.join(', ')}`);
+  }
+  if (signal.primaryFailureClass && signal.primaryFailureClass !== 'none') {
+    console.log(`   Primary failure class: ${signal.primaryFailureClass}`);
   }
 }
 
@@ -1460,7 +1492,12 @@ async function callAgent(agent, contextBundle, promptText, stage = 'unknown', ru
   );
 
   const duration = Date.now() - startTime;
-  trackAgentCall(agentName, stage, duration, result.meta?.inputTokens, result.meta?.outputTokens);
+  trackAgentCall(agentName, stage, duration, {
+    inputTokens: result.meta?.inputTokens,
+    outputTokens: result.meta?.outputTokens,
+    provider: result.meta?.provider,
+    model: result.meta?.model,
+  });
 
   return buildAgentCallResult(agent, result.text, result, {
     inputTokens: result.meta?.inputTokens,
@@ -1500,9 +1537,12 @@ async function runLoggedAgentStep(agent, stage, fn) {
 }
 
 async function attemptTextRepair(agent, contextBundle, promptText, stage, response, opts = {}) {
+  const repairBudgetTokens = getRepairMaxOutputTokens(agent, stage, {
+    maxOutputTokens: response?.meta?.maxOutputTokens,
+  });
   const repairAgent = {
     ...agent,
-    maxOutputTokens: getRepairMaxOutputTokens(agent),
+    maxOutputTokens: repairBudgetTokens,
   };
   const repairPrompt = buildTextRepairPrompt(stage, response?.meta?.stopReason || response?.meta?.providerStopReason || '');
   const repairResponse = await callAgent(
@@ -1529,7 +1569,7 @@ async function attemptTextRepair(agent, contextBundle, promptText, stage, respon
       repairStopReason: repairResponse.meta?.stopReason || '',
       repairOutputTokens: repairResponse.meta?.outputTokens || 0,
       repairInputTokens: repairResponse.meta?.inputTokens || 0,
-      repairBudgetTokens: repairAgent.maxOutputTokens,
+      repairBudgetTokens,
       originalStopReason: response?.meta?.stopReason || '',
       originalCompletion: response?.completionStatus || '',
     },
@@ -1537,9 +1577,12 @@ async function attemptTextRepair(agent, contextBundle, promptText, stage, respon
 }
 
 async function attemptApprovalRepair(agent, contextBundle, reviewContent, stage, response) {
+  const repairBudgetTokens = getRepairMaxOutputTokens(agent, stage, {
+    maxOutputTokens: response?.meta?.maxOutputTokens,
+  });
   const repairAgent = {
     ...agent,
-    maxOutputTokens: getRepairMaxOutputTokens(agent),
+    maxOutputTokens: repairBudgetTokens,
   };
   const repairPrompt = buildApprovalRepairPrompt(
     stage,
@@ -1582,7 +1625,7 @@ async function attemptApprovalRepair(agent, contextBundle, reviewContent, stage,
       completion: repaired.meta?.completion,
       repaired: true,
       repairStopReason: repaired.meta?.stopReason || repaired.meta?.providerStopReason || '',
-      repairBudgetTokens: repairAgent.maxOutputTokens,
+      repairBudgetTokens,
       originalStopReason: response.meta?.stopReason || response.meta?.providerStopReason || '',
       originalCompletion: response.completionStatus || '',
     }, normalizeProjectRelativeFilePath).meta,
@@ -1601,13 +1644,16 @@ async function callApprovalReviewWithRepair(agent, contextBundle, reviewContent,
   let normalizedApproval = normalizeApprovalReview(reviewResponse);
 
   if (normalizedApproval.completionStatus === 'invalid') {
+    const repairBudgetTokens = getRepairMaxOutputTokens(agent, stage, {
+      maxOutputTokens: reviewResponse.meta?.maxOutputTokens,
+    });
     console.log(`   🔧 Attempting bounded approval JSON repair for ${agentName} (${stage})...`);
     recordRepairSignal(operationalSignals, {
       agent: agentName,
       stage,
       outcome: 'attempted',
       stopReason: reviewResponse.meta?.stopReason || reviewResponse.meta?.providerStopReason || '',
-      budgetTokens: getRepairMaxOutputTokens(agent),
+      budgetTokens: repairBudgetTokens,
     });
 
     const repaired = await attemptApprovalRepair(
@@ -1634,7 +1680,7 @@ async function callApprovalReviewWithRepair(agent, contextBundle, reviewContent,
       outcome: normalizedApproval.completionStatus === 'complete' ? 'succeeded' : 'failed',
       stopReason: reviewResponse.meta?.originalStopReason || '',
       repairStopReason: reviewResponse.meta?.repairStopReason || reviewResponse.meta?.stopReason || '',
-      budgetTokens: reviewResponse.meta?.repairBudgetTokens || getRepairMaxOutputTokens(agent),
+      budgetTokens: reviewResponse.meta?.repairBudgetTokens || repairBudgetTokens,
     });
   }
 
@@ -1720,13 +1766,16 @@ async function callAgentWithValidation(agent, contextBundle, promptText, stage =
     && opts.enableRepair !== false
     && !opts._repairAttempt
   ) {
+    const repairBudgetTokens = getRepairMaxOutputTokens(agent, stage, {
+      maxOutputTokens: response.meta?.maxOutputTokens,
+    });
     console.log(`   🔧 Attempting bounded repair for ${agentName} (${stage})...`);
     recordRepairSignal(operationalSignals, {
       agent: agentName,
       stage,
       outcome: 'attempted',
       stopReason: response.meta?.stopReason || response.meta?.providerStopReason || '',
-      budgetTokens: getRepairMaxOutputTokens(agent),
+      budgetTokens: repairBudgetTokens,
     });
     const repaired = await attemptTextRepair(agent, contextBundle, promptText, stage, {
       ...response,
@@ -1745,7 +1794,7 @@ async function callAgentWithValidation(agent, contextBundle, promptText, stage =
       outcome: repairedCompletion.completionStatus === 'complete' ? 'succeeded' : 'failed',
       stopReason: response.meta?.stopReason || response.meta?.providerStopReason || '',
       repairStopReason: repaired.meta?.stopReason || repaired.meta?.providerStopReason || '',
-      budgetTokens: repaired.meta?.repairBudgetTokens || getRepairMaxOutputTokens(agent),
+      budgetTokens: repaired.meta?.repairBudgetTokens || repairBudgetTokens,
     });
 
     return {
@@ -2946,7 +2995,9 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
     checkpointPhase: 'proposals',
     buildContent: (agent) => buildProposalContent(workingPrompt, '', agent.role || agent.name || 'agent'),
   });
-  const proposalResults = await runAgentsWithProviderLimit(filterByComplexityAndPhase(debateAgents, 'proposal', taskComplexity), async (agent) => runLoggedAgentStep(agent, 'proposal', async () => {
+  const proposalAgents = filterByComplexityAndPhase(debateAgents, 'proposal', taskComplexity);
+  const proposalPhaseAgents = proposalAgents.map((agent) => agent.name || 'agent');
+  const proposalResults = await runAgentsWithProviderLimit(proposalAgents, async (agent) => runLoggedAgentStep(agent, 'proposal', async () => {
     const agentName = agent.name || 'agent';
     if (resumeMode && checkpoint.isAgentDone(PROJECT_LAYOUT, 'proposals', agentName)) {
       console.log(`   ✅ ${agentName} proposal loaded from checkpoint.`);
@@ -3019,6 +3070,7 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
         outputFormat: 'text',
         completionStatus: result.completionStatus,
         stopReason: result.meta?.stopReason || '',
+        expectedAgents: proposalPhaseAgents,
       });
       if (result.completionStatus !== 'complete') {
         recordIncompleteOutputSignal(operationalSignals, {
@@ -3066,7 +3118,9 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
       agent.name || 'agent',
     ),
   });
-  const critiqueResults = await runAgentsWithProviderLimit(filterByComplexityAndPhase(debateAgents, 'critique', taskComplexity), async (agent) => runLoggedAgentStep(agent, 'critique', async () => {
+  const critiqueAgents = filterByComplexityAndPhase(debateAgents, 'critique', taskComplexity);
+  const critiquePhaseAgents = critiqueAgents.map((agent) => agent.name || 'agent');
+  const critiqueResults = await runAgentsWithProviderLimit(critiqueAgents, async (agent) => runLoggedAgentStep(agent, 'critique', async () => {
     const roleLabel = agent.role || agent.name || 'agent';
     const agentName = agent.name || 'agent';
 
@@ -3148,6 +3202,7 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
         outputFormat: 'text',
         completionStatus: result.completionStatus,
         stopReason: result.meta?.stopReason || '',
+        expectedAgents: critiquePhaseAgents,
       });
       if (result.completionStatus !== 'complete') {
         recordIncompleteOutputSignal(operationalSignals, {
@@ -3213,11 +3268,17 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
 
   // ===== CONSENSUS =====
   let finalConsensusText = '';
+  let consensusOutputPath = path.join(RUN_ARCHIVE_DIR, `${consensusAgent.name || 'consensus'}-consensus.txt`);
   let approvalConsensusAllAgreed = true;
   let currentResultTrust = null;
   let latestApprovalOutputs = [];
   if (resumeMode && checkpoint.isPhaseDone(PROJECT_LAYOUT, 'consensus')) {
     console.log('🤝 Consensus loaded from checkpoint.');
+    const flow = checkpoint.loadRun(PROJECT_LAYOUT);
+    const checkpointConsensusPath = flow?.phases?.consensus?.outputFile;
+    if (checkpointConsensusPath) {
+      consensusOutputPath = checkpointConsensusPath;
+    }
     finalConsensusText = sanitizeUserFacingFinalText(
       checkpoint.getPhaseOutput(PROJECT_LAYOUT, 'consensus') || '',
     ).text;
@@ -3247,7 +3308,6 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
       console.warn('⚠️ Sanitized internal log/meta chatter from consensus output.');
     }
     finalConsensusText = sanitizedConsensus.text;
-    const consensusOutputPath = path.join(RUN_ARCHIVE_DIR, `${consensusAgent.name || 'consensus'}-consensus.txt`);
     fs.writeFileSync(consensusOutputPath, finalConsensusText + '\n');
     console.log(`✅ Consensus output archived: ${consensusOutputPath}`);
     validateEndMarker(finalConsensusText, consensusOutputPath);
@@ -3268,25 +3328,64 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
       stopReason: consensusResponse.meta?.stopReason || '',
     });
     if (consensusResponse.completionStatus !== 'complete') {
+      const consensusStopReason = consensusResponse.meta?.stopReason || consensusResponse.meta?.providerStopReason || '';
+      const consensusRecommendedTokens = Number(consensusResponse.meta?.recommendedOutputTokens) || 0;
+      const consensusEffectiveTokens = Number(consensusResponse.meta?.maxOutputTokens) || 0;
+      const consensusBudgetShortfallTokens = consensusRecommendedTokens > consensusEffectiveTokens
+        ? (consensusRecommendedTokens - consensusEffectiveTokens)
+        : 0;
+      const consensusOperatorReason = (
+        consensusResponse.completionStatus === 'truncated'
+        && consensusStopReason === 'length'
+      )
+        ? (
+            consensusBudgetShortfallTokens > 0
+              ? 'consensus-budget-underprovisioned'
+              : 'consensus-output-budget-exhausted'
+          )
+        : '';
+      if (consensusOperatorReason) {
+        const budgetNote = consensusBudgetShortfallTokens > 0
+          ? `configured ${consensusEffectiveTokens}, recommended ${consensusRecommendedTokens}`
+          : `effective ${consensusEffectiveTokens}, repair ${Number(consensusResponse.meta?.repairBudgetTokens) || 0}`;
+        console.warn(`⚠️ Consensus failure classified as ${consensusOperatorReason} (${budgetNote}).`);
+      }
       recordIncompleteOutputSignal(operationalSignals, {
         agent: consensusAgent.name || 'consensus',
         provider: getProviderName(consensusAgent),
         stage: 'consensus',
         completionStatus: consensusResponse.completionStatus,
-        stopReason: consensusResponse.meta?.stopReason || consensusResponse.meta?.providerStopReason || '',
+        stopReason: consensusStopReason,
         outputPath: consensusOutputPath,
+        estimatedInputTokens: consensusResponse.meta?.estimatedInputTokens,
+        contextBudget: consensusResponse.meta?.contextBudget || consensusAgent.contextBudget,
+        maxOutputTokens: consensusResponse.meta?.maxOutputTokens,
+        configuredMaxOutputTokens: consensusResponse.meta?.configuredMaxOutputTokens,
+        recommendedOutputTokens: consensusResponse.meta?.recommendedOutputTokens,
+        repairBudgetTokens: consensusResponse.meta?.repairBudgetTokens,
+        agreementScore,
+        operatorReason: consensusOperatorReason,
       });
       throw createIncompleteTextOutputError({
         agent: consensusAgent,
         name: consensusAgent.name || 'consensus',
         completionStatus: consensusResponse.completionStatus,
-        meta: consensusResponse.meta,
+        meta: {
+          ...(consensusResponse.meta || {}),
+          agreementScore,
+          operatorReason: consensusOperatorReason,
+          budgetShortfallTokens: consensusBudgetShortfallTokens,
+          contextBudget: consensusResponse.meta?.contextBudget || consensusAgent.contextBudget,
+        },
         outputPath: consensusOutputPath,
       }, 'consensus');
     }
 
+  }
+
     // ===== APPROVAL ROUNDS =====
     const approvalAgents = filterByComplexityAndPhase(debateAgents, 'approval', taskComplexity);
+    const approvalPhaseAgents = approvalAgents.map((agent) => agent.name || 'agent');
     const MAX_APPROVAL_ROUNDS = 2;
     let approvalRound = 0;
     let allAgreed = false;
@@ -3453,6 +3552,7 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
           agreed: result.approval?.agreed === true,
           score: Number.isFinite(result.approval?.score) ? result.approval.score : null,
           repaired: Boolean(result.meta?.repairAttempted),
+          expectedAgents: approvalPhaseAgents,
         });
 
         if (result.completionStatus !== 'complete') {
@@ -3568,7 +3668,11 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
         alreadyTriggered: seamExpansionRounds >= MAX_SEAM_EXPANSION_ROUNDS,
         ...(indexCfg.critiqueExpansionMaxRequests ? { maxItems: Number(indexCfg.critiqueExpansionMaxRequests) } : {}),
       });
+      const revisionSkipDecision = shouldSkipRevisionRound({
+        approvalOutputs: latestApprovalOutputs,
+      });
       previousRoundSeamKeys = new Set(roundMissingSeams.map((request) => buildApprovalSeamKey(request)).filter(Boolean));
+      lastDisagreements = revisionNotes;
 
       if (allAgreed) {
         if (seamExpansionDecision.trigger) {
@@ -3584,7 +3688,26 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
         break;
       }
 
+      if (roundNumber === 1 && revisionSkipDecision.skip && !seamExpansionDecision.trigger) {
+        console.log('⏭️ Skipping revision round 1: approval disagreement is evidence-gap-only and no fetchable seams remain.');
+        recordCallGatingSignal(operationalSignals, {
+          phase: 'revision',
+          action: 'skipped-no-fetchable-seams',
+          reason: revisionSkipDecision.reason,
+        });
+        recordNoMaterialProgressStopSignal(operationalSignals, {
+          roundNumber,
+          reason: 'revision-skip-no-fetchable-seams',
+        });
+        break;
+      }
+
       if (roundNumber === 1 && seamExpansionDecision.trigger) {
+        recordCallGatingSignal(operationalSignals, {
+          phase: 'revision',
+          action: 'skipped-to-seam-expansion',
+          reason: revisionSkipDecision.skip ? revisionSkipDecision.reason : 'fetchable-evidence-gap',
+        });
         recordTokensBeforeFirstSeamFetchSignal(operationalSignals, {
           stage: 'approval-1',
           tokens: getCurrentTotalTrackedTokens(),
@@ -3595,6 +3718,11 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
 
       if (roundNumber === MAX_APPROVAL_ROUNDS) {
         if (seamExpansionDecision.trigger && newRoundSeamKeys.length > 0) {
+          recordCallGatingSignal(operationalSignals, {
+            phase: 'revision',
+            action: 'skipped-to-seam-expansion',
+            reason: revisionSkipDecision.skip ? revisionSkipDecision.reason : 'fetchable-evidence-gap',
+          });
           recordTokensBeforeFirstSeamFetchSignal(operationalSignals, {
             stage: `approval-${roundNumber}`,
             tokens: getCurrentTotalTrackedTokens(),
@@ -3610,7 +3738,6 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
       }
 
       approvalRound += 1;
-      lastDisagreements = revisionNotes;
       const revisionPrompt = buildConsensusRevisionContent(
         workingPrompt,
         discussionSoFar,
@@ -3731,13 +3858,20 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
     }
     currentResultTrust = finalResultTrust;
     const finalResultMode = finalResultTrust.resultMode;
-    recordFinalTrustSignal(operationalSignals, finalResultTrust, { allAgreed });
+    recordFinalTrustSignal(operationalSignals, finalResultTrust, {
+      allAgreed,
+      approvalOutputs: latestApprovalOutputs,
+      operationalSignals,
+    });
     if (finalResultTrust.warningRequired) {
       const warningBlock = buildResultWarningFileContent({
         resultMode: finalResultMode,
         disagreementNotes: !allAgreed ? disagreementNotes : [],
         contractWarnings: finalResultTrust.groundedAnalysis.contractWarnings,
         validationWarnings: finalResultTrust.groundingValidation.validationWarnings,
+        primaryFailureClass: operationalSignals.finalTrust?.primaryFailureClass,
+        failureClasses: operationalSignals.finalTrust?.failureClasses,
+        failureSummary: operationalSignals.finalTrust?.failureSummary,
       });
       fs.writeFileSync(RESULT_WARNING_PATH, warningBlock);
       warningRelativePath = toRelativePath(RESULT_WARNING_PATH);
@@ -3788,8 +3922,6 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
         ? summarizeText(finalConsensusText)
         : `Consensus disputed after round ${lastRoundNumber}. See ${toRelativePath(RESULT_WARNING_PATH)}.`,
     });
-
-  }
 
   // ===== DEVIL'S ADVOCATE PHASE =====
   let devilsAdvocateResult = null;
@@ -4019,6 +4151,8 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
         currentResultTrust = revisedResultTrust;
         recordFinalTrustSignal(operationalSignals, revisedResultTrust, {
           allAgreed: approvalConsensusAllAgreed,
+          approvalOutputs: latestApprovalOutputs,
+          operationalSignals,
         });
         const revisedWarningPath = revisedResultTrust.warningRequired ? toRelativePath(RESULT_WARNING_PATH) : '';
         if (revisedResultTrust.warningRequired) {
@@ -4027,6 +4161,9 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
             disagreementNotes: [],
             contractWarnings: revisedResultTrust.groundedAnalysis.contractWarnings,
             validationWarnings: revisedResultTrust.groundingValidation.validationWarnings,
+            primaryFailureClass: operationalSignals.finalTrust?.primaryFailureClass,
+            failureClasses: operationalSignals.finalTrust?.failureClasses,
+            failureSummary: operationalSignals.finalTrust?.failureSummary,
           });
           fs.writeFileSync(RESULT_WARNING_PATH, warningBlock);
           if (revisedResultTrust.groundedAnalysis.contractWarnings.length > 0) {
@@ -4715,6 +4852,7 @@ module.exports = {
   computeCritiqueSeamOverlap,
   shouldTriggerSeamExpansion,
   computeAverageApprovalScore,
+  shouldSkipRevisionRound,
   shouldSkipDevilsAdvocate,
   resolveTesterMode,
   resolveTesterGate,

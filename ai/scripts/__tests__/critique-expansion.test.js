@@ -227,6 +227,57 @@ test('resolveMissingSeams resolves exact symbol requests deterministically', () 
   assert.equal(result.skippedSeams.length, 0);
 });
 
+test('resolveMissingSeams dedupes duplicate normalized symbol paths before declaring ambiguity', () => {
+  const root = mkTmpDir('critique-expansion-dedup-');
+  writeFile(
+    root,
+    'app/_helpers/manhattan.ts',
+    [
+      'export function buildManhattanRoute() {',
+      '  return [];',
+      '}',
+      '',
+    ].join('\n'),
+  );
+
+  const result = resolveMissingSeams([
+    {
+      symbolOrSeam: 'buildManhattanRoute',
+      reasonNeeded: 'Need router body',
+      fetchHint: 'app/_helpers/manhattan.ts',
+    },
+  ], {
+    rootDir: root,
+    index: {
+      symbols: [
+        {
+          id: 'sym-1',
+          name: 'buildManhattanRoute',
+          type: 'function',
+          file: 'app/_helpers/manhattan.ts',
+          startLine: 1,
+          endLine: 3,
+        },
+        {
+          id: 'sym-2',
+          name: 'buildManhattanRoute',
+          type: 'function',
+          file: './app/_helpers/manhattan.ts',
+          startLine: 1,
+          endLine: 3,
+        },
+      ],
+    },
+    snippetContextLines: 1,
+    maxSnippetLines: 20,
+  });
+
+  assert.equal(result.fetchedSeams.length, 1);
+  assert.equal(result.skippedSeams.length, 0);
+  assert.equal(result.fetchedSeams[0].file, 'app/_helpers/manhattan.ts');
+  assert.match(result.fetchedSeams[0].content, /buildManhattanRoute/);
+});
+
 test('resolveMissingSeams resolves Class#method requests through the owner type file', () => {
   const root = mkTmpDir('critique-expansion-scoped-method-');
   writeFile(
@@ -493,6 +544,80 @@ test('resolveMissingSeams supports exact line-range fetch hints', () => {
   assert.equal(result.fetchedSeams.length, 1);
   assert.equal(result.fetchedSeams[0].source, 'hint-range');
   assert.match(result.fetchedSeams[0].content, /buildApprovalInstances/);
+});
+
+test('resolveMissingSeams treats file path seams as hinted file requests', () => {
+  const root = mkTmpDir('critique-expansion-file-primary-');
+  writeFile(
+    root,
+    'app/_helpers/manhattan.ts',
+    [
+      'export function buildManhattanRoute() {',
+      '  return [];',
+      '}',
+      '',
+    ].join('\n'),
+  );
+
+  const result = resolveMissingSeams([
+    {
+      symbolOrSeam: 'app/_helpers/manhattan.ts',
+      reasonNeeded: 'Need router file',
+    },
+  ], {
+    rootDir: root,
+    index: {
+      symbols: [
+        {
+          id: 'sym-1',
+          name: 'buildManhattanRoute',
+          type: 'function',
+          file: 'app/_helpers/manhattan.ts',
+          startLine: 1,
+          endLine: 3,
+        },
+      ],
+    },
+  });
+
+  assert.equal(result.fetchedSeams.length, 1);
+  assert.equal(result.fetchedSeams[0].source, 'hint-file-primary-symbol');
+  assert.match(result.fetchedSeams[0].content, /buildManhattanRoute/);
+});
+
+test('resolveMissingSeams can use token search in a hinted file even when the file has no indexed symbols', () => {
+  const root = mkTmpDir('critique-expansion-noisy-file-');
+  writeFile(
+    root,
+    'app/board/[boardId]/_components/canvas/canvas.tsx',
+    [
+      'function moveLayer() {',
+      '  const boardId = props.boardId;',
+      '  updateConnectedLines();',
+      '  scheduleReroute();',
+      '}',
+      '',
+    ].join('\n'),
+  );
+
+  const result = resolveMissingSeams([
+    {
+      symbolOrSeam: 'app/board/[boardId]/_components/canvas/canvas.tsx:перемещение слоя и вызов updateConnectedLines/scheduleReroute',
+      reasonNeeded: 'Need exact move path',
+      fetchHint: 'Запросить узкий диапазон вокруг updateConnectedLines и scheduleReroute',
+    },
+  ], {
+    rootDir: root,
+    index: { symbols: [] },
+    snippetContextLines: 1,
+    maxSnippetLines: 20,
+  });
+
+  assert.equal(result.fetchedSeams.length, 1);
+  assert.equal(result.skippedSeams.length, 0);
+  assert.equal(result.fetchedSeams[0].source, 'hinted-file-token');
+  assert.equal(result.fetchedSeams[0].resolvedSymbol, 'updateConnectedLines');
+  assert.match(result.fetchedSeams[0].content, /scheduleReroute/);
 });
 
 test('resolveMissingSeams prefers scoped method resolution over broad line-range hints', () => {
