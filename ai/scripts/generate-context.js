@@ -288,7 +288,7 @@ const IS_ENTRYPOINT = require.main === module;
 const BOOT_ARGS = process.argv.slice(2);
 if (IS_ENTRYPOINT) {
   enforceDispatcherGuard({
-    useCommand: 'npm run ai -- --prompt="..."',
+    useCommand: 'npm run undes -- --prompt="..."',
   });
 }
 const INITIAL_CWD = process.cwd();
@@ -825,7 +825,7 @@ if (IS_ENTRYPOINT) {
     if (remainingScaffoldIssues.length > 0 || hasMergeAwareDrift) {
       console.warn('⚠️ Project scaffold is older than the current hub contract.');
       if (hasMergeAwareDrift) {
-        console.warn('   Merge-aware drift detected in project config. Recommended: `npm run ai:init -- --sync`');
+        console.warn('   Merge-aware drift detected in project config. Recommended: `npm run undes:init -- --sync`');
       }
       remainingScaffoldIssues.forEach((issue) => {
         console.warn(`   - ${issue.message}`);

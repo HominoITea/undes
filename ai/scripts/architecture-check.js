@@ -203,7 +203,7 @@ function main(optionsOrArgv = process.argv, root = process.cwd()) {
 
 if (require.main === module) {
   enforceDispatcherGuard({
-    useCommand: 'npm run ai:arch:check -- [--target=PATH] [--max-lines=N]',
+    useCommand: 'npm run undes:arch:check -- [--target=PATH] [--max-lines=N]',
   });
   main();
 }

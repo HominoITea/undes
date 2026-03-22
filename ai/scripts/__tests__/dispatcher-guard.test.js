@@ -49,7 +49,7 @@ test('enforceDispatcherGuard blocks direct invocation without dispatcher or bypa
   const result = enforceDispatcherGuard({
     env: {},
     exitOnFailure: false,
-    useCommand: 'npm run ai -- --prompt="..."',
+    useCommand: 'npm run undes -- --prompt="..."',
     logger: {
       warn: () => {},
       error: (line) => errors.push(String(line)),
@@ -68,7 +68,7 @@ test('enforceDispatcherGuard blocks bypass flag (no longer supported)', () => {
   const result = enforceDispatcherGuard({
     env: { _AI_DISPATCHER_BYPASS: '1' },
     exitOnFailure: false,
-    useCommand: 'npm run ai -- --prompt="..."',
+    useCommand: 'npm run undes -- --prompt="..."',
     logger: {
       warn: () => {},
       error: (line) => errors.push(String(line)),

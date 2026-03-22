@@ -99,7 +99,7 @@ function resolveProjectPathFromHubConfig(hubRootPath, { initialCwd, resolveHubFi
 function validateProjectLayout({ aiDataDir, aiSourceDir, projectRoot }) {
   if (!fs.existsSync(aiDataDir)) {
     console.error(`❌ AI data directory not found: ${aiDataDir}`);
-    console.error(`   Run: npm run ai:doctor -- --project-path="${projectRoot}"`);
+    console.error(`   Run: npm run undes:doctor -- --project-path="${projectRoot}"`);
     process.exit(1);
   }
   const requiredFiles = ['context.json'];
@@ -107,7 +107,7 @@ function validateProjectLayout({ aiDataDir, aiSourceDir, projectRoot }) {
     const filePath = path.join(aiSourceDir, file);
     if (!fs.existsSync(filePath)) {
       console.error(`❌ Required file missing: ${filePath}`);
-      console.error(`   Run: npm run ai:doctor -- --project-path="${projectRoot}"`);
+      console.error(`   Run: npm run undes:doctor -- --project-path="${projectRoot}"`);
       process.exit(1);
     }
   }

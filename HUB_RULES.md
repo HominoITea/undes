@@ -5,7 +5,7 @@ Rules for AI models/agents working on hub code, tests, config, and documentation
 ## 1. Mandatory Verification
 
 1. After any code or config change in the hub repository, run:
-   - `npm run ai:test`
+   - `npm run undes:test`
 2. For behavior changes, include matching tests in the same change-set whenever feasible.
 3. A task is not complete until this test suite passes.
 4. In the final report, include the test result summary (`passed/failed` and test count).

@@ -38,7 +38,7 @@ Reduce coupling in `ai/scripts/generate-context.js` by splitting logic into expl
 1. New pure logic goes to `domain/*`.
 2. New FS/OS/provider adapters go to `infrastructure/*`.
 3. `generate-context.js` should only orchestrate and call layer modules.
-4. Keep CLI entry paths stable (`npm run ai:*`) while refactoring internals.
+4. Keep CLI entry paths stable (`npm run undes:*`) while refactoring internals.
 
 ## Completed in this iteration
 - Extracted confidence/agreement/revision policy to `domain/quality-metrics.js`.

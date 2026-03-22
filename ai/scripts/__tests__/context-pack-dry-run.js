@@ -32,7 +32,7 @@ const legacyIndexPath = path.join(ROOT, indexCfg.outputPath);
 const indexPath = fs.existsSync(primaryIndexPath) ? primaryIndexPath : legacyIndexPath;
 
 if (!fs.existsSync(indexPath)) {
-  console.error(`❌ Index not found at ${indexPath}. Run "npm run ai:index" first.`);
+  console.error(`❌ Index not found at ${indexPath}. Run "npm run undes:index" first.`);
   process.exit(1);
 }
 

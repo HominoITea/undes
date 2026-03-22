@@ -69,7 +69,7 @@ test('generate-context fails on direct invocation without dispatcher guard env',
   const output = `${run.stdout}\n${run.stderr}`;
   assert.notEqual(run.status, 0);
   assert.match(output, /Direct script invocation is disabled in Hub-only mode/);
-  assert.match(output, /Use dispatcher: npm run ai -- --prompt/);
+  assert.match(output, /Use dispatcher: npm run undes -- --prompt/);
 });
 
 test('generate-context rejects bypass env and requires dispatcher', () => {
@@ -103,7 +103,7 @@ test('generate-context fails when AI data directory is missing', () => {
   const output = `${run.stdout}\n${run.stderr}`;
   assert.notEqual(run.status, 0);
   assert.match(output, /AI data directory not found/);
-  assert.match(output, /Run: npm run ai:doctor -- --project-path/);
+  assert.match(output, /Run: npm run undes:doctor -- --project-path/);
 });
 
 test('generate-context fails when required context.json is missing', () => {

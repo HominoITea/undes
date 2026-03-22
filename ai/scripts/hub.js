@@ -379,11 +379,11 @@ function printHelp() {
   console.log('AI Hub CLI (initial)');
   console.log('');
   console.log('Usage:');
-  console.log('  npm run ai:<command> -- [options] [--hub-root=/abs/hub]');
-  console.log('  npm run ai -- [--prompt="..."] [--project-path=/abs/project/path]');
-  console.log('  npm run ai:light -- [--prompt="..."] [--project-path=/abs/project/path]');
-  console.log('  npm run ai:index -- [--project-path=/abs/project/path]');
-  console.log('  npm run ai:pack -- [--project-path=/abs/project/path]');
+  console.log('  npm run undes:<command> -- [options] [--hub-root=/abs/hub]');
+  console.log('  npm run undes -- [--prompt="..."] [--project-path=/abs/project/path]');
+  console.log('  npm run undes:light -- [--prompt="..."] [--project-path=/abs/project/path]');
+  console.log('  npm run undes:index -- [--project-path=/abs/project/path]');
+  console.log('  npm run undes:pack -- [--project-path=/abs/project/path]');
   console.log('');
   console.log('Commands:');
   console.log('  run [--mode=default|light|index|pack|memory|init|clean|arch-check] [--project-path=/abs/project/path]');
@@ -521,7 +521,7 @@ function resolveProjectPathForRun(options = {}) {
 
   throw new Error(
     'No project selected/found. Use one of: ' +
-    '`npm run ai:start`, `npm run ai:add -- --path=/abs/project/path`, or `--project-path=/abs/project/path`.',
+    '`npm run undes:start`, `npm run undes:add -- --path=/abs/project/path`, or `--project-path=/abs/project/path`.',
   );
 }
 
@@ -618,7 +618,7 @@ function commandAdd(options) {
 function commandList() {
   const registry = loadRegistry();
   if (!registry.projects.length) {
-    console.log('No projects in registry. Use: npm run ai:add -- --path=/abs/project/path');
+    console.log('No projects in registry. Use: npm run undes:add -- --path=/abs/project/path');
     return;
   }
 
@@ -664,7 +664,7 @@ function commandStatus(options) {
   const selected = getSelectedProject(registry, options);
 
   if (!selected) {
-    console.log('No project selected/found. Use: npm run ai:add -- --path=... or npm run ai:status -- --project-path=...');
+    console.log('No project selected/found. Use: npm run undes:add -- --path=... or npm run undes:status -- --project-path=...');
     return;
   }
 
@@ -692,7 +692,7 @@ function commandStats(options) {
   const registry = loadRegistry();
   const targets = getProjectTargets(registry, options);
   if (!targets.length) {
-    console.log('No projects in registry. Use: npm run ai:add -- --path=/abs/project/path');
+    console.log('No projects in registry. Use: npm run undes:add -- --path=/abs/project/path');
     return;
   }
 
@@ -902,7 +902,7 @@ function commandDoctor(options) {
 
   const aiSize = dirSizeBytes(aiRoot);
   if (aiSize > 250 * 1024 * 1024) {
-    warnings.push(`Large AI data dir (${formatBytes(aiSize)}). Consider: npm run ai:gc -- --project-path="${projectPath}"`);
+    warnings.push(`Large AI data dir (${formatBytes(aiSize)}). Consider: npm run undes:gc -- --project-path="${projectPath}"`);
   }
 
   const astGrepBinary = detectAstGrepBinary({
@@ -936,7 +936,7 @@ function commandDoctor(options) {
   if (failed.length > 0) {
     console.log('');
     console.log('Suggested fixes:');
-    console.log(`1) Re-run: npm run ai:add -- --path="${projectPath}"`);
+    console.log(`1) Re-run: npm run undes:add -- --path="${projectPath}"`);
     console.log('2) If this is an old single-root project, normalize it manually to split-root (`ai/` config + `.ai/` runtime).');
     process.exitCode = 1;
     return;
@@ -949,7 +949,7 @@ function commandGc(options) {
   const registry = loadRegistry();
   const targets = getProjectTargets(registry, options);
   if (!targets.length) {
-    console.log('No projects in registry. Use: npm run ai:add -- --path=/abs/project/path');
+    console.log('No projects in registry. Use: npm run undes:add -- --path=/abs/project/path');
     return;
   }
 
@@ -1088,7 +1088,7 @@ function askSelection(maxNumber) {
 async function commandStart(options) {
   const registry = loadRegistry();
   if (!registry.projects.length) {
-    console.log('No projects in registry. Use: npm run ai:add -- --path=/abs/project/path');
+    console.log('No projects in registry. Use: npm run undes:add -- --path=/abs/project/path');
     return;
   }
 
@@ -1098,7 +1098,7 @@ async function commandStart(options) {
     .sort((a, b) => String(b.project.lastUsed || '').localeCompare(String(a.project.lastUsed || '')));
 
   if (!healthy.length) {
-    console.log('No healthy projects found. Fix paths or run npm run ai:add again.');
+    console.log('No healthy projects found. Fix paths or run npm run undes:add again.');
     return;
   }
 

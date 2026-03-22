@@ -279,7 +279,7 @@ function commandAdd(options) {
   writeJson(SPECS_PATH, specs);
 
   console.log(`✅ Added language "${id}" to ${SPECS_PATH}`);
-  console.log('ℹ️ Fill TODO regex patterns and run: npm run ai:lang:validate');
+  console.log('ℹ️ Fill TODO regex patterns and run: npm run undes:lang:validate');
 }
 
 function printHelp() {

@@ -183,6 +183,11 @@ test('parseLineRange supports hash and colon line hints', () => {
     startLine: 15,
     endLine: 18,
   });
+  assert.deepEqual(parseLineRange('src/main/App.java lines 30-42 around fallback branch'), {
+    file: 'src/main/App.java',
+    startLine: 30,
+    endLine: 42,
+  });
 });
 
 test('resolveMissingSeams resolves exact symbol requests deterministically', () => {
@@ -544,6 +549,43 @@ test('resolveMissingSeams supports exact line-range fetch hints', () => {
   assert.equal(result.fetchedSeams.length, 1);
   assert.equal(result.fetchedSeams[0].source, 'hint-range');
   assert.match(result.fetchedSeams[0].content, /buildApprovalInstances/);
+});
+
+test('resolveMissingSeams supports standalone line-range hints when file is already known', () => {
+  const root = mkTmpDir('critique-expansion-standalone-range-');
+  writeFile(
+    root,
+    'app/board/[boardId]/_components/canvas/canvas.tsx',
+    [
+      'function moveLayer() {',
+      '  const manhattanLockedPrev = shape.manhattanLocked;',
+      '  if (manhattanLockedPrev) {',
+      '    scheduleReroute();',
+      '  }',
+      '}',
+      '',
+    ].join('\n'),
+  );
+
+  const result = resolveMissingSeams([
+    {
+      symbolOrSeam: 'app/board/[boardId]/_components/canvas/canvas.tsx',
+      reasonNeeded: 'Need exact branch-local reroute guard',
+      fetchHint: 'lines 2-5 around manhattanLockedPrev',
+    },
+  ], {
+    rootDir: root,
+    index: { symbols: [] },
+    snippetContextLines: 0,
+    maxSnippetLines: 20,
+  });
+
+  assert.equal(result.fetchedSeams.length, 1);
+  assert.equal(result.skippedSeams.length, 0);
+  assert.equal(result.fetchedSeams[0].source, 'hint-range');
+  assert.equal(result.fetchedSeams[0].startLine, 2);
+  assert.equal(result.fetchedSeams[0].endLine, 5);
+  assert.match(result.fetchedSeams[0].content, /manhattanLockedPrev/);
 });
 
 test('resolveMissingSeams treats file path seams as hinted file requests', () => {

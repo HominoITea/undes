@@ -7,7 +7,7 @@ function isEnabled(value) {
 function enforceDispatcherGuard(options = {}) {
   const env = options.env || process.env;
   const logger = options.logger || console;
-  const useCommand = String(options.useCommand || 'npm run ai -- --prompt="..."');
+  const useCommand = String(options.useCommand || 'npm run undes -- --prompt="..."');
   const exitOnFailure = options.exitOnFailure !== false;
 
   if (isEnabled(env._AI_DISPATCHER_RESOLVED)) {

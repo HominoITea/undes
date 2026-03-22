@@ -951,7 +951,7 @@ function runAudit(treeFiles, projectType, rootDir = process.cwd()) {
 
   console.log('\n========================\n');
   console.log('To add more files, edit ai/context.json or run:');
-  console.log('  npm run ai:init --force');
+  console.log('  npm run undes:init --force');
   console.log('');
 }
 
@@ -1063,7 +1063,7 @@ async function main(optionsOrArgv = process.argv, env = process.env, baseCwd = p
     console.warn(`⚠️ ${warning}`);
   });
   if (hasWeakStackSignals(stackProfile) && !hasDeclaredStackOverrides(stackOverrides)) {
-    console.warn('⚠️ Stack detection has weak signals. Re-run `npm run ai:init -- --language=... --framework=...` or answer the bootstrap questionnaire in an interactive terminal.');
+    console.warn('⚠️ Stack detection has weak signals. Re-run `npm run undes:init -- --language=... --framework=...` or answer the bootstrap questionnaire in an interactive terminal.');
   }
   const llmsContent = buildLlmsSummary(stackProfile) || generatedConfig?.llmsFileContent || buildDefaultLlms(projectType);
   const cursorRulesContent =
@@ -1124,7 +1124,7 @@ async function main(optionsOrArgv = process.argv, env = process.env, baseCwd = p
 
 if (require.main === module) {
   enforceDispatcherGuard({
-    useCommand: 'npm run ai:init -- [--dry-run] [--force]',
+    useCommand: 'npm run undes:init -- [--dry-run] [--force]',
   });
   main().catch((error) => {
     console.error('❌ init-project failed.');

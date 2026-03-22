@@ -431,7 +431,7 @@ test('hub run --mode=memory forwards passthrough args', () => {
   ]);
 
   assert.equal(run.status, 0, `${run.stdout}\n${run.stderr}`);
-  assert.match(`${run.stdout}\n${run.stderr}`, /Usage: npm run ai:memory/);
+  assert.match(`${run.stdout}\n${run.stderr}`, /Usage: npm run undes:memory/);
 });
 
 test('hub run --mode=memory propagates in-process exit code on validation failure', () => {

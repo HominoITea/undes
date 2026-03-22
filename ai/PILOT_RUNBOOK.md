@@ -22,11 +22,11 @@ This pilot is required to avoid routing based on guessed thresholds.
 ## Prerequisites
 1. Register a real target project in hub:
 ```bash
-npm run ai:add -- --path="/abs/path/to/repository"
+npm run undes:add -- --path="/abs/path/to/repository"
 ```
 2. Select active project once:
 ```bash
-npm run ai:start
+npm run undes:start
 ```
 3. Ensure API keys are configured in `.ai.env`.
 4. Run pilot in interactive mode (do not use `--non-interactive`) so quality rating is recorded.
@@ -48,7 +48,7 @@ Suggested structure:
 
 ## Run Command Template
 ```bash
-npm run ai -- \
+npm run undes -- \
   --prompt="YOUR_REAL_PROMPT" \
   --prepost --test
 ```

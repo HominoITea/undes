@@ -8,7 +8,7 @@
 
 ```mermaid
 flowchart TD
-    Start([Пользователь: npm run ai -- --prompt="..."]) --> Bootstrap[Bootstrap: Сборка stack-profile.json\n(Определение языка, фреймворков)]
+    Start([Пользователь: npm run undes -- --prompt="..."]) --> Bootstrap[Bootstrap: Сборка stack-profile.json\n(Определение языка, фреймворков)]
     Bootstrap --> Caching{Архив содержит\nтакой же промпт?}
     
     %% Pre-process Phase

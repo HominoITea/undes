@@ -153,6 +153,9 @@ function parseLineRange(text = '') {
   if (!match) {
     match = source.match(/^(.+?):(\d+)(?:-(\d+))?$/);
   }
+  if (!match) {
+    match = source.match(/^(.+?)\s+lines?\s+(\d+)(?:\s*(?:-|to)\s*(\d+))?(?:\b.*)?$/i);
+  }
   if (!match) return null;
 
   const file = normalizeRelativePath(match[1]);
@@ -162,6 +165,24 @@ function parseLineRange(text = '') {
 
   return {
     file,
+    startLine,
+    endLine: Math.max(startLine, endLine),
+  };
+}
+
+function parseStandaloneLineRange(text = '') {
+  const source = String(text || '').trim();
+  if (!source) return null;
+
+  let match = source.match(/\blines?\s+(\d+)(?:\s*(?:-|to)\s*(\d+))?\b/i);
+  if (!match) {
+    match = source.match(/\bL(\d+)(?:\s*-\s*L?(\d+))?\b/i);
+  }
+  if (!match) return null;
+
+  const startLine = clampPositiveInt(match[1], 1);
+  const endLine = clampPositiveInt(match[2] || match[1], startLine);
+  return {
     startLine,
     endLine: Math.max(startLine, endLine),
   };
@@ -733,10 +754,20 @@ function resolveSingleMissingSeam(request, options = {}) {
     return { fetched: null, skipped: { request, reason: 'missing-root-or-index' } };
   }
 
-  const lineHint = parseLineRange(request?.fetchHint || '') || parseLineRange(request?.symbolOrSeam || '');
-  const fileHint = lineHint?.file
+  const directLineHint = parseLineRange(request?.fetchHint || '') || parseLineRange(request?.symbolOrSeam || '');
+  const fileHint = directLineHint?.file
     || extractRelativeFileHint(request?.fetchHint || '')
     || extractRelativeFileHint(request?.symbolOrSeam || '');
+  const standaloneLineHint = !directLineHint && fileHint
+    ? parseStandaloneLineRange(request?.fetchHint || '')
+    : null;
+  const lineHint = directLineHint || (standaloneLineHint
+    ? {
+      file: fileHint,
+      startLine: standaloneLineHint.startLine,
+      endLine: standaloneLineHint.endLine,
+    }
+    : null);
   const fileHintReason = lineHint ? 'hint-range-not-found' : 'file-hint-not-found';
 
   const scopedMethodResolution = resolveScopedMethodRequest(request, index, fileHint);

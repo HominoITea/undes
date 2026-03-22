@@ -80,7 +80,7 @@ If a grammar fails to compile (for example missing build tools), it is silently 
 - Default behavior after `npm install`: the kit will try the bundled local `ast-grep` first.
 - Safe fallback: if `ast-grep` is missing or unsupported, runtime falls back to index-backed structural search automatically.
 - Manual override: set `AI_AST_GREP_BIN=/abs/path/to/ast-grep` if you want to pin a custom binary.
-- Health check: `npm run ai:doctor -- --project-path=/abs/project/path` reports whether `ast-grep` is currently detected.
+- Health check: `npm run undes:doctor -- --project-path=/abs/project/path` reports whether `ast-grep` is currently detected.
 
 ### How it works
 
@@ -206,29 +206,31 @@ Use `ai.bat`:
 ## Quick Start (EN)
 ```bash
 # 1) Optional bootstrap for new projects
-npm run ai:init
+npm run undes:init
 
 # 2) Main run
-npm run ai -- --prompt="Refactor login controller"
+npm run undes -- --prompt="Refactor login controller"
 
 # 3) Light mode (faster/cheaper)
-npm run ai:light -- --prompt="Fix typo in README"
+npm run undes:light -- --prompt="Fix typo in README"
 
 # 4) Rebuild code index only
-npm run ai:index
+npm run undes:index
 
 # 5) Build context pack only
-npm run ai:pack -- --prompt="Summarize auth flow"
+npm run undes:pack -- --prompt="Summarize auth flow"
 
 # 6) Show memory snapshot from typed logs
-npm run ai:memory -- --entries=5 --log=plan,change
+npm run undes:memory -- --entries=5 --log=plan,change
 
 # 7) Search saved local memory
-npm run ai:memory:search -- --query="jwt race"
+npm run undes:memory:search -- --query="jwt race"
 
 # 8) Save explicit fact/decision to local memory
-npm run ai:memory:save -- --type=decision --title="Split-root layout" --content="Keep ai/ authored and .ai/ runtime"
+npm run undes:memory:save -- --type=decision --title="Split-root layout" --content="Keep ai/ authored and .ai/ runtime"
 ```
+
+Primary CLI family is now `undes*`. Legacy `ai*` scripts remain available as compatibility aliases during the migration window.
 
 ---
 
@@ -236,27 +238,27 @@ npm run ai:memory:save -- --type=decision --title="Split-root layout" --content=
 
 | npm script | What it does | Example |
 |---|---|---|
-| `npm run ai -- ...` | Full multi-agent run with context generation | `npm run ai -- --prompt="Add rate limiting"` |
-| `npm run ai:light -- ...` | Same engine, but with light context set | `npm run ai:light -- --prompt="Update docs"` |
-| `npm run ai:index` | Build/update `.code_index.json` and exit | `npm run ai:index` |
-| `npm run ai:pack -- ...` | Build `.context_bundle.md` using Context Pack mode and exit | `npm run ai:pack -- --prompt="Describe payment module"` |
-| `npm run ai:memory -- ...` | Print snapshot from plan/proposal/discussion/change/global logs | `npm run ai:memory -- --entries=3 --log=discussion,change` |
-| `npm run ai:memory:search -- ...` | Search typed local memory entries (`fact`, `decision`, `episode`) | `npm run ai:memory:search -- --query="templater diagnostics"` |
-| `npm run ai:memory:save -- ...` | Save an explicit typed local memory entry | `npm run ai:memory:save -- --type=fact --title="Framework" --content="Project uses Next.js 15"` |
-| `npm run ai:<hub-cmd> -- ...` | Hub registry and maintenance (`ai:add`, `ai:list`, `ai:start`, `ai:status`, `ai:doctor`, `ai:stats`, `ai:gc`) | `npm run ai:stats` |
-| `npm run ai:init -- ...` | Bootstrap active config files from project scan | `npm run ai:init -- --audit` |
-| `npm run ai:clean` | Keep only latest files in `.ai/prompts/runs` | `npm run ai:clean` |
-| `npm run ai:arch:check -- ...` | Run architecture complexity checks | `npm run ai:arch:check -- --target=src --max-lines=250` |
-| `npm run ai:lang:list` | List registered language specs | `npm run ai:lang:list` |
-| `npm run ai:lang:validate` | Validate `ai/specs/languages.json` | `npm run ai:lang:validate` |
-| `npm run ai:lang:scaffold -- ...` | Print scaffold JSON for a new language spec | `npm run ai:lang:scaffold -- --id=rust --label=Rust --ext=.rs` |
-| `npm run ai:lang:add -- ...` | Add a new language spec with TODO regex patterns | `npm run ai:lang:add -- --id=rust --label=Rust --ext=.rs` |
+| `npm run undes -- ...` | Full multi-agent run with context generation | `npm run undes -- --prompt="Add rate limiting"` |
+| `npm run undes:light -- ...` | Same engine, but with light context set | `npm run undes:light -- --prompt="Update docs"` |
+| `npm run undes:index` | Build/update `.code_index.json` and exit | `npm run undes:index` |
+| `npm run undes:pack -- ...` | Build `.context_bundle.md` using Context Pack mode and exit | `npm run undes:pack -- --prompt="Describe payment module"` |
+| `npm run undes:memory -- ...` | Print snapshot from plan/proposal/discussion/change/global logs | `npm run undes:memory -- --entries=3 --log=discussion,change` |
+| `npm run undes:memory:search -- ...` | Search typed local memory entries (`fact`, `decision`, `episode`) | `npm run undes:memory:search -- --query="templater diagnostics"` |
+| `npm run undes:memory:save -- ...` | Save an explicit typed local memory entry | `npm run undes:memory:save -- --type=fact --title="Framework" --content="Project uses Next.js 15"` |
+| `npm run undes:<hub-cmd> -- ...` | Hub registry and maintenance (`undes:add`, `undes:list`, `undes:start`, `undes:status`, `undes:doctor`, `undes:stats`, `undes:gc`) | `npm run undes:stats` |
+| `npm run undes:init -- ...` | Bootstrap active config files from project scan | `npm run undes:init -- --audit` |
+| `npm run undes:clean` | Keep only latest files in `.ai/prompts/runs` | `npm run undes:clean` |
+| `npm run undes:arch:check -- ...` | Run architecture complexity checks | `npm run undes:arch:check -- --target=src --max-lines=250` |
+| `npm run undes:lang:list` | List registered language specs | `npm run undes:lang:list` |
+| `npm run undes:lang:validate` | Validate `ai/specs/languages.json` | `npm run undes:lang:validate` |
+| `npm run undes:lang:scaffold -- ...` | Print scaffold JSON for a new language spec | `npm run undes:lang:scaffold -- --id=rust --label=Rust --ext=.rs` |
+| `npm run undes:lang:add -- ...` | Add a new language spec with TODO regex patterns | `npm run undes:lang:add -- --id=rust --label=Rust --ext=.rs` |
 
 Verification policy for hub changes:
-- After changing hub code/config/docs, run `npm run ai:test` before finalizing.
+- After changing hub code/config/docs, run `npm run undes:test` before finalizing.
 - For feature/fix changes, add/update tests in the target project and run relevant tests when possible.
 
-### Flags for `npm run ai -- ...`
+### Flags for `npm run undes -- ...`
 
 | Flag | Effect |
 |---|---|
@@ -272,8 +274,8 @@ Verification policy for hub changes:
 | `--no-tree` | Skip directory tree section in context bundle. |
 | `--no-cache` | Ignore `.context_cache.json` and rebuild context. |
 | `--no-redact` | Disable secret redaction in context output. |
-| `--index-only` | Build index and exit (used by `ai:index`). |
-| `--context-pack-only` | Build context pack bundle and exit (used by `ai:pack`). |
+| `--index-only` | Build index and exit (used by `undes:index`). |
+| `--context-pack-only` | Build context pack bundle and exit (used by `undes:pack`). |
 | `--prepost` | Enable pre-process phase agents (`phase: "pre-process"`). |
 | `--test` | Enable post-process phase agents (`phase: "post-process"`). |
 | `--restart` | Ignore any interrupted checkpoint run and start fresh. |
@@ -282,12 +284,12 @@ Verification policy for hub changes:
 | `--feedback="..."` | Feedback text for `--refine` (prompted interactively if omitted). |
 
 Hub behavior:
-- `npm run ai:start` saves selected project into `config/hub-config.json` (`activeProjectPath`).
-- Next `npm run ai` from hub root auto-uses this project even without `AI_HUB_PROJECT_PATH`.
+- `npm run undes:start` saves selected project into `config/hub-config.json` (`activeProjectPath`).
+- Next `npm run undes` from hub root auto-uses this project even without `AI_HUB_PROJECT_PATH`.
 - CLI/env still override config (`--project-path` > `AI_HUB_PROJECT_PATH` > `config/hub-config.json` > last-used registry hint).
 - Compatibility window: legacy root `projects.json` / `hub-config.json` are still read, but emit deprecation warnings.
-- Legacy alias `npm run ai:hub -- ...` removed; use flat `ai:*` commands only.
-- Direct script invocation is blocked in strict dispatcher mode (for example `node ai/scripts/generate-context.js`); use `npm run ai ...`.
+- Legacy alias family `ai:*` still works during migration, but `undes:*` is now the primary CLI surface.
+- Direct script invocation is blocked in strict dispatcher mode (for example `node ai/scripts/generate-context.js`); use `npm run undes ...`.
 
 ### Writing Better Investigation Prompts (EN)
 
@@ -316,49 +318,49 @@ Use these steps when one hub instance serves multiple repositories.
 
 1. Add each project once:
 ```bash
-npm run ai:add -- --path=/abs/path/to/project-a
-npm run ai:add -- --path=/abs/path/to/project-b
+npm run undes:add -- --path=/abs/path/to/project-a
+npm run undes:add -- --path=/abs/path/to/project-b
 ```
 
 2. Verify registry:
 ```bash
-npm run ai:list
+npm run undes:list
 ```
 
 3. Switch active project:
 ```bash
 # Interactive menu
-npm run ai:start
+npm run undes:start
 
 # Or non-interactive selection by list index
-npm run ai:start -- --select=2
+npm run undes:start -- --select=2
 ```
 This writes selected path to `config/hub-config.json` as `activeProjectPath`.
 
 4. Run AI for the active project (from hub root):
 ```bash
-npm run ai -- --prompt="Implement feature X"
+npm run undes -- --prompt="Implement feature X"
 ```
 No `--project-path` and no `AI_HUB_PROJECT_PATH` are required after `start`.
 
 5. One-off override for current command only:
 ```bash
-npm run ai -- --project-path=/abs/path/to/another-project --prompt="Quick check"
+npm run undes -- --project-path=/abs/path/to/another-project --prompt="Quick check"
 ```
 or:
 ```bash
-AI_HUB_PROJECT_PATH=/abs/path/to/another-project npm run ai -- --prompt="Quick check"
+AI_HUB_PROJECT_PATH=/abs/path/to/another-project npm run undes -- --prompt="Quick check"
 ```
 Override priority: `--project-path` > `AI_HUB_PROJECT_PATH` > `config/hub-config.json` > `config/projects.json:lastUsed`.
 
 6. Check current target project details:
 ```bash
-npm run ai:status
+npm run undes:status
 ```
 
 7. If run fails with `EACCES`, fix write permissions in target project `.ai/` directory.
 
-### Flags for `npm run ai:init -- ...`
+### Flags for `npm run undes:init -- ...`
 
 | Flag | Effect |
 |---|---|
@@ -375,18 +377,18 @@ npm run ai:status
 | `--api-key-env=...` | Parsed but currently not applied in runtime bootstrap logic. |
 
 Runtime note:
-- on `npm run ai`, the hub now checks a project scaffold contract in `.ai/hub-contract.json`;
+- on `npm run undes`, the hub now checks a project scaffold contract in `.ai/hub-contract.json`;
 - if safe derived surfaces drift (`.ai/stack-profile.json`, `ai/llms.md`, context references), they are auto-synced before the run starts;
-- if merge-aware drift remains in `ai/context.json` / `ai/agents.json`, runtime warns and recommends `npm run ai:init -- --sync`.
+- if merge-aware drift remains in `ai/context.json` / `ai/agents.json`, runtime warns and recommends `npm run undes:init -- --sync`.
 
-### Flags for `npm run ai:memory -- ...`
+### Flags for `npm run undes:memory -- ...`
 
-The default `ai:memory` command is still a typed-log snapshot view.
+The default `undes:memory` command is still a typed-log snapshot view.
 
 Additional Local Memory commands:
 
-- `npm run ai:memory:search -- --query="..."`
-- `npm run ai:memory:save -- --type=decision --title="..." --content="..."`
+- `npm run undes:memory:search -- --query="..."`
+- `npm run undes:memory:save -- --type=decision --title="..." --content="..."`
 
 Local Memory storage lives in:
 
@@ -401,7 +403,7 @@ Local Memory storage lives in:
 | `--log=plan,proposal,discussion,change,global` | Comma-separated list of logs to print. |
 | `--help`, `-h` | Print usage help. |
 
-### Flags for `npm run ai:arch:check -- ...`
+### Flags for `npm run undes:arch:check -- ...`
 
 | Flag | Effect |
 |---|---|
@@ -414,7 +416,7 @@ Local Memory storage lives in:
 | `--god-fns=N` | Minimum functions required before god-module rule triggers. |
 | `--help`, `-h` | Print usage help. |
 
-### Options for `npm run ai:lang:scaffold` and `npm run ai:lang:add`
+### Options for `npm run undes:lang:scaffold` and `npm run undes:lang:add`
 
 | Option | Effect |
 |---|---|
@@ -427,22 +429,22 @@ Local Memory storage lives in:
 ## Быстрый старт (RU)
 ```bash
 # 1) Опционально: bootstrap для нового проекта
-npm run ai:init
+npm run undes:init
 
 # 2) Основной запуск
-npm run ai -- --prompt="Рефакторинг контроллера логина"
+npm run undes -- --prompt="Рефакторинг контроллера логина"
 
 # 3) Легкий режим (быстрее/дешевле)
-npm run ai:light -- --prompt="Исправь опечатку в README"
+npm run undes:light -- --prompt="Исправь опечатку в README"
 
 # 4) Только обновить индекс кода
-npm run ai:index
+npm run undes:index
 
 # 5) Только собрать context pack
-npm run ai:pack -- --prompt="Опиши auth flow"
+npm run undes:pack -- --prompt="Опиши auth flow"
 
 # 6) Показать снимок памяти по логам
-npm run ai:memory -- --entries=5 --log=plan,change
+npm run undes:memory -- --entries=5 --log=plan,change
 ```
 
 ## Tree-sitter (Опциональный AST-парсинг)
@@ -479,7 +481,7 @@ npm install
 - Поведение по умолчанию после `npm install`: кит сначала пытается использовать локально установленный bundled `ast-grep`.
 - Безопасный fallback: если `ast-grep` отсутствует или не поддерживается, рантайм автоматически откатывается на index-backed structural search.
 - Ручной override: можно задать `AI_AST_GREP_BIN=/abs/path/to/ast-grep`, если нужен конкретный бинарник.
-- Проверка состояния: `npm run ai:doctor -- --project-path=/abs/project/path` покажет, обнаружен ли сейчас `ast-grep`.
+- Проверка состояния: `npm run undes:doctor -- --project-path=/abs/project/path` покажет, обнаружен ли сейчас `ast-grep`.
 
 ### Как это работает
 
@@ -545,24 +547,24 @@ cat examples/env-presets/balanced.env >> .ai.env
 
 | npm script | Что делает | Пример |
 |---|---|---|
-| `npm run ai -- ...` | Полный multi-agent запуск с генерацией контекста | `npm run ai -- --prompt="Добавь rate limiting"` |
-| `npm run ai:light -- ...` | Тот же движок, но с `lightFiles` | `npm run ai:light -- --prompt="Обнови документацию"` |
-| `npm run ai:index` | Собирает/обновляет `.code_index.json` и завершает работу | `npm run ai:index` |
-| `npm run ai:pack -- ...` | Собирает `.context_bundle.md` в режиме Context Pack и завершает работу | `npm run ai:pack -- --prompt="Опиши платежный модуль"` |
-| `npm run ai:memory -- ...` | Печатает snapshot по логам plan/proposal/discussion/change/global | `npm run ai:memory -- --entries=3 --log=discussion,change` |
-| `npm run ai:<hub-cmd> -- ...` | Управление реестром и обслуживанием хаба (`ai:add`, `ai:list`, `ai:start`, `ai:status`, `ai:doctor`, `ai:stats`, `ai:gc`) | `npm run ai:stats` |
-| `npm run ai:init -- ...` | Генерирует bootstrap рабочих конфиг-файлов из скана проекта | `npm run ai:init -- --audit` |
-| `npm run ai:clean` | Оставляет только последние файлы в `.ai/prompts/runs` | `npm run ai:clean` |
-| `npm run ai:arch:check -- ...` | Проверяет архитектурные ограничения по коду | `npm run ai:arch:check -- --target=src --max-lines=250` |
-| `npm run ai:lang:list` | Показывает список языковых спецификаций | `npm run ai:lang:list` |
-| `npm run ai:lang:validate` | Валидирует `ai/specs/languages.json` | `npm run ai:lang:validate` |
-| `npm run ai:lang:scaffold -- ...` | Печатает JSON-шаблон новой языковой спецификации | `npm run ai:lang:scaffold -- --id=rust --label=Rust --ext=.rs` |
-| `npm run ai:lang:add -- ...` | Добавляет новую языковую спецификацию с TODO regex | `npm run ai:lang:add -- --id=rust --label=Rust --ext=.rs` |
+| `npm run undes -- ...` | Полный multi-agent запуск с генерацией контекста | `npm run undes -- --prompt="Добавь rate limiting"` |
+| `npm run undes:light -- ...` | Тот же движок, но с `lightFiles` | `npm run undes:light -- --prompt="Обнови документацию"` |
+| `npm run undes:index` | Собирает/обновляет `.code_index.json` и завершает работу | `npm run undes:index` |
+| `npm run undes:pack -- ...` | Собирает `.context_bundle.md` в режиме Context Pack и завершает работу | `npm run undes:pack -- --prompt="Опиши платежный модуль"` |
+| `npm run undes:memory -- ...` | Печатает snapshot по логам plan/proposal/discussion/change/global | `npm run undes:memory -- --entries=3 --log=discussion,change` |
+| `npm run undes:<hub-cmd> -- ...` | Управление реестром и обслуживанием хаба (`undes:add`, `undes:list`, `undes:start`, `undes:status`, `undes:doctor`, `undes:stats`, `undes:gc`) | `npm run undes:stats` |
+| `npm run undes:init -- ...` | Генерирует bootstrap рабочих конфиг-файлов из скана проекта | `npm run undes:init -- --audit` |
+| `npm run undes:clean` | Оставляет только последние файлы в `.ai/prompts/runs` | `npm run undes:clean` |
+| `npm run undes:arch:check -- ...` | Проверяет архитектурные ограничения по коду | `npm run undes:arch:check -- --target=src --max-lines=250` |
+| `npm run undes:lang:list` | Показывает список языковых спецификаций | `npm run undes:lang:list` |
+| `npm run undes:lang:validate` | Валидирует `ai/specs/languages.json` | `npm run undes:lang:validate` |
+| `npm run undes:lang:scaffold -- ...` | Печатает JSON-шаблон новой языковой спецификации | `npm run undes:lang:scaffold -- --id=rust --label=Rust --ext=.rs` |
+| `npm run undes:lang:add -- ...` | Добавляет новую языковую спецификацию с TODO regex | `npm run undes:lang:add -- --id=rust --label=Rust --ext=.rs` |
 
 Политика верификации для изменений в хабе:
-- После изменений в коде/конфигах/документации хаба обязательно запускай `npm run ai:test` перед завершением задачи.
+- После изменений в коде/конфигах/документации хаба обязательно запускай `npm run undes:test` перед завершением задачи.
 
-### Флаги для `npm run ai -- ...`
+### Флаги для `npm run undes -- ...`
 
 | Флаг | Что делает |
 |---|---|
@@ -578,20 +580,20 @@ cat examples/env-presets/balanced.env >> .ai.env
 | `--no-tree` | Не добавляет дерево файлов в bundle. |
 | `--no-cache` | Игнорирует `.context_cache.json` и пересобирает контекст. |
 | `--no-redact` | Отключает редактирование секретов в выводе контекста. |
-| `--index-only` | Только индекс и выход (использует `ai:index`). |
-| `--context-pack-only` | Только context pack bundle и выход (использует `ai:pack`). |
+| `--index-only` | Только индекс и выход (использует `undes:index`). |
+| `--context-pack-only` | Только context pack bundle и выход (использует `undes:pack`). |
 | `--prepost` | Включает pre-process агентов (`phase: "pre-process"`). |
 | `--test` | Включает post-process агентов (`phase: "post-process"`). |
 | `--restart` | Игнорирует прерванный checkpoint-run и запускает новый с нуля. |
 | `--non-interactive` | Автовосстановление прерванного run без запроса (режим CI/скриптов). |
 
 Поведение хаба:
-- `npm run ai:start` сохраняет выбранный проект в `config/hub-config.json` (`activeProjectPath`).
-- Следующий `npm run ai` из корня хаба автоматически берет этот проект даже без `AI_HUB_PROJECT_PATH`.
+- `npm run undes:start` сохраняет выбранный проект в `config/hub-config.json` (`activeProjectPath`).
+- Следующий `npm run undes` из корня хаба автоматически берет этот проект даже без `AI_HUB_PROJECT_PATH`.
 - Приоритет источников: `--project-path` > `AI_HUB_PROJECT_PATH` > `config/hub-config.json` > last-used из `config/projects.json`.
 - Окно совместимости: legacy root `projects.json` / `hub-config.json` пока читаются, но выводится deprecation warning.
-- Legacy-алиас `npm run ai:hub -- ...` удален; используйте только плоские `ai:*` команды.
-- В strict dispatcher режиме прямой запуск скриптов (`node ai/scripts/generate-context.js`) блокируется; используйте `npm run ai ...`.
+- Legacy-алиас `npm run ai:hub -- ...` удален; используйте плоские `undes:*` команды. `ai:*` сохранены как compatibility aliases на переходный период.
+- В strict dispatcher режиме прямой запуск скриптов (`node ai/scripts/generate-context.js`) блокируется; используйте `npm run undes ...`.
 
 ### Как Писать Prompt Для Исследования (RU)
 
@@ -620,49 +622,49 @@ cat examples/env-presets/balanced.env >> .ai.env
 
 1. Один раз добавь проекты в реестр:
 ```bash
-npm run ai:add -- --path=/abs/path/to/project-a
-npm run ai:add -- --path=/abs/path/to/project-b
+npm run undes:add -- --path=/abs/path/to/project-a
+npm run undes:add -- --path=/abs/path/to/project-b
 ```
 
 2. Проверь список:
 ```bash
-npm run ai:list
+npm run undes:list
 ```
 
 3. Переключи активный проект:
 ```bash
 # Интерактивное меню
-npm run ai:start
+npm run undes:start
 
 # Или без меню по номеру из list
-npm run ai:start -- --select=2
+npm run undes:start -- --select=2
 ```
 Выбранный путь сохраняется в `config/hub-config.json` в поле `activeProjectPath`.
 
 4. Запускай AI для активного проекта (из корня хаба):
 ```bash
-npm run ai -- --prompt="Реализуй фичу X"
+npm run undes -- --prompt="Реализуй фичу X"
 ```
 После `start` не нужно каждый раз передавать `--project-path` или `AI_HUB_PROJECT_PATH`.
 
 5. Разовый override только для одного запуска:
 ```bash
-npm run ai -- --project-path=/abs/path/to/another-project --prompt="Быстрая проверка"
+npm run undes -- --project-path=/abs/path/to/another-project --prompt="Быстрая проверка"
 ```
 или:
 ```bash
-AI_HUB_PROJECT_PATH=/abs/path/to/another-project npm run ai -- --prompt="Быстрая проверка"
+AI_HUB_PROJECT_PATH=/abs/path/to/another-project npm run undes -- --prompt="Быстрая проверка"
 ```
 Приоритет: `--project-path` > `AI_HUB_PROJECT_PATH` > `config/hub-config.json` > `config/projects.json:lastUsed`.
 
 6. Проверка текущего целевого проекта:
 ```bash
-npm run ai:status
+npm run undes:status
 ```
 
 7. Если видишь `EACCES`, проверь права на запись в `.ai/` целевого проекта.
 
-### Флаги для `npm run ai:init -- ...`
+### Флаги для `npm run undes:init -- ...`
 
 | Флаг | Что делает |
 |---|---|
@@ -677,7 +679,7 @@ npm run ai:status
 | `--model=...` | Парсится, но в текущей версии не влияет на bootstrap-логику. |
 | `--api-key-env=...` | Парсится, но в текущей версии не влияет на bootstrap-логику. |
 
-### Флаги для `npm run ai:memory -- ...`
+### Флаги для `npm run undes:memory -- ...`
 
 | Флаг | Что делает |
 |---|---|
@@ -686,7 +688,7 @@ npm run ai:status
 | `--log=plan,proposal,discussion,change,global` | Список логов через запятую. |
 | `--help`, `-h` | Печатает справку по команде. |
 
-### Флаги для `npm run ai:arch:check -- ...`
+### Флаги для `npm run undes:arch:check -- ...`
 
 | Флаг | Что делает |
 |---|---|
@@ -699,7 +701,7 @@ npm run ai:status
 | `--god-fns=N` | Порог числа функций для активации правила god-module. |
 | `--help`, `-h` | Печатает справку по команде. |
 
-### Опции для `npm run ai:lang:scaffold` и `npm run ai:lang:add`
+### Опции для `npm run undes:lang:scaffold` и `npm run undes:lang:add`
 
 | Опция | Что делает |
 |---|---|
@@ -748,7 +750,7 @@ Use one primary log destination per event type.
 - Primary log: `UNIFIED_MODEL_CHANGE_LOG.md`
 - Planning/status log: `PROJECT_PLANNED_CHANGES.md`
 
-2. Runtime multi-agent executions (`npm run ai`, refine, checkpoint resume):
+2. Runtime multi-agent executions (`npm run undes`, refine, checkpoint resume):
 - Primary timeline: `.ai/logs/AI_LOG.md`
 - Detailed phase logs: `.ai/logs/AI_PLAN_LOG.md`, `AI_PROPOSAL_LOG.md`, `AI_DISCUSSION_LOG.md`, `AI_CHANGE_LOG.md`, `AI_ERROR_LOG.md`
 

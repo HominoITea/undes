@@ -152,6 +152,8 @@ test('approval review prompt applies evidence-quality penalties before agreeing'
   assert.match(review, /missingSeams/);
   assert.match(review, /minimal resolvable requests needed for a patch-safe answer/);
   assert.match(review, /Every `missingSeams` entry must use `Class#method` format/);
+  assert.match(review, /If the unresolved gap is branch-local, guard-local, or variable-local inside an already known file, keep the request narrow/);
+  assert.match(review, /canvas\.tsx lines 460-520 around manhattanLockedPrev/);
   assert.match(review, /Do not request an entire class or file when one method body/);
 });
 
@@ -175,6 +177,7 @@ test('approval repair prompt reinforces strict JSON and narrow seam requests', (
   assert.match(repair, /strict JSON object only/);
   assert.match(repair, /Do not add markdown, headings, explanations outside the JSON/);
   assert.match(repair, /Every `missingSeams` entry must use `Class#method` format/);
+  assert.match(repair, /For branch-local or variable-local evidence gaps in an already known file/);
   assert.match(repair, /Do not request an entire class or file when a narrower seam is enough/);
 });
 

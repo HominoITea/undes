@@ -229,16 +229,16 @@ function selectLogKeys(requestedLogs, logs) {
 }
 
 function printHelp() {
-  console.log('Usage: npm run ai:memory -- [--entries=N] [--bytes=N] [--log=plan,proposal,discussion,change,error,global]');
+  console.log('Usage: npm run undes:memory -- [--entries=N] [--bytes=N] [--log=plan,proposal,discussion,change,error,global]');
   console.log('Additional commands:');
-  console.log('  npm run ai:memory:search -- --query="jwt race" [--type=fact|decision|episode|openQuestion] [--limit=N]');
-  console.log('  npm run ai:memory:save -- --type=decision --title="..." --content="..." [--summary="..."] [--tags=a,b] [--source-ref=path]');
+  console.log('  npm run undes:memory:search -- --query="jwt race" [--type=fact|decision|episode|openQuestion] [--limit=N]');
+  console.log('  npm run undes:memory:save -- --type=decision --title="..." --content="..." [--summary="..."] [--tags=a,b] [--source-ref=path]');
   console.log('Examples:');
-  console.log('  npm run ai:memory');
-  console.log('  npm run ai:memory -- --entries=5 --bytes=3000');
-  console.log('  npm run ai:memory -- --log=change,discussion');
-  console.log('  npm run ai:memory:search -- --query="split root layout"');
-  console.log('  npm run ai:memory:save -- --type=fact --title="Framework" --content="Project uses Next.js 15" --tags=nextjs,app-router');
+  console.log('  npm run undes:memory');
+  console.log('  npm run undes:memory -- --entries=5 --bytes=3000');
+  console.log('  npm run undes:memory -- --log=change,discussion');
+  console.log('  npm run undes:memory:search -- --query="split root layout"');
+  console.log('  npm run undes:memory:save -- --type=fact --title="Framework" --content="Project uses Next.js 15" --tags=nextjs,app-router');
 }
 
 function normalizeMainInput(optionsOrArgv = process.argv, env = process.env, baseCwd = process.cwd()) {
@@ -387,7 +387,7 @@ function main(optionsOrArgv = process.argv, env = process.env, baseCwd = process
 
 if (require.main === module) {
   enforceDispatcherGuard({
-    useCommand: 'npm run ai:memory -- [--entries=N] [--bytes=N] [--log=...]',
+    useCommand: 'npm run undes:memory -- [--entries=N] [--bytes=N] [--log=...]',
   });
   main();
 }

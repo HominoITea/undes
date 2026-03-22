@@ -25,20 +25,22 @@ cp .ai.env.example .ai.env
 # using `AI_CFG__...` keys from `.ai.env.example`
 
 # 2. Run with a question
-npm run ai -- --prompt="How do I add a 'Like' button to the canvas?"
+npm run undes -- --prompt="How do I add a 'Like' button to the canvas?"
 
 # Optional: bootstrap project AI config
-npm run ai:init
+npm run undes:init
 
 # Optional: enable Prompt Engineer (pre-process)
-npm run ai -- --prompt="Refactor the board toolbar" --prepost
+npm run undes -- --prompt="Refactor the board toolbar" --prepost
 
 # Optional: enable Tester (post-process validation)
-npm run ai -- --prompt="Add export to PNG" --test
+npm run undes -- --prompt="Add export to PNG" --test
 
 # 3. Check the result
 cat .ai/prompts/result.txt
 ```
+
+Primary CLI family is now `undes*`. Legacy `ai*` scripts are still supported as compatibility aliases during the migration window.
 
 ## Runtime Overrides
 
@@ -81,17 +83,17 @@ When this repository is used as a shared hub for several projects:
 
 ```bash
 # Add projects once
-npm run ai:add -- --path=/abs/path/to/project-a
-npm run ai:add -- --path=/abs/path/to/project-b
+npm run undes:add -- --path=/abs/path/to/project-a
+npm run undes:add -- --path=/abs/path/to/project-b
 
 # Select active project (writes config/hub-config.json -> activeProjectPath)
-npm run ai:start
+npm run undes:start
 
 # Run against selected project without extra flags
-npm run ai -- --prompt="Implement task"
+npm run undes -- --prompt="Implement task"
 ```
 
-Switch any time with `npm run ai:start` (or `npm run ai:start -- --select=N`).
+Switch any time with `npm run undes:start` (or `npm run undes:start -- --select=N`).
 For one-off runs, use `--project-path=/abs/path`.
 Direct script runs are blocked in strict dispatcher mode (`node ai/scripts/...`); use npm scripts.
 Detailed multi-project instructions are in `README.md` (`Workspace Hub Mode` section).
@@ -134,7 +136,7 @@ Ready presets are available in `examples/env-presets/` (`economy`, `balanced`, `
 ### Step 3: Verify Configuration
 ```bash
 # Test that the script runs
-npm run ai -- --help
+npm run undes -- --help
 ```
 
 ---
@@ -282,9 +284,9 @@ fall out of sync. The scaffold contract system detects and resolves this automat
 
 **How it works:**
 
-1. `npm run ai:init` writes `.ai/hub-contract.json` with a `contractVersion` and
+1. `npm run undes:init` writes `.ai/hub-contract.json` with a `contractVersion` and
    SHA-256 hashes of every scaffolded file.
-2. On every `npm run ai` startup, the runtime compares the project contract against
+2. On every `npm run undes` startup, the runtime compares the project contract against
    the current `HUB_CONTRACT_VERSION`. If the contract is missing or outdated, drift
    is detected.
 
@@ -304,19 +306,19 @@ and `lightFiles` — removing them manually has no effect, they will reappear.
 **Commands:**
 
 ```bash
-# Auto-sync only (runs implicitly on every npm run ai)
+# Auto-sync only (runs implicitly on every npm run undes)
 # Updates: stack-profile.json, llms.md, context.json refs, hub-contract.json
 # Does NOT touch: agents.json
 
 # Full sync with backup (explicit operator action)
-npm run ai:init -- --sync
+npm run undes:init -- --sync
 # Updates everything including agents.json (merges hub defaults + project overrides)
 # Creates .bak-<timestamp> before overwriting merge-aware files
 ```
 
 **Console output:**
 - `Project scaffold drift detected. Auto-synced: ...` — safe files were updated
-- `Merge-aware drift detected in project config. Recommended: npm run ai:init -- --sync` — agents.json needs manual sync
+- `Merge-aware drift detected in project config. Recommended: npm run undes:init -- --sync` — agents.json needs manual sync
 - `Scaffold drift check skipped: ...` — non-fatal error, run continues
 
 ```json
@@ -369,31 +371,31 @@ npm run ai:init -- --sync
 
 ```bash
 # Project bootstrap (active config files)
-npm run ai:init
+npm run undes:init
 
 # Full run
-npm run ai -- --prompt="Your question here"
+npm run undes -- --prompt="Your question here"
 
 # Light run
-npm run ai:light -- --prompt="Your question here"
+npm run undes:light -- --prompt="Your question here"
 
 # Rebuild index only
-npm run ai:index
+npm run undes:index
 
 # Build context pack only
-npm run ai:pack -- --prompt="Your question here"
+npm run undes:pack -- --prompt="Your question here"
 
 # Memory snapshot
-npm run ai:memory
+npm run undes:memory
 
 # Typed memory search
-npm run ai:memory:search -- --query="jwt race"
+npm run undes:memory:search -- --query="jwt race"
 
 # Manual typed memory save
-npm run ai:memory:save -- --type=decision --title="Split-root layout" --content="Keep ai/ authored and .ai/ runtime"
+npm run undes:memory:save -- --type=decision --title="Split-root layout" --content="Keep ai/ authored and .ai/ runtime"
 ```
 
-For full command and flags reference (including `ai:clean`, `ai:arch:check`, `ai:lang:*`, and all CLI options), use `README.md`.
+For full command and flags reference (including `undes:clean`, `undes:arch:check`, `undes:lang:*`, and all CLI options), use `README.md`.
 
 Testing policy for agents:
 - For each behavior change, add/update tests (unit/integration/regression as applicable).
@@ -439,8 +441,8 @@ Important:
 
 Enable with flags:
 ```bash
-npm run ai -- --prompt="Your question" --prepost
-npm run ai -- --prompt="Your question" --test
+npm run undes -- --prompt="Your question" --prepost
+npm run undes -- --prompt="Your question" --test
 ```
 
 ```
@@ -520,7 +522,7 @@ Context bundle is cached based on file hashes. If files haven't changed, cached 
 
 ```bash
 # Force regeneration
-npm run ai -- --no-cache --prompt="..."
+npm run undes -- --no-cache --prompt="..."
 ```
 
 ### Metrics Tracking
@@ -582,10 +584,10 @@ The system automatically retries with exponential backoff. If persistent:
 ### Context Too Large
 ```bash
 # Use light mode
-npm run ai:light -- --prompt="..."
+npm run undes:light -- --prompt="..."
 
 # Or limit files
-npm run ai -- --max-files=100 --prompt="..."
+npm run undes -- --max-files=100 --prompt="..."
 ```
 
 ---
@@ -631,7 +633,7 @@ project/
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                         npm run ai                               │
+│                        npm run undes                             │
 └─────────────────────────────────────────────────────────────────┘
                                 │
                                 ▼
@@ -747,22 +749,22 @@ cp .ai.env.example .ai.env
 # Опционально: задайте execution/rate-limit/token настройки через ключи `AI_CFG__...`
 
 # 2. Опционально: bootstrap проекта (создает рабочие конфиги)
-npm run ai:init
+npm run undes:init
 
 # 3. Запустите с вопросом
-npm run ai -- --prompt="Как добавить кнопку лайка на холст?"
+npm run undes -- --prompt="Как добавить кнопку лайка на холст?"
 
 # Легкий режим (быстрее/дешевле)
-npm run ai:light -- --prompt="Исправь опечатку в README"
+npm run undes:light -- --prompt="Исправь опечатку в README"
 
 # Обновить только индекс кода
-npm run ai:index
+npm run undes:index
 
 # Собрать только context pack
-npm run ai:pack -- --prompt="Опиши auth flow"
+npm run undes:pack -- --prompt="Опиши auth flow"
 
 # Посмотреть snapshot памяти из typed-логов
-npm run ai:memory -- --entries=5 --log=plan,change
+npm run undes:memory -- --entries=5 --log=plan,change
 
 # 4. Проверьте результат
 cat .ai/prompts/result.txt
@@ -786,25 +788,25 @@ OPENAI_API_KEY=sk-proj-xxxxx
 
 ```bash
 # Bootstrap (рабочие конфиги)
-npm run ai:init
+npm run undes:init
 
 # Полный режим
-npm run ai -- --prompt="Ваш вопрос"
+npm run undes -- --prompt="Ваш вопрос"
 
 # Легкий режим (быстрее и дешевле)
-npm run ai:light -- --prompt="Ваш вопрос"
+npm run undes:light -- --prompt="Ваш вопрос"
 
 # Только обновить индекс кода
-npm run ai:index
+npm run undes:index
 
 # Только собрать context pack
-npm run ai:pack -- --prompt="Ваш вопрос"
+npm run undes:pack -- --prompt="Ваш вопрос"
 
 # Память проекта (план/предложения/обсуждения/изменения)
-npm run ai:memory
+npm run undes:memory
 ```
 
-Полный справочник по всем командам и флагам (`ai:clean`, `ai:arch:check`, `ai:lang:*` и все CLI-опции) находится в `README.md` (разделы EN/RU).
+Полный справочник по всем командам и флагам (`undes:clean`, `undes:arch:check`, `undes:lang:*` и все CLI-опции) находится в `README.md` (разделы EN/RU).
 
 ## Результаты
 
@@ -816,7 +818,7 @@ npm run ai:memory
 | `.ai/prompts/test-report.md` | Отчет по тестам (если включен `--test`) |
 | `.ai/prompts/runs/` | Полные артефакты завершенных прогонов |
 | `.ai/prompts/discussions/<task-id>/<run-id>/` | Исторический пакет prompt/result для конкретного прогона задачи |
-| `.ai/prompts/runs/init-*.json` | Метаданные bootstrap (`ai:init`) |
+| `.ai/prompts/runs/init-*.json` | Метаданные bootstrap (`undes:init`) |
 | `.ai/prompts/metrics/latest.json` | Метрики последнего запуска |
 | `.ai/prompts/metrics/history.json` | История метрик (100 запусков) |
 

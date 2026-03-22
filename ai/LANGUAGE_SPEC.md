@@ -11,29 +11,29 @@ This guide shows how to add a new programming language spec to the project.
 
 1. Validate current registry:
 ```bash
-npm run ai:lang:validate
+npm run undes:lang:validate
 ```
 
 2. Generate a scaffold (preview only):
 ```bash
-npm run ai:lang:scaffold -- --id=rust --label=Rust --ext=.rs
+npm run undes:lang:scaffold -- --id=rust --label=Rust --ext=.rs
 ```
 
 3. Add a new language entry with TODO patterns:
 ```bash
-npm run ai:lang:add -- --id=rust --label=Rust --ext=.rs
+npm run undes:lang:add -- --id=rust --label=Rust --ext=.rs
 ```
 
 4. Open `ai/specs/languages.json` and replace `TODO` regex entries in `symbolPatterns`.
 
 5. Validate again:
 ```bash
-npm run ai:lang:validate
+npm run undes:lang:validate
 ```
 
 6. Verify list:
 ```bash
-npm run ai:lang:list
+npm run undes:lang:list
 ```
 
 ## Schema

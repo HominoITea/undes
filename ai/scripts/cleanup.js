@@ -129,7 +129,7 @@ function main(optionsOrArgv = process.argv, env = process.env, baseCwd = process
 
 if (require.main === module) {
   enforceDispatcherGuard({
-    useCommand: 'npm run ai:clean',
+    useCommand: 'npm run undes:clean',
   });
   main();
 }
