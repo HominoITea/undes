@@ -729,6 +729,8 @@ npm run undes:status
 - `.ai/prompts/discussions/<task-id>/<run-id>/`: prompt/result/Devil's Advocate discussion package for a specific task run.
 - `.ai/prompts/metrics/latest.json`: latest run metrics plus `operationalSignals` such as runtime settings, structural-search diagnostics, output-token auto-adjustments, and final trust / patch-safe gap summary.
 - `ai/PILOT_RUNBOOK.md`: real-project pilot checklist before enabling SLA Router.
+
+### Runtime Logs
 - `.ai/logs/AI_PLAN_LOG.md`: plans and execution lifecycle.
 - `.ai/logs/AI_PROPOSAL_LOG.md`: model proposals.
 - `.ai/logs/AI_DISCUSSION_LOG.md`: critiques/discussions.
@@ -745,32 +747,6 @@ Important:
 - if `COPYPASTE_READY: NO`, manual review, project-specific validation, and testing are mandatory before using generated code or config;
 - user-facing free-text outputs are expected to stay in the same natural language as the original user prompt unless the user explicitly requests another language;
 - see [docs/USER_AGREEMENT.md](docs/USER_AGREEMENT.md) for the current user-facing disclaimer and responsibility boundary.
-
-### Logging Contract (No Duplicates)
-
-Use one primary log destination per event type.
-
-1. Hub repository edits (manual code/docs/config/test changes):
-- Primary log: `UNIFIED_MODEL_CHANGE_LOG.md`
-- Planning/status log: `PROJECT_PLANNED_CHANGES.md`
-
-2. Runtime multi-agent executions (`npm run undes`, refine, checkpoint resume):
-- Primary timeline: `.ai/logs/AI_LOG.md`
-- Detailed phase logs: `.ai/logs/AI_PLAN_LOG.md`, `AI_PROPOSAL_LOG.md`, `AI_DISCUSSION_LOG.md`, `AI_CHANGE_LOG.md`, `AI_ERROR_LOG.md`
-
-3. Hub operating on external target projects:
-- Runtime logs go to target project `.ai/logs/*`
-- Hub root keeps a short reference entry only (`project path + task_id/run_id`)
-
-Mandatory metadata in every entry:
-- `timestamp_utc` (exact UTC time)
-- `author_model` (who made/run the change)
-- `task_id` (ticket/issue/run/manual id)
-- `task_summary` (what change/run this belongs to)
-
-Anti-duplication rule:
-- Do not paste the same full summary into multiple logs.
-- Secondary log entries should contain a short pointer: `Ref: <task_id>`.
 
 ### Git Workflow Rule
 

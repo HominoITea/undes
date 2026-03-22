@@ -683,48 +683,6 @@ project/
 
 ---
 
-## Logging Protocol
-
-All AI agents must follow one-source logging (no duplicate summaries).
-
-### Streams
-1. `Hub manual changes`:
-- `UNIFIED_MODEL_CHANGE_LOG.md` (primary)
-- `PROJECT_PLANNED_CHANGES.md` (planning/status)
-
-2. `Runtime multi-agent execution`:
-- `.ai/logs/AI_LOG.md` (primary)
-- `.ai/logs/AI_PLAN_LOG.md`
-- `.ai/logs/AI_PROPOSAL_LOG.md`
-- `.ai/logs/AI_DISCUSSION_LOG.md`
-- `.ai/logs/AI_CHANGE_LOG.md`
-- `.ai/logs/AI_ERROR_LOG.md`
-
-### Before Working
-Read recent entries from the stream that matches your action type.
-
-### After Working
-Write one primary entry and avoid copy-paste duplicates:
-
-```markdown
-## [YYYY-MM-DD HH:mm:ss UTC] - Agent: [Name]
-Project: [Project name]
-Task ID: [ABC-123 | run-... | <promptHash>]
-Task Summary: [what this change/run is about]
-Phase/Action: [proposal|discussion|change|plan]
-Artifact(s): [file paths]
-Status: [IN_PROGRESS|DONE|FAILED]
-Summary: [What was discussed/proposed/changed]
-```
-
-Mandatory metadata:
-- `timestamp_utc`
-- `author_model`
-- `task_id`
-- `task_summary`
-
-Secondary logs should only keep `Ref: <task_id>` if the full summary already exists in another primary log.
-
 ## Git Workflow Rule
 
 For all new feature development:
