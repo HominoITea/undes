@@ -1,32 +1,40 @@
-# Universal AI Agent Kit
+# undes
 
-A standalone, cross-platform toolkit to run multi-agent AI workflows in any project (Node.js, .NET, Python, Java, etc.).
+Evidence-aware multi-agent engineering workflows for real codebases.
+
+It is designed for work that needs more than a single-shot chat answer:
+- root-cause investigation across multiple files
+- proposal/critique/consensus loops with explicit approval
+- narrow seam expansion when evidence is still missing
+- patch-safe vs diagnostic output separation
+- repeatable runs with logs, checkpoints, memory, and metrics
 
 ## Features
-- Multi-agent debate with configurable roles (Architect, Reviewer, Implementer, Synthesizer, etc.).
-- Consensus loop: Proposal -> Critique -> Consensus -> Validation.
-- Dispute handling (`result-warning.txt` when agreement is too low).
-- Universal context generation from your project files.
-- Prompt/context cache for faster repeated runs.
-- Typed logs in `.ai/logs/` with UTC timestamps and model/agent authorship.
-- Local memory in `.ai/memory/` with SQLite + FTS5 recall across runs.
+- Multi-agent workflow with explicit stages: proposal, critique, consensus, approval, seam expansion, post-process.
+- Context assembly for real repositories with code index, Context Pack, structural search fallback, and bounded file/range reads.
+- Evidence-grounded output contract with `Grounded Fixes`, `Assumptions / Unverified Seams`, `Assumed Implementation`, and patch-safe gating.
+- Runtime controls for checkpoint/resume, conservative output-budget auto-raise, prompt preprocessing reuse, complexity routing, and typed operational signals.
+- Local memory with SQLite + FTS5 recall plus typed project logs in `.ai/logs/`.
+- Hub mode for working across multiple repositories from one control repo.
+- Bootstrap and scaffold sync for project configs (`stack-profile.json`, `llms.md`, context/agents sync).
+- Run metrics with per-model and per-phase token breakdowns.
 
+## What It Gives You
+- Better grounding: the system separates proven fixes from assumptions instead of mixing everything into one narrative answer.
+- Lower waste: repeated runs can reuse preprocess output, route by complexity, and fetch only the missing seams.
+- Safer operator workflow: result warnings, approval artifacts, typed logs, and checkpoints make failures inspectable.
+- Cross-stack support: works on Node.js, TypeScript, Python, Java, .NET, Go, Rust, and mixed repositories.
 
 ## Layered Structure
 - Architecture map and migration rules: `ai/ARCHITECTURE_LAYERS.md`.
 - Active design and research docs: `ai/design/README.md`.
 - New code should follow `application` -> `domain` -> `infrastructure` boundaries.
 
-## Legacy Folder
-- Legacy and moved root artifacts are stored in `legacy/`.
-- Inventory and policy: `legacy/README.md`.
-
-## Root Layout Policy
-- Keep root minimal: entry docs (`README.md`, `AI_WORKFLOW.md`), required memory/governance logs, runtime package files, and `ai/`.
-- Hub runtime JSON config lives in `config/`:
+## Repository Layout
+- Keep root minimal: entry docs (`README.md`, `AI_WORKFLOW.md`), package/runtime files, `config/`, and `ai/`.
+- Hub registry/config lives in `config/`:
   - `config/projects.json`
   - `config/hub-config.json`
-- Compatibility window: legacy root `projects.json` / `hub-config.json` are still read with deprecation warning.
 - Keep `.ai.env` in root (standard dotenv location for CLI tools).
 
 ---
@@ -230,7 +238,7 @@ npm run undes:memory:search -- --query="jwt race"
 npm run undes:memory:save -- --type=decision --title="Split-root layout" --content="Keep ai/ authored and .ai/ runtime"
 ```
 
-Primary CLI family is now `undes*`. Legacy `ai*` scripts remain available as compatibility aliases during the migration window.
+Primary CLI family is `undes*`.
 
 ---
 
@@ -287,8 +295,6 @@ Hub behavior:
 - `npm run undes:start` saves selected project into `config/hub-config.json` (`activeProjectPath`).
 - Next `npm run undes` from hub root auto-uses this project even without `AI_HUB_PROJECT_PATH`.
 - CLI/env still override config (`--project-path` > `AI_HUB_PROJECT_PATH` > `config/hub-config.json` > last-used registry hint).
-- Compatibility window: legacy root `projects.json` / `hub-config.json` are still read, but emit deprecation warnings.
-- Legacy alias family `ai:*` still works during migration, but `undes:*` is now the primary CLI surface.
 - Direct script invocation is blocked in strict dispatcher mode (for example `node ai/scripts/generate-context.js`); use `npm run undes ...`.
 
 ### Writing Better Investigation Prompts (EN)
@@ -591,8 +597,6 @@ cat examples/env-presets/balanced.env >> .ai.env
 - `npm run undes:start` сохраняет выбранный проект в `config/hub-config.json` (`activeProjectPath`).
 - Следующий `npm run undes` из корня хаба автоматически берет этот проект даже без `AI_HUB_PROJECT_PATH`.
 - Приоритет источников: `--project-path` > `AI_HUB_PROJECT_PATH` > `config/hub-config.json` > last-used из `config/projects.json`.
-- Окно совместимости: legacy root `projects.json` / `hub-config.json` пока читаются, но выводится deprecation warning.
-- Legacy-алиас `npm run ai:hub -- ...` удален; используйте плоские `undes:*` команды. `ai:*` сохранены как compatibility aliases на переходный период.
 - В strict dispatcher режиме прямой запуск скриптов (`node ai/scripts/generate-context.js`) блокируется; используйте `npm run undes ...`.
 
 ### Как Писать Prompt Для Исследования (RU)

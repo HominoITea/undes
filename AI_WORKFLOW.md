@@ -40,7 +40,7 @@ npm run undes -- --prompt="Add export to PNG" --test
 cat .ai/prompts/result.txt
 ```
 
-Primary CLI family is now `undes*`. Legacy `ai*` scripts are still supported as compatibility aliases during the migration window.
+Primary CLI family is `undes*`.
 
 ## Runtime Overrides
 
