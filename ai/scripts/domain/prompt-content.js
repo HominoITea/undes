@@ -55,6 +55,32 @@ function buildGroundedFixesOutputContract() {
     `Each cited file anchor must be a single exact path. Do not write alternative paths, guesses, or "${DEFAULT_EVIDENCE_ALTERNATIVE_PATH_LABEL}" variants in \`Evidence:\` lines.`,
     'Do not introduce new repository/service/helper method names or new persistence seams in `Grounded Fixes` unless that exact seam was observed in the provided context or read files.',
     'Do not elevate race conditions, pessimistic locking, or concurrency hardening into `Grounded Fixes` unless the supplied context directly shows a concrete concurrency seam in the affected code path.',
+    'If a claim depends on downstream behavior, execution order, side effects, or consumption logic that was not explicitly read in this run, do not place that claim in `Grounded Fixes`.',
+    'When the local mechanical defect is proven but downstream behavior remains unread or inferred, keep only the mechanically proven patch in `Grounded Fixes` and move the downstream implication to `Assumptions / Unverified Seams`.',
+  ];
+}
+
+function buildRoleAwareApprovalGuidance(roleLabel = '') {
+  const normalizedRole = String(roleLabel || '').trim().toLowerCase();
+
+  if (normalizedRole.includes('reviewer')) {
+    return [
+      ' Reviewer focus: judge whether the mechanically proven patch is safe, sufficiently scoped, and useful for the main issue.',
+      ' Do not penalize the draft merely because downstream mechanisms remain unverified if those items are clearly isolated under `Assumptions / Unverified Seams`, `Assumed Implementation`, or `Deferred Checks`.',
+      ' Penalize the draft if a downstream or unread mechanism is still presented as grounded implementation inside `Grounded Fixes`.',
+    ];
+  }
+
+  if (normalizedRole.includes('developer')) {
+    return [
+      ' Developer focus: inspect `Grounded Fixes` for unread seams, guessed file anchors, or downstream mechanism claims that are not directly proven by the supplied context.',
+      ' Apply evidence penalties strictly when `Grounded Fixes` relies on inferred execution order, side effects, or consumption logic from files/methods that were not explicitly read in this run.',
+      ' Do not downgrade the draft for unresolved downstream ideas when they are correctly quarantined under `Assumptions / Unverified Seams`, `Assumed Implementation`, or `Deferred Checks`.',
+    ];
+  }
+
+  return [
+    ' Use the shared approval baseline: a draft can still pass even when downstream mechanisms remain unverified, as long as those items stay outside `Grounded Fixes` and are clearly labeled as assumptions or follow-up checks.',
   ];
 }
 
@@ -148,6 +174,8 @@ function buildConsensusContent(promptText, discussionSoFar, roleLabel) {
     ' Do not demote a grounded claim merely because another agent raised an unsupported objection or a plausible risk hypothesis.',
     ' Keep unsupported objections and risk hypotheses under `Assumptions / Unverified Seams` or `Deferred Checks` unless direct evidence later confirms them.',
     ' If two claims conflict, prefer the one backed by direct evidence; if the conflict remains unresolved, describe it as uncertainty rather than guessing.',
+    ' Before writing `Grounded Fixes`, classify each implementation claim as either directly proven in this run or still inferred. Only directly proven claims may remain in `Grounded Fixes`.',
+    ' Do not place downstream behavior, execution order, side effects, or unread consumption logic in `Grounded Fixes` unless the exact supporting seam was explicitly read in this run.',
     '\n\n# OUTPUT CONTRACT\n',
     'Structure the final answer with these sections in this order:',
     ...buildGroundedFixesOutputContract(),
@@ -177,6 +205,7 @@ function buildConsensusReviewContent(promptText, discussionSoFar, consensusText,
     ' Apply these evidence-quality penalties before setting your final score:',
     ' - `Grounded Fixes` contains concrete claims without `Evidence:` anchors -> subtract 3.',
     ' - `Grounded Fixes` proposes implementation changes but does not include concrete code blocks or diff snippets -> subtract 2.',
+    ' - `Grounded Fixes` includes downstream behavior, execution-order, side-effect, or consumption claims that depend on unread seams -> subtract 2.',
     ' - A blocker objection remains unresolved even though the draft/discussion provides no evidence for it -> subtract 2.',
     ' - A risk hypothesis is treated like a proven blocker or code fact instead of staying labeled as uncertainty -> subtract 2.',
     ' - An `Evidence:` anchor points to a missing, guessed, or not-provided file/path -> subtract 1.',
@@ -188,6 +217,8 @@ function buildConsensusReviewContent(promptText, discussionSoFar, consensusText,
     ' If you apply any penalty, explain each one in `notes` with the offending claim, objection, or anchor and the exact required revision.',
     ' If the score drops because the draft still needs direct evidence from a narrow unread seam, you may add `missingSeams` with only the minimal resolvable requests needed for a patch-safe answer.',
     ' `missingSeams` is optional and should stay empty or omitted when the draft can already be approved or revised without additional file reads.',
+    ...buildRoleAwareApprovalGuidance(roleLabel),
+    ' Shared approval baseline: a draft can still score 7 or higher when downstream mechanisms remain unverified, as long as those claims are removed from `Grounded Fixes` and explicitly quarantined under assumptions/follow-up sections.',
     ' Use the canonical request schema only; do not invent extra fields or an alternative format.',
     ' Every `missingSeams` entry must use `Class#method` format (e.g. `ApproverFacadeImpl#processSimpleApproval`) or an exact line-range hint. Do not request a bare class name — the resolver cannot fetch method bodies from whole-class requests.',
     ' If you need a precise location, prefer a narrow line-range hint such as `src/main/java/.../AbstractDocumentHandler.java:120-165`.',
@@ -228,6 +259,8 @@ function buildConsensusRevisionContent(promptText, discussionSoFar, consensusTex
     ' Be concise and avoid repeating unchanged sections verbatim.',
     ' Do not remove grounded content solely because a revision request repeats an unsupported objection or a risk hypothesis without direct evidence.',
     ' Keep unsupported objections and still-unproven risks under `Assumptions / Unverified Seams` or `Deferred Checks` unless the revision notes provide direct evidence.',
+    ' Reclassify any claim that depends on unread downstream behavior, execution order, side effects, or consumption logic out of `Grounded Fixes` unless the revision notes provide direct evidence for it.',
+    ' If revision notes identify a guessed or unread downstream claim inside `Grounded Fixes`, move it to `Assumptions / Unverified Seams` instead of trying to defend it rhetorically.',
     '\n\n# OUTPUT CONTRACT\n',
     'Preserve this structure in the revised final answer:',
     ...buildGroundedFixesOutputContract(),

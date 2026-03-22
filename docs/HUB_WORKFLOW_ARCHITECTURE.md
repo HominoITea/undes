@@ -1,121 +1,129 @@
 # Архитектура Жизненного Цикла Запроса в AI Hub (Workflow)
 
-В этом документе подробно описан весь жизненный цикл (флоу) работы запроса в хабе, включая все вилки, итерации и фазы согласования (аппрува).
+В этом документе подробно описан актуальный жизненный цикл (pipeline) работы хаба, включая сборку контекста, интеллектуальный роутинг, фазы дебатов и механизмы защиты (Cost Optimization & Trust Gating).
 
-Флоу представляет собой многоуровневый конвейер (pipeline), где агенты работают параллельно или последовательно в зависимости от фазы, а также существуют циклы автоматической доработки (Approval Rounds) и автоматического расширения контекста (Lever 3).
+Флоу представляет собой динамический конвейер: он умеет адаптироваться под сложность задачи, переиспользовать кэш, точечно подтягивать недостающий код (Seam Expansion) и отключать ненужные этапы ради экономии токенов (Pipeline Cost Optimization).
 
 ## Диаграмма процесса (Mermaid)
 
 ```mermaid
 flowchart TD
-    Start([Пользователь: npm run ai -- --prompt="..."]) --> Context[Сборка Context Pack\n(Индекс, файлы, кэш)]
-    Context --> PreProcess{Включен\n--prepost?}
-
+    Start([Пользователь: npm run ai -- --prompt="..."]) --> Bootstrap[Bootstrap: Сборка stack-profile.json\n(Определение языка, фреймворков)]
+    Bootstrap --> Caching{Архив содержит\nтакой же промпт?}
+    
     %% Pre-process Phase
-    PreProcess -- Да --> PE[Agent: Prompt Engineer\nУлучшение/уточнение промпта]
-    PE --> MainStart
-    PreProcess -- Нет --> MainStart
+    Caching -- Да --> ReusePE[Reuse: переиспользование\nартефакта preprocess]
+    Caching -- Нет --> PE[Agent: Prompt Engineer\n(Уточнение промпта, классификация сложности)]
+    ReusePE --> Context
+    PE --> Context
+    
+    %% Context Pack
+    Context[Сборка Context Pack L0/L1/L2\n(AST-анализ, outline, body)] --> Routing{Complexity Routing\n(Сложность?)}
 
     %% Main Debate: Proposals & Critiques
-    MainStart[Начало основных дебатов] --> Proposals
+    Routing -- Trivial --> DebateTrivial[Упрощенный цикл:\n1 Proposal ➔ 1 Critique]
+    Routing -- Standard --> DebateStd[Стандартный цикл:\n2 Агента (Proposals ➔ Critiques)]
+    Routing -- Architectural --> DebateFull[Полный цикл:\n3 Агента (Proposals ➔ Critiques)]
     
-    subgraph Debate [Main Debate (Параллельно)]
-        Proposals[Фаза: Proposals\nАгенты генерируют независимые решения]
-        Proposals --> Critiques[Фаза: Critiques\nАгенты критикуют решения коллег]
-    end
+    DebateTrivial --> Consensus
+    DebateStd --> Consensus
+    DebateFull --> Consensus
 
     %% Consensus Phase
-    Debate --> Consensus[Agent: Synthesizer\nСинтез финального ответа (Consensus)]
+    Consensus[Agent: Synthesizer\nСинтез: Grounded Fixes vs Assumptions]
     Consensus --> ApprovalStart
 
     %% Approval Rounds
-    subgraph ApprovalLoop [Approval Rounds (до 3 итераций)]
-        ApprovalStart[Фаза: Approval\nАгенты голосуют: Agreed/Not Agreed]
+    subgraph ApprovalLoop [Approval Rounds (до 2 итераций)]
+        ApprovalStart[Фаза: Approval\nГолосование и сбор missingSeams]
         ApprovalStart --> AllAgreed{Все согласны?}
-        AllAgreed -- Нет\n(Сбор revisionNotes) --> CheckRoundAppr{Итерация < 3?}
-        CheckRoundAppr -- Да --> Revision[Agent: Synthesizer\nRevision: исправление по замечаниям]
+        
+        AllAgreed -- Нет --> CheckSeams{Есть missingSeams\nи trust gap?}
+        CheckSeams -- Да --> TriggerSeamExp[Срабатывание Seam Expansion\n(ранний выход из Approval)]
+        CheckSeams -- Нет --> CheckRoundAppr{Итерация < 2?}
+        
+        CheckRoundAppr -- Да --> Revision[Agent: Synthesizer\nRevision: переписывание черновика]
         Revision --> ApprovalStart
         CheckRoundAppr -- Нет --> ApprovalDone[Консенсус не достигнут (Disputed)]
         AllAgreed -- Да --> ApprovalDone[Консенсус достигнут (Agreed)]
     end
 
-    %% Lever 3 Expansion
-    ApprovalDone --> TrustCheck[Анализ Trust Signal\nНе хватает контекста?]
+    %% Seam Expansion
+    TriggerSeamExp --> FetchSeams[Seam Expansion:\nПоиск и извлечение нового кода (L3)]
+    FetchSeams --> L3Debate[Повтор цикла Дебатов\nс расширенным контекстом]
+    L3Debate --> ApprovalStart
+
+    ApprovalDone --> TrustCheck[Анализ Trust Signal\n(patchSafeEligible?)]
     
-    subgraph Lever3 [Lever-3 Expansion (до 2 итераций)]
-        TrustCheck --> TriggerL3{Нужен Lever-3?}
-        TriggerL3 -- Да --> CheckRoundL3{Итерация < 2?}
-        CheckRoundL3 -- Да --> FetchSeams[Авто-подгрузка недостающих\nфайлов/методов (missingSeams)]
-        FetchSeams --> L3Debate[Повтор: Proposals ➔ Critiques\n ➔ Consensus ➔ Approval\n(с расширенным промптом)]
-        L3Debate --> TrustCheck
-    end
-
     %% Devil's Advocate
-    TriggerL3 -- Нет --> CheckRoundL3 -- Нет --> DAStart[Фаза: Devil's Advocate]
+    TrustCheck --> DAGate{DA Gate:\nНужен ли DA?}
+    DAGate -- Пропуск\n(Чистый run или Diagnostic) --> TesterGate
+    DAGate -- Нужен --> DAStart[Agent: Devil's Advocate\nАтака на решение, поиск уязвимостей]
+    DAStart --> TesterGate
 
-    subgraph Defense [Security & QA]
-        DAStart[Agent: Devil's Advocate\nАтака на решение, поиск уязвимостей]
-        DAStart --> PostProcess{Включен\n--test?}
-        PostProcess -- Да --> Tester[Agent: Tester\nГенерация тестов/валидация]
-        PostProcess -- Нет --> SaveOutput
-        Tester --> SaveOutput
-    end
+    %% Post Process
+    TesterGate{Tester включен?}
+    TesterGate -- Да --> Tester[Agent: Tester\nPatch-validation или Diagnostic-review]
+    TesterGate -- Нет --> SaveOutput
+    Tester --> SaveOutput
 
     %% Output
-    SaveOutput[Сохранение артефактов] --> PatchSafeCheck{Код Patch-Safe?}
-    PatchSafeCheck -- Да --> ResultGood[Вывод: result.txt + patch-safe-result.md]
-    PatchSafeCheck -- Нет --> ResultWarn[Вывод: result.txt + result-warning.txt\n(Только как совет)]
+    SaveOutput[Сохранение артефактов] --> FinalCheck{Код Patch-Safe?}
+    FinalCheck -- Да --> ResultGood[Вывод: patch-safe-result.md]
+    FinalCheck -- Нет --> ResultWarn[Вывод: result-warning.txt\n(Только как совет)]
     
     ResultGood --> Finish([Конец])
     ResultWarn --> Finish
 ```
 
-## Детальный разбор каждого этапа и ограничений (Лимиты и Вилки)
+## Детальный разбор каждого этапа и архитектурных механизмов
 
-### 1. Инициализация и Подготовка Контекста
-*   Анализируется запрос и собирается базовая "пачка" контекста (Context Pack) согласно `context.json`.
-*   Если есть `--prepost`, запускается **Prompt Engineer** (`pre-process` фаза), который переписывает и дополняет изначальный пользовательский промпт, чтобы устранить двусмысленности. Дальше все агенты работают с этим улучшенным промптом.
+### 1. Bootstrap и Stack-Profile
+На старте система вызывает `detectProjectStack` (или использует существующий `stack-profile.json`). Хаб автоматически определяет языки, фреймворки, базы данных и монорепозиторные скоупы (Scopes), чтобы формировать контекст и подгружать нужные навыки (Skills).
 
-### 2. Главные Дебаты (Main Discussion)
-*   **Proposals (Предложения):** Все агенты, допущенные до фазы `proposal` (например, Architect, Developer, Reviewer), **параллельно** генерируют свои варианты решения. Каждый агент обязан выдать "Уровень уверенности" (Confidence Score 0-100%).
-*   **Critiques (Критика):** Как только все предложения готовы, те же агенты **параллельно** читают предложения друг друга и пишут критику, находя слабые места.
+### 2. Preprocess и Caching
+Запускается **Prompt Engineer**. Он переписывает промпт и определяет его сложность (Complexity).
+* **Preprocess Reuse:** Если этот же промпт уже запускался ранее, хаб пропускает вызов агента и переиспользует старый `preprocess` артефакт из кэша (экономия токенов).
 
-### 3. Синтез (Consensus)
-*   Выделенный агент (обычно `synthesizer` с флагом `consensus: true`) собирает оригинальный запрос + все предложения + всю критику и пишет **единый сводный ответ** (черновик).
+### 3. Умная сборка контекста (Context Pack)
+Контекст собирается не слепым дампом, а через систему **Context Pack (L0/L1/L2)**, использующую AST-парсинг (Tree-Sitter):
+* **L0 (Outline):** Для высокоуровневых/архитектурных промптов подгружаются только "скелеты" файлов (сигнатуры классов и методов).
+* **L1 (Body):** Стандартный уровень. Для маленьких файлов (эвристика < 150 строк) отдается все тело целиком во избежание лишних "раунд-трипов" к LLM.
+* **L2 (Deep Analysis / Call Graph):** Для дебаггинга или сложных расследований подгружаются тела зависимостей и граф вызовов (с жесткими ограничениями для динамических языков вроде JS/Python, чтобы не утопить агентов в мусоре).
 
-### 4. Циклы утверждения (Approval Rounds) — До 3-х итераций
-Здесь начинается первая внутренняя петля (while loop).
-*   Агенты, участвующие в фазе `approval` (Architect исключен в новых версиях для ускорения цикла, участвуют Developer/Reviewer), читают черновик Синтезатора.
-*   Каждый возвращает JSON с вердиктом: `agreed: true/false` и `notes` (замечания).
-*   **Вилка:**
-    *   Если **все** ответили `agreed: true` ➔ переходим дальше.
-    *   Если **кто-то против** ➔ запускается шаг **Revision**. Синтезатору отправляются все замечания несогласных, и он переписывает черновик.
-    *   *Лимит:* Цикл повторяется максимум **3 раза** (`MAX_APPROVAL_ROUNDS = 3`). Если на 3-й раз кто-то все еще не согласен, статус помечается как `AllAgreed = false` (Consensus Disputed), но процесс двигается дальше.
+### 4. Complexity-Based Routing (Роутинг по сложности)
+В зависимости от классификации Prompt Engineer, система выбирает "вес" дебатов, оптимизируя затраты (Pipeline Cost Optimization):
+* **Trivial (Опечатки, конфиги):** 1 предложение ➔ 1 критика (без DA).
+* **Standard (Багфиксы, фичи):** 2 агента.
+* **Architectural (Рефакторинг):** 3 агента (полный состав).
 
-### 5. Механика глубокого копания (Lever-3 Expansion) — До 2-х итераций
-Это самая тяжелая автоматическая вилка. Система оценивает финальный черновик (Trust Signal) и смотрит, жаловались ли агенты во время Approval, что им "не хватает данных" (`missingSeams`).
-*   **Вилка:**
-    *   Если уровень доверия высокий и нет запросов на новые файлы ➔ пропускаем.
-    *   Если система понимает, что ответ не имеет "патч-безопасной опоры" (например, агент придумал метод, которого нет в контексте, или запросил чтение файла X) ➔ **срабатывает Lever 3**.
-*   **Как работает Lever 3:**
-    1. Инструмент парсит запрошенные методы/файлы (`missingSeams`).
-    2. Извлекает этот код из проекта и формирует "Приложение" (Appendix).
-    3. **Запускает весь цикл Дебатов с нуля!** (Только с суффиксом `lever3-1`). Снова параллельно делаются Proposals ➔ Critiques ➔ Consensus ➔ Approval (до 3 раундов).
-*   *Лимит:* Этот тяжеловесный цикл может сработать **максимум 2 раза** (`MAX_LEVER3_EXPANSION_ROUNDS = 2`).
+### 5. Главные Дебаты (Main Discussion)
+Допущенные агенты (Architect, Developer, Reviewer) параллельно генерируют **Proposals** (предложения). Затем они читают предложения коллег и пишут **Critiques** (критику).
 
-### 6. Фаза Адвоката Дьявола (Devil's Advocate)
-Финальный консенсус (с учетом всех Approval и Lever-3 раундов) передается агенту `devils-advocate`.
-*   Он намеренно пытается "сломать" решение: ищет проблемы безопасности, race conditions, edge-кейсы.
-*   Генерирует `devils-advocate-report.md`.
-*   *Вилка:* Если DA находит `CRITICAL_ISSUES` или средняя уверенность агентов (Average Confidence) упала ниже 60%, это помечается как провал доверия к коду.
+### 6. Синтез (Consensus)
+`Synthesizer` собирает результаты в единый драфт, строго соблюдая **Evidence-Grounded Patch Mode**:
+* **Grounded Fixes:** Только то, что железобетонно доказано прочитанным кодом.
+* **Assumptions / Unverified Seams:** Любые допущения о "непрочитанном" коде или поведении ниже по потоку. Угадывать факты в блоке Grounded Fixes жестко запрещено (чтобы избежать `role-evidence-divergence`).
 
-### 7. Постобработка (Post-Process / Tester)
-*   Если был передан флаг `--test`, агент `tester` берет согласованное решение и пишет/предлагает тесты для него, валидируя логику. Формирует `test-report.md`.
+### 7. Approval Rounds (до 2-х итераций)
+Агенты оценивают черновик с учетом ролевой специфики (Reviewer смотрит на общую суть, Developer — на строгость улик).
+* Если есть спор о логике, Синтезатор делает **Revision** (переписывает черновик). Максимум 2 раунда вместо старых 3-х.
+* Если спор возникает исключительно из-за нехватки улик (`missingSeams`), петля Approval может быть прервана досрочно для запуска Seam Expansion (Round Orchestration Phase 1).
 
-### 8. Сохранение результатов и Patch-Safe гейт
-В самом конце оценивается "Trust header".
-*   Если решение полностью обосновано кодом проекта и все агенты договорились: создается `patch-safe-result.md` — код можно безопасно копипастить.
-*   Если были споры на этапе Approval (цикл прервался по лимиту), или сработали ворнинги у Адвоката Дьявола, или выдуман несуществующий код: создается **`result-warning.txt`**. Основной ответ `result.txt` получает заголовок `COPYPASTE_READY: NO` (использовать только как совет, код требует ручной доработки оператором).
+### 8. Seam Expansion (Ранее Lever-3)
+Если агенты требуют дополнительный контекст (определены точные `missingSeams` с `fetchHint`) и есть проблемы с доверием (Trust gap), хаб **автоматически подтягивает нужные методы/файлы** из проекта и перезапускает цикл дебатов с расширенным контекстом. Механизм `seam fetch precision` обеспечивает точный парсинг даже "грязных" и неоднозначных запросов от агентов.
 
-*Итог по количеству прогонов моделей под капотом (в худшем сценарии):*
-1 (Pre-process) + [3 (Proposals) + 3 (Critiques) + 1 (Consensus) + 3 * (3 Approvals + 1 Revision)] * 3 (Lever 3 x2) + 1 (Devil's Advocate) + 1 (Tester) = **Десятки запросов к API за один вызов** (именно поэтому они выполняются максимально параллельно).
+### 9. Devil's Advocate (DA Gate)
+DA атакует финальное решение на предмет уязвимостей.
+* **Conditional Skip:** Чтобы не тратить токены, DA **отключается**, если:
+  1. Это чистый запуск (все агенты согласны, `avgApprovalScore >= 9`, код `patch-safe`).
+  2. Это статус `DIAGNOSTIC` без доступных для подгрузки улик.
+
+### 10. Post-Process (Tester)
+Агент Tester валидирует решение.
+* **Сплит режимов:** Если патч готов (`patch-safe`), он работает в режиме `patch-validation` (генерация тестов). Если патча нет (`DIAGNOSTIC`), он работает в легком режиме `diagnostic-review`.
+
+### 11. Сохранение результатов и Trust Gate
+Оценка финального доверия к коду:
+* **`patch-safe-result.md`:** Создается, если код доказан, все швы закрыты, агенты согласны. Можно безопасно копипастить.
+* **`result-warning.txt` (DIAGNOSTIC):** Создается, если остались `substantive-assumptions`, разногласия ролей (`role-evidence-divergence`) или ворнинги DA. Результат используется только как совет, патч не выдается на авто-применение.

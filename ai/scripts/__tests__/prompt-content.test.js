@@ -104,6 +104,9 @@ test('consensus prompts explicitly forbid internal log templates and meta chatte
   assert.match(consensus, /Do not write alternative paths, guesses, or "or\/или" variants in `Evidence:` lines/);
   assert.match(consensus, /Do not introduce new repository\/service\/helper method names or new persistence seams in `Grounded Fixes` unless that exact seam was observed/);
   assert.match(consensus, /Do not elevate race conditions, pessimistic locking, or concurrency hardening into `Grounded Fixes` unless the supplied context directly shows a concrete concurrency seam/);
+  assert.match(consensus, /If a claim depends on downstream behavior, execution order, side effects, or consumption logic that was not explicitly read in this run, do not place that claim in `Grounded Fixes`/);
+  assert.match(consensus, /Before writing `Grounded Fixes`, classify each implementation claim as either directly proven in this run or still inferred/);
+  assert.match(consensus, /Do not place downstream behavior, execution order, side effects, or unread consumption logic in `Grounded Fixes` unless the exact supporting seam was explicitly read in this run/);
   assert.match(consensus, /Do not write `RESULT_MODE` or `COPYPASTE_READY`/);
   assert.match(consensus, /Do not include internal process notes, log-writing instructions/);
   assert.match(consensus, /Do not append meta chatter/);
@@ -120,6 +123,8 @@ test('consensus prompts explicitly forbid internal log templates and meta chatte
   assert.match(revision, /Do not introduce new repository\/service\/helper method names or new persistence seams in `Grounded Fixes` unless that exact seam was observed/);
   assert.match(revision, /Use plain `Evidence:` lines, not markdown-styled variants like `\*\*Evidence:\*\*`/);
   assert.match(revision, /Do not elevate race conditions, pessimistic locking, or concurrency hardening into `Grounded Fixes` unless the supplied context directly shows a concrete concurrency seam/);
+  assert.match(revision, /Reclassify any claim that depends on unread downstream behavior, execution order, side effects, or consumption logic out of `Grounded Fixes` unless the revision notes provide direct evidence for it/);
+  assert.match(revision, /If revision notes identify a guessed or unread downstream claim inside `Grounded Fixes`, move it to `Assumptions \/ Unverified Seams` instead of trying to defend it rhetorically/);
   assert.match(revision, /Do not include internal process notes, log-writing instructions/);
   assert.match(revision, /Do not append meta chatter/);
 });
@@ -131,6 +136,7 @@ test('approval review prompt applies evidence-quality penalties before agreeing'
   assert.match(review, /Review `Grounded Fixes` as proven implementation content/);
   assert.match(review, /`Grounded Fixes` contains concrete claims without `Evidence:` anchors -> subtract 3/);
   assert.match(review, /`Grounded Fixes` proposes implementation changes but does not include concrete code blocks or diff snippets -> subtract 2/);
+  assert.match(review, /`Grounded Fixes` includes downstream behavior, execution-order, side-effect, or consumption claims that depend on unread seams -> subtract 2/);
   assert.match(review, /A blocker objection remains unresolved even though the draft\/discussion provides no evidence for it -> subtract 2/);
   assert.match(review, /A risk hypothesis is treated like a proven blocker or code fact instead of staying labeled as uncertainty -> subtract 2/);
   assert.match(review, /An `Evidence:` anchor points to a missing, guessed, or not-provided file\/path -> subtract 1/);
@@ -141,10 +147,25 @@ test('approval review prompt applies evidence-quality penalties before agreeing'
   assert.match(review, /Prefer surfacing the smallest next reads that would retire the remaining substantive assumptions/);
   assert.match(review, /If you apply any penalty, explain each one in `notes`/);
   assert.match(review, /A score of 7 or higher after penalties implies you AGREE with the draft/);
+  assert.match(review, /Reviewer focus: judge whether the mechanically proven patch is safe, sufficiently scoped, and useful for the main issue/);
+  assert.match(review, /Shared approval baseline: a draft can still score 7 or higher when downstream mechanisms remain unverified/);
   assert.match(review, /missingSeams/);
   assert.match(review, /minimal resolvable requests needed for a patch-safe answer/);
   assert.match(review, /Every `missingSeams` entry must use `Class#method` format/);
   assert.match(review, /Do not request an entire class or file when one method body/);
+});
+
+test('approval review prompt is role-aware but keeps one approval baseline', () => {
+  const reviewerPrompt = buildConsensusReviewContent('prompt', 'discussion', 'draft', 'Reviewer');
+  const developerPrompt = buildConsensusReviewContent('prompt', 'discussion', 'draft', 'Developer');
+
+  assert.match(reviewerPrompt, /Reviewer focus: judge whether the mechanically proven patch is safe, sufficiently scoped, and useful for the main issue/);
+  assert.match(reviewerPrompt, /Do not penalize the draft merely because downstream mechanisms remain unverified if those items are clearly isolated/);
+  assert.match(developerPrompt, /Developer focus: inspect `Grounded Fixes` for unread seams, guessed file anchors, or downstream mechanism claims/);
+  assert.match(developerPrompt, /Apply evidence penalties strictly when `Grounded Fixes` relies on inferred execution order, side effects, or consumption logic/);
+  assert.match(developerPrompt, /Do not downgrade the draft for unresolved downstream ideas when they are correctly quarantined/);
+  assert.match(reviewerPrompt, /Shared approval baseline: a draft can still score 7 or higher when downstream mechanisms remain unverified/);
+  assert.match(developerPrompt, /Shared approval baseline: a draft can still score 7 or higher when downstream mechanisms remain unverified/);
 });
 
 test('approval repair prompt reinforces strict JSON and narrow seam requests', () => {
