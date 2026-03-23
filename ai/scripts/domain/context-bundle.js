@@ -12,6 +12,57 @@ const { getProviderName } = require('../infrastructure/providers');
 
 // ── Context bundle transforms ──────────────────────────────────────
 
+function replaceMarkdownSection(content, sectionHeader, replacement) {
+  if (!content || typeof content !== 'string') return content;
+  const sectionStart = content.indexOf(sectionHeader);
+  if (sectionStart < 0) return content;
+
+  const nextSectionStart = content.indexOf('\n## ', sectionStart + 1);
+  const sectionEnd = nextSectionStart > sectionStart ? nextSectionStart : content.length;
+  return content.slice(0, sectionStart) + replacement + content.slice(sectionEnd);
+}
+
+function buildCompactContextPack(bundleContent) {
+  const packStart = bundleContent.indexOf('## CONTEXT PACK');
+  if (packStart < 0) return bundleContent;
+
+  const nextSectionStart = bundleContent.indexOf('\n## ', packStart + 1);
+  const packEnd = nextSectionStart > packStart ? nextSectionStart : bundleContent.length;
+  const packContent = bundleContent.slice(packStart, packEnd);
+  const lines = packContent.split('\n');
+
+  const compact = ['## CONTEXT PACK (COMPACT)'];
+  for (const prefix of ['Prompt:', 'Level:']) {
+    const match = lines.find((line) => line.startsWith(prefix));
+    if (match) compact.push(match);
+  }
+
+  const symbolsHeaderIndex = lines.indexOf('### Symbols');
+  if (symbolsHeaderIndex !== -1) {
+    compact.push('');
+    compact.push('### Symbols');
+    const symbolLines = [];
+    for (let i = symbolsHeaderIndex + 1; i < lines.length; i += 1) {
+      const line = lines[i];
+      if (line.startsWith('### ')) break;
+      if (line.trim().startsWith('- ')) symbolLines.push(line);
+    }
+    const maxSymbolLines = 8;
+    compact.push(...symbolLines.slice(0, maxSymbolLines));
+    if (symbolLines.length > maxSymbolLines) {
+      const omitted = symbolLines.length - maxSymbolLines;
+      compact.push(`- ... (${omitted} more symbols omitted)`);
+    }
+  }
+
+  compact.push('');
+  compact.push('### Code Context');
+  compact.push('_Context pack compressed for synthesis/revision. Use proposals, critiques, approvals, and fetched seams for detailed evidence._');
+  compact.push('');
+
+  return replaceMarkdownSection(bundleContent, '## CONTEXT PACK', compact.join('\n'));
+}
+
 function trimContextForPhase(contextBundle, phase) {
   if (!contextBundle || typeof contextBundle !== 'string') return contextBundle;
 
@@ -35,10 +86,22 @@ function trimContextForPhase(contextBundle, phase) {
 
   const replacement = '### Code Context\n_Code fragments omitted - see proposals above for relevant code._\n';
   if (sectionEnd > fragStart) {
-    return contextBundle.slice(0, fragStart) + replacement + contextBundle.slice(sectionEnd);
+    contextBundle = contextBundle.slice(0, fragStart) + replacement + contextBundle.slice(sectionEnd);
+  } else {
+    contextBundle = contextBundle.slice(0, fragStart) + replacement;
   }
 
-  return contextBundle.slice(0, fragStart) + replacement;
+  const synthesisPhases = ['consensus', 'revision', 'da-revision'];
+  if (synthesisPhases.includes(phase)) {
+    contextBundle = buildCompactContextPack(contextBundle);
+    contextBundle = replaceMarkdownSection(
+      contextBundle,
+      '## DIRECTORY STRUCTURE',
+      '## DIRECTORY STRUCTURE\n_Context omitted for synthesis/revision to reduce repeated bundle size._\n',
+    );
+  }
+
+  return contextBundle;
 }
 
 function replaceContextPackSection(bundleContent, newPackMarkdown) {
@@ -128,6 +191,8 @@ function saveResultCache(cachePath, hash, resultPath) {
 }
 
 module.exports = {
+  replaceMarkdownSection,
+  buildCompactContextPack,
   trimContextForPhase,
   replaceContextPackSection,
   buildAgentContextBundle,

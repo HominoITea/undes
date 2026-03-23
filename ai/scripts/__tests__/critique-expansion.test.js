@@ -172,6 +172,32 @@ test('collectMissingSeamsFromApprovalOutputs merges and dedupes approval payload
   ]);
 });
 
+test('collectMissingSeamsFromApprovalOutputs upgrades broad file hints with exact line ranges from approval notes', () => {
+  const seams = collectMissingSeamsFromApprovalOutputs([
+    {
+      approval: {
+        notes: [
+          "Раздел 'Grounded Fixes' ссылается на строки 487-506 и 515-523 файла canvas.tsx,",
+          'но эти строки не были подтверждены в текущем контексте.',
+        ].join(' '),
+        missingSeams: [
+          {
+            symbolOrSeam: 'canvas#lockedPoints',
+            reasonNeeded: 'Нужно подтвердить корректировку крайних точек.',
+            fetchHint: 'app/board/[boardId]/_components/canvas/canvas.tsx',
+          },
+        ],
+      },
+    },
+  ]);
+
+  assert.equal(seams.length, 1);
+  assert.equal(
+    seams[0].fetchHint,
+    'app/board/[boardId]/_components/canvas/canvas.tsx#L487-L523',
+  );
+});
+
 test('parseLineRange supports hash and colon line hints', () => {
   assert.deepEqual(parseLineRange('src/main/App.java#L10-L20'), {
     file: 'src/main/App.java',

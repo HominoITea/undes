@@ -95,7 +95,10 @@ test('callGoogle throws when candidates missing', async () => {
 
 test('callAnthropic joins content blocks', async () => {
   const originalFetch = global.fetch;
-  global.fetch = async () => mockResponse({
+  const requests = [];
+  global.fetch = async (_url, options = {}) => {
+    requests.push(JSON.parse(options.body || '{}'));
+    return mockResponse({
     ok: true,
     headers: {
       'anthropic-ratelimit-input-tokens-limit': '30000',
@@ -107,7 +110,8 @@ test('callAnthropic joins content blocks', async () => {
       stop_reason: 'end_turn',
       stop_sequence: null,
     },
-  });
+    });
+  };
 
   try {
     const providers = createProviderClients({ getMaxOutputTokens: () => 256, aiLogContextHeader: '## FILE: .ai/logs/AI_LOG.md' });
@@ -122,6 +126,18 @@ test('callAnthropic joins content blocks', async () => {
     assert.equal(result.headers['anthropic-ratelimit-input-tokens-limit'], '30000');
     assert.equal(result.meta.provider, 'anthropic');
     assert.equal(result.meta.stopReason, 'end_turn');
+    assert.equal(requests.length, 1);
+    assert.deepEqual(requests[0].system, [
+      {
+        type: 'text',
+        text: 'Generated on: [omitted]',
+        cache_control: { type: 'ephemeral' },
+      },
+    ]);
+    assert.deepEqual(requests[0].messages, [
+      { role: 'user', content: '## DIRECTORY STRUCTURE\nfiles' },
+      { role: 'user', content: 'prompt' },
+    ]);
   } finally {
     global.fetch = originalFetch;
   }

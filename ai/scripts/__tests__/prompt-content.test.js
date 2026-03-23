@@ -55,12 +55,19 @@ test('buildCritiqueContentWithProposals skips own proposal and adds numbered pee
   assert.match(text, /`Risk hypothesis` is allowed for plausible concerns, but you must say it is not yet proven/);
   assert.match(text, /If you need extra file reads, request only a narrow range/);
   assert.match(text, /Treat race conditions, pessimistic locking, and concurrency hardening as secondary/);
+  assert.match(text, /Limit the response to the 3 most important table rows and at most 3 bullets in `My additions\/objections`/);
+  assert.match(text, /Keep each table comment to one short sentence whenever possible/);
 });
 
 test('proposal prompt requires evidence for concrete claims and labels hypotheses honestly', () => {
   const proposal = buildProposalContent('prompt', 'discussion', 'Developer');
 
+  assert.match(proposal, /Use this compact structure in order: `## Diagnosis`, `## Grounded Patch`, `## Risks \/ Assumptions`/);
+  assert.match(proposal, /Keep `## Diagnosis` to at most 3 bullets or short paragraphs total/);
+  assert.match(proposal, /Keep `## Grounded Patch` to at most 3 patch items/);
+  assert.match(proposal, /Keep `## Risks \/ Assumptions` to at most 3 bullets/);
   assert.match(proposal, /When making a concrete implementation or code-path claim, add an `Evidence: path\[:line\]` line/);
+  assert.match(proposal, /Keep each `Evidence:` line anchor-only: one exact path or line range, with no parenthetical code expressions or prose on that same line/);
   assert.match(proposal, /include only the smallest grounded patch snippets or changed method\/test fragments/);
   assert.match(proposal, /Do not emit full classes, full controllers, or exhaustive test files/);
   assert.match(proposal, /If a concern is plausible but not directly proven, label it explicitly as a hypothesis or unverified seam/);
@@ -100,13 +107,21 @@ test('consensus prompts explicitly forbid internal log templates and meta chatte
   assert.match(consensus, /include concrete code blocks or unified-diff-style snippets/);
   assert.match(consensus, /Do not leave `Grounded Fixes` as recommendation-only prose/);
   assert.match(consensus, /Use plain `Evidence:` lines, not markdown-styled variants like `\*\*Evidence:\*\*`/);
+  assert.match(consensus, /Each `Evidence:` line must contain only one exact file anchor/);
+  assert.match(consensus, /Do not append parenthetical explanations, code expressions, helper names, or prose on the same `Evidence:` line/);
+  assert.match(consensus, /If you need to explain why the anchor matters, do it in the next sentence or bullet, not inside the `Evidence:` line/);
   assert.match(consensus, /Do not cite unread files, message keys, enum values, or dotted constants as file anchors/);
   assert.match(consensus, /Do not write alternative paths, guesses, or "or\/или" variants in `Evidence:` lines/);
   assert.match(consensus, /Do not introduce new repository\/service\/helper method names or new persistence seams in `Grounded Fixes` unless that exact seam was observed/);
   assert.match(consensus, /Do not elevate race conditions, pessimistic locking, or concurrency hardening into `Grounded Fixes` unless the supplied context directly shows a concrete concurrency seam/);
   assert.match(consensus, /If a claim depends on downstream behavior, execution order, side effects, or consumption logic that was not explicitly read in this run, do not place that claim in `Grounded Fixes`/);
+  assert.match(consensus, /If evidence proves only a scoped or partial patch, say that explicitly inside `Grounded Fixes` and do not present it as the full end-to-end fix/);
+  assert.match(consensus, /Do not claim an edge case, fallback branch, or special-case path is fully fixed unless that exact path was explicitly read or directly proven in this run/);
   assert.match(consensus, /Before writing `Grounded Fixes`, classify each implementation claim as either directly proven in this run or still inferred/);
   assert.match(consensus, /Do not place downstream behavior, execution order, side effects, or unread consumption logic in `Grounded Fixes` unless the exact supporting seam was explicitly read in this run/);
+  assert.match(consensus, /If the draft fixes only the directly proven branch or local defect, describe it as a scoped patch instead of a complete end-to-end fix/);
+  assert.match(consensus, /Keep every section compact: no more than 5 bullets\/items per section unless concrete code blocks require more space/);
+  assert.match(consensus, /Prefer one short bullet per grounded claim instead of long prose paragraphs/);
   assert.match(consensus, /Do not write `RESULT_MODE` or `COPYPASTE_READY`/);
   assert.match(consensus, /Do not include internal process notes, log-writing instructions/);
   assert.match(consensus, /Do not append meta chatter/);
@@ -122,9 +137,13 @@ test('consensus prompts explicitly forbid internal log templates and meta chatte
   assert.match(revision, /Do not write alternative paths, guesses, or "or\/или" variants in `Evidence:` lines/);
   assert.match(revision, /Do not introduce new repository\/service\/helper method names or new persistence seams in `Grounded Fixes` unless that exact seam was observed/);
   assert.match(revision, /Use plain `Evidence:` lines, not markdown-styled variants like `\*\*Evidence:\*\*`/);
+  assert.match(revision, /Each `Evidence:` line must contain only one exact file anchor/);
+  assert.match(revision, /Do not append parenthetical explanations, code expressions, helper names, or prose on the same `Evidence:` line/);
   assert.match(revision, /Do not elevate race conditions, pessimistic locking, or concurrency hardening into `Grounded Fixes` unless the supplied context directly shows a concrete concurrency seam/);
   assert.match(revision, /Reclassify any claim that depends on unread downstream behavior, execution order, side effects, or consumption logic out of `Grounded Fixes` unless the revision notes provide direct evidence for it/);
   assert.match(revision, /If revision notes identify a guessed or unread downstream claim inside `Grounded Fixes`, move it to `Assumptions \/ Unverified Seams` instead of trying to defend it rhetorically/);
+  assert.match(revision, /If revision notes show that only part of the fix is directly proven, rewrite `Grounded Fixes` as a scoped patch and move the unproven full-fix claim to `Assumptions \/ Unverified Seams`/);
+  assert.match(revision, /Keep the revised answer compact: preserve section order, collapse repetition, and keep each section to at most 5 bullets\/items unless code blocks require more space/);
   assert.match(revision, /Do not include internal process notes, log-writing instructions/);
   assert.match(revision, /Do not append meta chatter/);
 });
@@ -137,9 +156,11 @@ test('approval review prompt applies evidence-quality penalties before agreeing'
   assert.match(review, /`Grounded Fixes` contains concrete claims without `Evidence:` anchors -> subtract 3/);
   assert.match(review, /`Grounded Fixes` proposes implementation changes but does not include concrete code blocks or diff snippets -> subtract 2/);
   assert.match(review, /`Grounded Fixes` includes downstream behavior, execution-order, side-effect, or consumption claims that depend on unread seams -> subtract 2/);
+  assert.match(review, /`Grounded Fixes` presents a scoped or branch-local patch as a complete fix even though a fallback path or edge case remains unread\/unproven -> subtract 2/);
   assert.match(review, /A blocker objection remains unresolved even though the draft\/discussion provides no evidence for it -> subtract 2/);
   assert.match(review, /A risk hypothesis is treated like a proven blocker or code fact instead of staying labeled as uncertainty -> subtract 2/);
   assert.match(review, /An `Evidence:` anchor points to a missing, guessed, or not-provided file\/path -> subtract 1/);
+  assert.match(review, /An `Evidence:` line mixes a valid anchor with parenthetical code, dotted expressions, or other prose on the same line -> subtract 1/);
   assert.match(review, /Do not penalize items that are clearly kept under `Assumptions \/ Unverified Seams`, `Assumed Implementation`, or `Deferred Checks`/);
   assert.match(review, /Do not penalize code in `## Assumed Implementation`/);
   assert.match(review, /convert them into `missingSeams` requests instead of leaving them as prose-only follow-up/);
@@ -186,9 +207,14 @@ test('devils advocate prompt checks evidence discipline without over-penalizing 
 
   assert.match(devilsAdvocate, /Check evidence discipline/);
   assert.match(devilsAdvocate, /flag concrete claims without `Evidence:` anchors, implementation changes described without concrete code blocks\/diff snippets, guessed\/unread file anchors, or hypotheses presented as proven code facts/);
+  assert.match(devilsAdvocate, /Check anchor purity/);
+  assert.match(devilsAdvocate, /Flag any `Evidence:` line that mixes a real file anchor with parenthetical code, dotted expressions, or explanatory prose on the same line/);
   assert.match(devilsAdvocate, /Do not treat clearly labeled items under `Assumptions \/ Unverified Seams` or `Deferred Checks` as defects/);
   assert.match(devilsAdvocate, /name the exact offending claim, section, or bad anchor/);
   assert.match(devilsAdvocate, /If a concern is only a plausible risk and not directly proven by the provided code\/context, say that explicitly/);
+  assert.match(devilsAdvocate, /Language compliance for free-text JSON values is mandatory/);
+  assert.match(devilsAdvocate, /If the original user request is in Russian, then every free-text JSON string value must also be in Russian/);
+  assert.match(devilsAdvocate, /Do not write English summaries, issue descriptions, suggestions, edge cases, or explanatory sentences/);
 });
 
 test('parsePromptEngineerResponse parses json and fallback', () => {
