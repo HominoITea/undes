@@ -431,7 +431,7 @@ test('callAgentWithValidation performs one bounded repair pass for truncated tex
 
 test('normalizeApprovalReview keeps valid JSON approvals complete', () => {
   const result = normalizeApprovalReview({
-    text: '{"score":8,"notes":"Looks good","missingSeams":[{"symbolOrSeam":"processSimpleApproval(...)","reasonNeeded":"Need body"}]}\n=== END OF DOCUMENT ===',
+    text: '{"score":8,"notes":"Looks good","missingSeams":[{"symbolOrSeam":"processPrimaryFlow(...)","reasonNeeded":"Need body"}]}\n=== END OF DOCUMENT ===',
     completionStatus: 'complete',
   });
 
@@ -443,7 +443,7 @@ test('normalizeApprovalReview keeps valid JSON approvals complete', () => {
     notes: 'Looks good',
     missingSeams: [
       {
-        symbolOrSeam: 'processSimpleApproval',
+        symbolOrSeam: 'processPrimaryFlow',
         reasonNeeded: 'Need body',
         expectedImpact: '',
         fetchHint: '',
@@ -503,7 +503,7 @@ test('buildPatchSafeResultContent emits strict grounded-fixes artifact', () => {
   const content = buildPatchSafeResultContent(`
 ## Grounded Fixes
 - Keep turn validation on current step only.
-Evidence: src/main/java/example/ApproverFacadeImpl.java:10
+Evidence: src/main/java/example/ExampleService.java:10
 \`\`\`java
 Utils.getCurrentUserPltId();
 \`\`\`
@@ -560,7 +560,7 @@ test('buildResultWarningFileContent marks diagnostic output as manual-review-onl
 test('buildPromptScopeWarningFileContent explains narrow starting seams and optional broadened prompt', () => {
   const content = buildPromptScopeWarningFileContent({
     risk: 'narrow-starting-seams',
-    notes: ['Prompt pins only ApproverFacadeImpl#approveDocument as the main code seam.'],
+    notes: ['Prompt pins only ExampleService#handleRequest as the main code seam.'],
     suggestedPromptPath: '.ai/prompts/runs/run-123/suggested-broadened-prompt.txt',
   });
 
@@ -568,7 +568,7 @@ test('buildPromptScopeWarningFileContent explains narrow starting seams and opti
   assert.match(content, /SCOPE_RISK: narrow-starting-seams/);
   assert.match(content, /MANUAL_REVIEW_RECOMMENDED: YES/);
   assert.match(content, /may bias retrieval toward a too-local slice/);
-  assert.match(content, /Prompt pins only ApproverFacadeImpl#approveDocument/);
+  assert.match(content, /Prompt pins only ExampleService#handleRequest/);
   assert.match(content, /Suggested broadened prompt: \.ai\/prompts\/runs\/run-123\/suggested-broadened-prompt\.txt/);
   assert.match(content, /Use the broader prompt only with user approval/);
 });
@@ -577,7 +577,7 @@ test('analyzeEvidenceGroundedResultStructure recognizes required sections and ev
   const analysis = analyzeEvidenceGroundedResultStructure(`
 ## Grounded Fixes
 - Fix queue advancement for same-step approvals.
-Evidence: src/main/java/example/ApproverFacadeImpl.java:10
+Evidence: src/main/java/example/ExampleService.java:10
 \`\`\`java
 // patch
 \`\`\`
@@ -600,7 +600,7 @@ test('analyzeEvidenceGroundedResultStructure parses Assumed Implementation secti
   const analysis = analyzeEvidenceGroundedResultStructure(`
 ## Grounded Fixes
 - Fix queue advancement.
-Evidence: src/main/java/example/ApproverFacadeImpl.java:10
+Evidence: src/main/java/example/ExampleService.java:10
 \`\`\`java
 // patch
 \`\`\`
@@ -627,9 +627,9 @@ test('analyzeEvidenceGroundedResultStructure accepts markdown-styled evidence la
   const analysis = analyzeEvidenceGroundedResultStructure(`
 ## Grounded Fixes
 - Fix queue advancement for same-step approvals.
-**Evidence:** \`src/main/java/example/ApproverFacadeImpl.java:10\`
+**Evidence:** \`src/main/java/example/ExampleService.java:10\`
 \`\`\`java
-approvalQueueService.moveQueueForward();
+approvalQueueService.advanceQueue();
 \`\`\`
 
 ## Assumptions / Unverified Seams
@@ -678,19 +678,19 @@ Evidence: src/main/java/example/MtfOrderController.java:10
 test('extractEvidenceAnchors keeps only the primary file anchor from each evidence line', () => {
   const anchors = extractEvidenceAnchors(`
 - Keep turn validation on current step only.
-Evidence: src/main/java/example/ApproverFacadeImpl.java:10, src/main/java/example/ApprovalInstance.java:44
+Evidence: src/main/java/example/ExampleService.java:10, src/main/java/example/ApprovalInstance.java:44
 `);
 
-  assert.deepEqual(anchors, ['src/main/java/example/ApproverFacadeImpl.java']);
+  assert.deepEqual(anchors, ['src/main/java/example/ExampleService.java']);
 });
 
 test('extractEvidenceAnchors keeps only the primary markdown-styled file anchor', () => {
   const anchors = extractEvidenceAnchors(`
 - Keep turn validation on current step only.
-**Evidence:** \`src/main/java/example/ApproverFacadeImpl.java:10\`, \`src/main/java/example/ApprovalInstance.java:44\`
+**Evidence:** \`src/main/java/example/ExampleService.java:10\`, \`src/main/java/example/ApprovalInstance.java:44\`
 `);
 
-  assert.deepEqual(anchors, ['src/main/java/example/ApproverFacadeImpl.java']);
+  assert.deepEqual(anchors, ['src/main/java/example/ExampleService.java']);
 });
 
 test('extractEvidenceAnchors ignores parenthetical code expressions after valid anchors', () => {
@@ -708,7 +708,7 @@ test('buildEvidenceGroundingValidation accepts grounded seams backed by observed
   const validation = buildEvidenceGroundingValidation(`
 ## Grounded Fixes
 - Guard current turn before approve.
-Evidence: src/main/java/example/ApproverFacadeImpl.java:10
+Evidence: src/main/java/example/ExampleService.java:10
 \`\`\`java
 Utils.getCurrentUserPltId();
 new ApprovalTypeEntity();
@@ -720,10 +720,10 @@ new ApprovalTypeEntity();
 ## Deferred Checks
 - Run regression tests.
 `, {
-    observedFiles: ['src/main/java/example/ApproverFacadeImpl.java'],
+    observedFiles: ['src/main/java/example/ExampleService.java'],
     codeIndex: {
       byFile: {
-        'src/main/java/example/ApproverFacadeImpl.java': { symbols: [] },
+        'src/main/java/example/ExampleService.java': { symbols: [] },
       },
       symbols: [
         { name: 'getCurrentUserPltId' },
@@ -732,7 +732,7 @@ new ApprovalTypeEntity();
     },
   });
 
-  assert.deepEqual(validation.evidenceAnchors, ['src/main/java/example/ApproverFacadeImpl.java']);
+  assert.deepEqual(validation.evidenceAnchors, ['src/main/java/example/ExampleService.java']);
   assert.equal(validation.validationWarnings.length, 0);
   assert.equal(validation.patchSafeEligible, true);
 });
@@ -741,7 +741,7 @@ test('buildEvidenceGroundingValidation flags speculative seams and substantive a
   const validation = buildEvidenceGroundingValidation(`
 ## Grounded Fixes
 - Rewire approval step ownership.
-Evidence: src/main/java/example/ApproverFacadeImpl.java:10
+Evidence: src/main/java/example/ExampleService.java:10
 \`\`\`java
 authService.getCurrentUserId();
 \`\`\`
@@ -752,10 +752,10 @@ authService.getCurrentUserId();
 ## Deferred Checks
 - Compile and run approval tests.
 `, {
-    observedFiles: ['src/main/java/example/ApproverFacadeImpl.java'],
+    observedFiles: ['src/main/java/example/ExampleService.java'],
     codeIndex: {
       byFile: {
-        'src/main/java/example/ApproverFacadeImpl.java': { symbols: [] },
+        'src/main/java/example/ExampleService.java': { symbols: [] },
       },
       symbols: [
         { name: 'getCurrentUserPltId' },
@@ -772,7 +772,7 @@ test('buildEvidenceGroundingValidation ignores dotted constants that are not fil
   const validation = buildEvidenceGroundingValidation(`
 ## Grounded Fixes
 - Reuse existing exception keys only.
-Evidence: src/main/java/example/ApproverFacadeImpl.java:10, error.template.not.found, error.document.org.not.found
+Evidence: src/main/java/example/ExampleService.java:10, error.template.not.found, error.document.org.not.found
 
 ## Assumptions / Unverified Seams
 - None.
@@ -780,16 +780,16 @@ Evidence: src/main/java/example/ApproverFacadeImpl.java:10, error.template.not.f
 ## Deferred Checks
 - Verify localized message bundles separately.
 `, {
-    observedFiles: ['src/main/java/example/ApproverFacadeImpl.java'],
+    observedFiles: ['src/main/java/example/ExampleService.java'],
     codeIndex: {
       byFile: {
-        'src/main/java/example/ApproverFacadeImpl.java': { symbols: [] },
+        'src/main/java/example/ExampleService.java': { symbols: [] },
       },
       symbols: [],
     },
   });
 
-  assert.deepEqual(validation.evidenceAnchors, ['src/main/java/example/ApproverFacadeImpl.java']);
+  assert.deepEqual(validation.evidenceAnchors, ['src/main/java/example/ExampleService.java']);
   assert.equal(
     validation.validationWarnings.some((warning) => warning.includes('error.template.not.found')),
     false,
@@ -868,7 +868,7 @@ test('assessFinalResultTrust upgrades to patch-safe only when evidence gate pass
   const trust = assessFinalResultTrust(`
 ## Grounded Fixes
 - Guard current turn before approve.
-Evidence: src/main/java/example/ApproverFacadeImpl.java:10
+Evidence: src/main/java/example/ExampleService.java:10
 \`\`\`java
 Utils.getCurrentUserPltId();
 \`\`\`
@@ -880,10 +880,10 @@ Utils.getCurrentUserPltId();
 - Run regression tests.
 `, {
     allAgreed: true,
-    observedFiles: ['src/main/java/example/ApproverFacadeImpl.java'],
+    observedFiles: ['src/main/java/example/ExampleService.java'],
     codeIndex: {
       byFile: {
-        'src/main/java/example/ApproverFacadeImpl.java': { symbols: [] },
+        'src/main/java/example/ExampleService.java': { symbols: [] },
       },
       symbols: [
         { name: 'getCurrentUserPltId' },
@@ -934,10 +934,10 @@ test('buildFinalTrustSignal summarizes trust gaps into structured telemetry', ()
     groundingValidation: {
       patchSafeEligible: false,
       validationWarnings: [
-        'Evidence anchor was not observed in the current run context: `src/main/java/example/ApproverFacadeImpl.java`.',
+        'Evidence anchor was not observed in the current run context: `src/main/java/example/ExampleService.java`.',
         '`## Assumptions / Unverified Seams` contains substantive items; patch-safe mode denied.',
       ],
-      evidenceAnchors: ['src/main/java/example/ApproverFacadeImpl.java'],
+      evidenceAnchors: ['src/main/java/example/ExampleService.java'],
       observedFiles: ['src/main/java/example/OtherFile.java'],
       candidateSeams: [{ kind: 'method', token: 'authService.getCurrentUserId' }],
       hasSubstantiveAssumptions: true,
@@ -1622,7 +1622,7 @@ test('operational signal helpers accumulate bounded post-run telemetry', () => {
       patchSafeEligible: false,
       validationWarnings: ['Evidence anchor points to missing file: `src/main/java/example/Missing.java`.'],
       evidenceAnchors: ['src/main/java/example/Missing.java'],
-      observedFiles: ['src/main/java/example/ApproverFacadeImpl.java'],
+      observedFiles: ['src/main/java/example/ExampleService.java'],
       candidateSeams: [],
       hasSubstantiveAssumptions: false,
     },

@@ -25,17 +25,17 @@ function writeFile(root, relPath, content) {
 
 test('normalizeMissingSeams keeps bounded canonical requests', () => {
   const seams = normalizeMissingSeams([
-    { symbolOrSeam: 'processSimpleApproval(...)', reasonNeeded: 'Need real approve body', fetchHint: 'src/flow/ApproverFacadeImpl.java' },
-    { symbolOrSeam: 'processSimpleApproval', reasonNeeded: 'duplicate should collapse', fetchHint: 'src/flow/ApproverFacadeImpl.java' },
+    { symbolOrSeam: 'processPrimaryFlow(...)', reasonNeeded: 'Need real approve body', fetchHint: 'src/flow/ExampleService.java' },
+    { symbolOrSeam: 'processPrimaryFlow', reasonNeeded: 'duplicate should collapse', fetchHint: 'src/flow/ExampleService.java' },
     { symbolOrSeam: '', reasonNeeded: 'ignored' },
   ], { maxItems: 4 });
 
   assert.deepEqual(seams, [
     {
-      symbolOrSeam: 'processSimpleApproval',
+      symbolOrSeam: 'processPrimaryFlow',
       reasonNeeded: 'Need real approve body',
       expectedImpact: '',
-      fetchHint: 'src/flow/ApproverFacadeImpl.java',
+      fetchHint: 'src/flow/ExampleService.java',
     },
   ]);
 });
@@ -43,75 +43,75 @@ test('normalizeMissingSeams keeps bounded canonical requests', () => {
 test('normalizeMissingSeams expands broad class requests into method-scoped seams when reason names methods', () => {
   const seams = normalizeMissingSeams([
     {
-      symbolOrSeam: 'ApproverFacadeImpl',
-      reasonNeeded: 'Need methods processSimpleApproval, processEdsResult, resetApprovalChain for exact approve-path fix',
-      fetchHint: 'src/ApproverFacadeImpl.java',
+      symbolOrSeam: 'ExampleService',
+      reasonNeeded: 'Need methods processPrimaryFlow, processSecondaryFlow, resetProcessingChain for exact request-path fix',
+      fetchHint: 'src/ExampleService.java',
     },
   ], { maxItems: 4 });
 
   assert.deepEqual(seams.map((item) => item.symbolOrSeam), [
-    'ApproverFacadeImpl#processSimpleApproval',
-    'ApproverFacadeImpl#processEdsResult',
-    'ApproverFacadeImpl#resetApprovalChain',
+    'ExampleService#processPrimaryFlow',
+    'ExampleService#processSecondaryFlow',
+    'ExampleService#resetProcessingChain',
   ]);
 });
 
 test('normalizeMissingSeams splits explicit scoped multi-method requests into separate seams', () => {
   const seams = normalizeMissingSeams([
     {
-      symbolOrSeam: 'ApproverFacadeImpl#approveDocument, processSimpleApproval, processEdsResult, moveQueueForward',
-      reasonNeeded: 'Need exact approve-path bodies',
-      fetchHint: 'src/ApproverFacadeImpl.java',
+      symbolOrSeam: 'ExampleService#handleRequest, processPrimaryFlow, processSecondaryFlow, advanceQueue',
+      reasonNeeded: 'Need exact request-path bodies',
+      fetchHint: 'src/ExampleService.java',
     },
   ], { maxItems: 5 });
 
   assert.deepEqual(seams.map((item) => item.symbolOrSeam), [
-    'ApproverFacadeImpl#approveDocument',
-    'ApproverFacadeImpl#processSimpleApproval',
-    'ApproverFacadeImpl#processEdsResult',
-    'ApproverFacadeImpl#moveQueueForward',
+    'ExampleService#handleRequest',
+    'ExampleService#processPrimaryFlow',
+    'ExampleService#processSecondaryFlow',
+    'ExampleService#advanceQueue',
   ]);
 });
 
 test('normalizeMissingSeams expands phrase-based seam labels into method-scoped requests and strips broad range hints', () => {
   const seams = normalizeMissingSeams([
     {
-      symbolOrSeam: 'ApproverFacadeImpl queue methods',
-      reasonNeeded: 'Need methods moveQueueForward, processApprovalAction, resetApprovalChain for finalization fix',
-      fetchHint: 'src/ApproverFacadeImpl.java#L650-L1100',
+      symbolOrSeam: 'ExampleService queue methods',
+      reasonNeeded: 'Need methods advanceQueue, processRequestAction, resetProcessingChain for finalization fix',
+      fetchHint: 'src/ExampleService.java#L650-L1100',
     },
   ], { maxItems: 4 });
 
   assert.deepEqual(seams.map((item) => item.symbolOrSeam), [
-    'ApproverFacadeImpl#moveQueueForward',
-    'ApproverFacadeImpl#processApprovalAction',
-    'ApproverFacadeImpl#resetApprovalChain',
+    'ExampleService#advanceQueue',
+    'ExampleService#processRequestAction',
+    'ExampleService#resetProcessingChain',
   ]);
-  assert.ok(seams.every((item) => item.fetchHint === 'src/ApproverFacadeImpl.java'));
+  assert.ok(seams.every((item) => item.fetchHint === 'src/ExampleService.java'));
 });
 
 test('normalizeMissingSeams prioritizes scoped requests over broad symbol seams when capped', () => {
   const seams = normalizeMissingSeams([
     {
-      symbolOrSeam: 'ApprovalSettingRepository',
+      symbolOrSeam: 'SettingsRepository',
       reasonNeeded: 'Need repository filter semantics',
-      fetchHint: 'src/ApprovalSettingRepository.java',
+      fetchHint: 'src/SettingsRepository.java',
     },
     {
-      symbolOrSeam: 'ApproverFacadeImpl queue methods',
-      reasonNeeded: 'Need methods moveQueueForward and processApprovalAction for queue fix',
-      fetchHint: 'src/ApproverFacadeImpl.java#L650-L1100',
+      symbolOrSeam: 'ExampleService queue methods',
+      reasonNeeded: 'Need methods advanceQueue and processRequestAction for queue fix',
+      fetchHint: 'src/ExampleService.java#L650-L1100',
     },
     {
-      symbolOrSeam: 'ApproverFacadeImpl#approveDocument',
-      reasonNeeded: 'Need direct approval seam',
-      fetchHint: 'src/ApproverFacadeImpl.java:416-470',
+      symbolOrSeam: 'ExampleService#handleRequest',
+      reasonNeeded: 'Need direct request seam',
+      fetchHint: 'src/ExampleService.java:416-470',
     },
   ], { maxItems: 3 });
 
   assert.equal(seams.length, 3);
-  assert.ok(seams.every((item) => item.symbolOrSeam.startsWith('ApproverFacadeImpl#')));
-  assert.ok(!seams.some((item) => item.symbolOrSeam === 'ApprovalSettingRepository'));
+  assert.ok(seams.every((item) => item.symbolOrSeam.startsWith('ExampleService#')));
+  assert.ok(!seams.some((item) => item.symbolOrSeam === 'SettingsRepository'));
 });
 
 test('normalizeMissingSeams dedupes same symbolOrSeam with different fetchHint keeping higher priority', () => {
@@ -152,7 +152,7 @@ test('collectMissingSeamsFromApprovalOutputs merges and dedupes approval payload
     {
       approval: {
         missingSeams: [
-          { symbolOrSeam: 'processSimpleApproval', reasonNeeded: 'Need body' },
+          { symbolOrSeam: 'processPrimaryFlow', reasonNeeded: 'Need body' },
           { symbolOrSeam: 'findByDocumentIdAndApproverUserIdAndIsCurrentInQueueTrue', reasonNeeded: 'Need repository contract' },
         ],
       },
@@ -160,14 +160,14 @@ test('collectMissingSeamsFromApprovalOutputs merges and dedupes approval payload
     {
       approval: {
         missingSeams: [
-          { symbolOrSeam: 'processSimpleApproval(...)', reasonNeeded: 'Duplicate' },
+          { symbolOrSeam: 'processPrimaryFlow(...)', reasonNeeded: 'Duplicate' },
         ],
       },
     },
   ]);
 
   assert.deepEqual(seams.map((item) => item.symbolOrSeam), [
-    'processSimpleApproval',
+    'processPrimaryFlow',
     'findByDocumentIdAndApproverUserIdAndIsCurrentInQueueTrue',
   ]);
 });
@@ -220,11 +220,11 @@ test('resolveMissingSeams resolves exact symbol requests deterministically', () 
   const root = mkTmpDir('critique-expansion-symbol-');
   writeFile(
     root,
-    'src/ApproverFacadeImpl.java',
+    'src/ExampleService.java',
     [
-      'class ApproverFacadeImpl {',
+      'class ExampleService {',
       '  void helper() {}',
-      '  void processSimpleApproval() {',
+      '  void processPrimaryFlow() {',
       '    approve();',
       '  }',
       '}',
@@ -233,16 +233,16 @@ test('resolveMissingSeams resolves exact symbol requests deterministically', () 
   );
 
   const result = resolveMissingSeams([
-    { symbolOrSeam: 'processSimpleApproval', reasonNeeded: 'Need approve path body' },
+    { symbolOrSeam: 'processPrimaryFlow', reasonNeeded: 'Need approve path body' },
   ], {
     rootDir: root,
     index: {
       symbols: [
         {
           id: 'sym-1',
-          name: 'processSimpleApproval',
+          name: 'processPrimaryFlow',
           type: 'method',
-          file: 'src/ApproverFacadeImpl.java',
+          file: 'src/ExampleService.java',
           startLine: 3,
           endLine: 5,
         },
@@ -253,8 +253,8 @@ test('resolveMissingSeams resolves exact symbol requests deterministically', () 
   });
 
   assert.equal(result.fetchedSeams.length, 1);
-  assert.equal(result.fetchedSeams[0].file, 'src/ApproverFacadeImpl.java');
-  assert.match(result.fetchedSeams[0].content, /processSimpleApproval/);
+  assert.equal(result.fetchedSeams[0].file, 'src/ExampleService.java');
+  assert.match(result.fetchedSeams[0].content, /processPrimaryFlow/);
   assert.equal(result.skippedSeams.length, 0);
 });
 
@@ -468,9 +468,9 @@ test('resolveMissingSeams falls back to owner class body when method not found i
   const root = mkTmpDir('critique-expansion-owner-fallback-');
   writeFile(
     root,
-    'src/ApproverFacadeImpl.java',
+    'src/ExampleService.java',
     [
-      'class ApproverFacadeImpl {',
+      'class ExampleService {',
       '  void helper() {}',
       '}',
       '',
@@ -479,9 +479,9 @@ test('resolveMissingSeams falls back to owner class body when method not found i
 
   const result = resolveMissingSeams([
     {
-      symbolOrSeam: 'ApproverFacadeImpl#processSimpleApproval',
+      symbolOrSeam: 'ExampleService#processPrimaryFlow',
       reasonNeeded: 'Need exact approve-path body',
-      fetchHint: 'src/ApproverFacadeImpl.java',
+      fetchHint: 'src/ExampleService.java',
     },
   ], {
     rootDir: root,
@@ -489,9 +489,9 @@ test('resolveMissingSeams falls back to owner class body when method not found i
       symbols: [
         {
           id: 'class-1',
-          name: 'ApproverFacadeImpl',
+          name: 'ExampleService',
           type: 'class',
-          file: 'src/ApproverFacadeImpl.java',
+          file: 'src/ExampleService.java',
           startLine: 1,
           endLine: 3,
         },
@@ -509,10 +509,10 @@ test('resolveMissingSeams rejects bare class-name requests instead of fetching c
   const root = mkTmpDir('critique-expansion-bare-class-reject-');
   writeFile(
     root,
-    'src/ApproverFacadeImpl.java',
+    'src/ExampleService.java',
     [
-      'class ApproverFacadeImpl {',
-      '  void processSimpleApproval() {}',
+      'class ExampleService {',
+      '  void processPrimaryFlow() {}',
       '  void helper() {}',
       '}',
       '',
@@ -521,9 +521,9 @@ test('resolveMissingSeams rejects bare class-name requests instead of fetching c
 
   const result = resolveMissingSeams([
     {
-      symbolOrSeam: 'ApproverFacadeImpl',
+      symbolOrSeam: 'ExampleService',
       reasonNeeded: 'Need full class',
-      fetchHint: 'src/ApproverFacadeImpl.java',
+      fetchHint: 'src/ExampleService.java',
     },
   ], {
     rootDir: root,
@@ -531,9 +531,9 @@ test('resolveMissingSeams rejects bare class-name requests instead of fetching c
       symbols: [
         {
           id: 'class-1',
-          name: 'ApproverFacadeImpl',
+          name: 'ExampleService',
           type: 'class',
-          file: 'src/ApproverFacadeImpl.java',
+          file: 'src/ExampleService.java',
           startLine: 1,
           endLine: 4,
         },
@@ -692,11 +692,11 @@ test('resolveMissingSeams prefers scoped method resolution over broad line-range
   const root = mkTmpDir('critique-expansion-scoped-over-range-');
   writeFile(
     root,
-    'src/ApproverFacadeImpl.java',
+    'src/ExampleService.java',
     [
-      'class ApproverFacadeImpl {',
+      'class ExampleService {',
       '  void helper() {}',
-      '  void approveDocument() {',
+      '  void handleRequest() {',
       '    stepOne();',
       '  }',
       '  void trailing() {}',
@@ -707,9 +707,9 @@ test('resolveMissingSeams prefers scoped method resolution over broad line-range
 
   const result = resolveMissingSeams([
     {
-      symbolOrSeam: 'ApproverFacadeImpl#approveDocument',
-      reasonNeeded: 'Need direct approval seam',
-      fetchHint: 'src/ApproverFacadeImpl.java:1-7',
+      symbolOrSeam: 'ExampleService#handleRequest',
+      reasonNeeded: 'Need direct request seam',
+      fetchHint: 'src/ExampleService.java:1-7',
     },
   ], {
     rootDir: root,
@@ -717,17 +717,17 @@ test('resolveMissingSeams prefers scoped method resolution over broad line-range
       symbols: [
         {
           id: 'class-1',
-          name: 'ApproverFacadeImpl',
+          name: 'ExampleService',
           type: 'class',
-          file: 'src/ApproverFacadeImpl.java',
+          file: 'src/ExampleService.java',
           startLine: 1,
           endLine: 7,
         },
         {
           id: 'method-1',
-          name: 'approveDocument',
+          name: 'handleRequest',
           type: 'method',
-          file: 'src/ApproverFacadeImpl.java',
+          file: 'src/ExampleService.java',
           startLine: 3,
           endLine: 5,
         },
@@ -899,18 +899,18 @@ test('resolveMissingSeams finds getter via field name token variant', () => {
 test('buildCritiqueExpansionAppendix includes fetched and skipped seams', () => {
   const appendix = buildCritiqueExpansionAppendix({
     requestedSeams: [
-      { symbolOrSeam: 'processSimpleApproval', reasonNeeded: 'Need body', expectedImpact: 'Ground guard fix', fetchHint: '' },
+      { symbolOrSeam: 'processPrimaryFlow', reasonNeeded: 'Need body', expectedImpact: 'Ground guard fix', fetchHint: '' },
     ],
     fetchedSeams: [
       {
-        symbolOrSeam: 'processSimpleApproval',
+        symbolOrSeam: 'processPrimaryFlow',
         reasonNeeded: 'Need body',
         expectedImpact: 'Ground guard fix',
-        file: 'src/ApproverFacadeImpl.java',
+        file: 'src/ExampleService.java',
         startLine: 10,
         endLine: 20,
         source: 'symbol',
-        content: 'void processSimpleApproval() {}',
+        content: 'void processPrimaryFlow() {}',
       },
     ],
     skippedSeams: [
@@ -919,7 +919,7 @@ test('buildCritiqueExpansionAppendix includes fetched and skipped seams', () => 
   });
 
   assert.match(appendix, /SEAM EXPANSION — EXPANDED EVIDENCE/);
-  assert.match(appendix, /processSimpleApproval/);
+  assert.match(appendix, /processPrimaryFlow/);
   assert.match(appendix, /PESSIMISTIC_WRITE/);
 });
 
@@ -973,7 +973,7 @@ test('shouldTriggerCritiqueExpansion only fires on substantive assumptions with 
     approvalOutputs: [
       {
         approval: {
-          missingSeams: [{ symbolOrSeam: 'processSimpleApproval', reasonNeeded: 'Need body' }],
+          missingSeams: [{ symbolOrSeam: 'processPrimaryFlow', reasonNeeded: 'Need body' }],
         },
       },
     ],
@@ -986,7 +986,7 @@ test('shouldTriggerCritiqueExpansion only fires on substantive assumptions with 
     approvalOutputs: [
       {
         approval: {
-          missingSeams: [{ symbolOrSeam: 'processSimpleApproval', reasonNeeded: 'Need body' }],
+          missingSeams: [{ symbolOrSeam: 'processPrimaryFlow', reasonNeeded: 'Need body' }],
         },
       },
     ],
@@ -1008,7 +1008,7 @@ test('shouldTriggerCritiqueExpansion accepts raw assessFinalResultTrust shape', 
       {
         approval: {
           missingSeams: [
-            { symbolOrSeam: 'src/flow/ApproverFacadeImpl.java', reasonNeeded: 'Need approve-path body' },
+            { symbolOrSeam: 'src/flow/ExampleService.java', reasonNeeded: 'Need approve-path body' },
           ],
         },
       },

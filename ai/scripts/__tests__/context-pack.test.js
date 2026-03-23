@@ -50,7 +50,7 @@ const defaultCfg = {
 
 test('inferContextLevel classifies architecture, standard, and deep-analysis prompts', () => {
   assert.equal(inferContextLevel('Give me an architecture overview of the approval module'), 'L0');
-  assert.equal(inferContextLevel('Refactor approveDocument method'), 'L1');
+  assert.equal(inferContextLevel('Refactor handleRequest method'), 'L1');
   assert.equal(inferContextLevel('Debug stack trace for approval crash in production'), 'L2');
 });
 
@@ -139,18 +139,18 @@ test('fileNameSeeds returns empty when no file token matches', () => {
 
 test('promptNamedSymbolSeeds matches explicit class and method names from raw prompt text', () => {
   const symbols = [
-    makeSym('approveDocument', './src/ApproverFacadeImpl.java'),
-    makeSym('moveQueueForward', './src/ApproverFacadeImpl.java'),
+    makeSym('handleRequest', './src/ExampleService.java'),
+    makeSym('advanceQueue', './src/ExampleService.java'),
     makeSym('helper', './src/OtherService.java'),
   ];
 
   const seeds = promptNamedSymbolSeeds(
-    'Проверь ApproverFacadeImpl и метод moveQueueForward в approve path',
+    'Revisa ExampleService и metodo advanceQueue в approve path',
     symbols
   );
 
-  assert.ok(seeds.some((sym) => sym.name === 'approveDocument'));
-  assert.ok(seeds.some((sym) => sym.name === 'moveQueueForward'));
+  assert.ok(seeds.some((sym) => sym.name === 'handleRequest'));
+  assert.ok(seeds.some((sym) => sym.name === 'advanceQueue'));
   assert.equal(seeds.some((sym) => sym.name === 'helper'), false);
 });
 
@@ -248,7 +248,7 @@ test('integration: structural search lifts content-relevant symbol into context 
       '',
       'function processThing() {',
       '  // approval queue advancement logic',
-      '  return moveQueueForward();',
+      '  return advanceQueue();',
       '}',
       '',
     ].join('\n')
@@ -343,7 +343,7 @@ test('integration: context skeleton auto-includes implemented interface signatur
       'public class Impl implements Strategy {',
       '  private final Repo repo;',
       '  public Impl(Repo repo) { this.repo = repo; }',
-      '  public ApprovalInstance approveDocument() {',
+      '  public ApprovalInstance handleRequest() {',
       '    return repo.load();',
       '  }',
       '}',
@@ -353,7 +353,7 @@ test('integration: context skeleton auto-includes implemented interface signatur
   const symbols = [
     { id: 's1', name: 'Strategy', type: 'interface', file: 'src/Strategy.java', startLine: 1, endLine: 3, signature: 'interface Strategy' },
     { id: 's2', name: 'Impl', type: 'class', file: 'src/Impl.java', startLine: 2, endLine: 8, signature: 'class Impl implements Strategy' },
-    { id: 's3', name: 'approveDocument', type: 'method', file: 'src/Impl.java', startLine: 5, endLine: 7, signature: 'approveDocument' },
+    { id: 's3', name: 'handleRequest', type: 'method', file: 'src/Impl.java', startLine: 5, endLine: 7, signature: 'handleRequest' },
   ];
   const edges = [
     { fromFile: 'src/Impl.java', toSymbol: 'Strategy', kind: 'import' },
@@ -361,7 +361,7 @@ test('integration: context skeleton auto-includes implemented interface signatur
 
   const pack = buildContextPack({
     rootDir: root,
-    promptText: 'approveDocument mapping',
+    promptText: 'handleRequest mapping',
     index: makeIndex(symbols, edges),
     cfg: {
       ...defaultCfg,
@@ -380,19 +380,19 @@ test('integration: context skeleton auto-includes implemented interface signatur
 test('integration: explicit prompt-named seam is pinned into context pack despite index-order noise', () => {
   const root = mkTmpDir('ctx-pack-prompt-pin-');
   writeFile(root, 'src/approval-setting.js', 'function create() {}\nfunction update() {}\nfunction deleteSetting() {}\n');
-  writeFile(root, 'src/ApproverFacadeImpl.java', 'void moveQueueForward() {}\n');
+  writeFile(root, 'src/ExampleService.java', 'void advanceQueue() {}\n');
 
   const symbols = [
     makeSym('approvalSettingController', 'src/approval-setting.js', 1, 1),
     makeSym('create', 'src/approval-setting.js', 1, 1),
     makeSym('update', 'src/approval-setting.js', 2, 2),
     makeSym('deleteSetting', 'src/approval-setting.js', 3, 3),
-    makeSym('moveQueueForward', 'src/ApproverFacadeImpl.java', 1, 1),
+    makeSym('advanceQueue', 'src/ExampleService.java', 1, 1),
   ];
 
   const pack = buildContextPack({
     rootDir: root,
-    promptText: 'Проверь approval create update delete и метод moveQueueForward в ApproverFacadeImpl',
+    promptText: 'Revisa approval create update delete и metodo advanceQueue в ExampleService',
     index: makeIndex(symbols),
     cfg: {
       ...defaultCfg,
@@ -404,7 +404,7 @@ test('integration: explicit prompt-named seam is pinned into context pack despit
   });
 
   assert.equal(pack.used, true);
-  assert.match(pack.markdown, /moveQueueForward/);
+  assert.match(pack.markdown, /advanceQueue/);
 });
 
 test('integration: L0 uses outline-only rendering for large files and stays compact', () => {
@@ -499,8 +499,8 @@ test('integration: L1 includes target bodies but remains well below full-file si
   const lines = [];
   for (let i = 1; i <= 220; i += 1) {
     if (i === 1) lines.push('export class ApprovalFlow {');
-    else if (i === 80) lines.push('  approveDocument() {');
-    else if (i === 81) lines.push('    return moveQueueForward();');
+    else if (i === 80) lines.push('  handleRequest() {');
+    else if (i === 81) lines.push('    return advanceQueue();');
     else if (i === 82) lines.push('  }');
     else if (i === 120) lines.push('  helper() {');
     else if (i === 121) lines.push('    return 1;');
@@ -526,12 +526,12 @@ test('integration: L1 includes target bodies but remains well below full-file si
     },
     {
       id: 'approve',
-      name: 'approveDocument',
+      name: 'handleRequest',
       type: 'method',
       file: 'src/approval-flow.ts',
       startLine: 80,
       endLine: 82,
-      signature: 'approveDocument() {',
+      signature: 'handleRequest() {',
       container: 'ApprovalFlow',
       containerType: 'class',
       bodyLines: 2,
@@ -562,7 +562,7 @@ test('integration: L1 includes target bodies but remains well below full-file si
         bodyLines: 219,
         trust: 'exact-ast',
         children: [
-          { kind: 'method', name: 'approveDocument', range: [80, 82], signature: 'approveDocument() {', bodyLines: 2, trust: 'exact-ast', children: [] },
+          { kind: 'method', name: 'handleRequest', range: [80, 82], signature: 'handleRequest() {', bodyLines: 2, trust: 'exact-ast', children: [] },
           { kind: 'method', name: 'helper', range: [120, 122], signature: 'helper() {', bodyLines: 2, trust: 'exact-ast', children: [] },
         ],
       },
@@ -571,7 +571,7 @@ test('integration: L1 includes target bodies but remains well below full-file si
 
   const pack = buildContextPack({
     rootDir: root,
-    promptText: 'Refactor approveDocument and approval flow',
+    promptText: 'Refactor handleRequest and approval flow',
     index,
     cfg: {
       ...defaultCfg,
@@ -586,7 +586,7 @@ test('integration: L1 includes target bodies but remains well below full-file si
 
   assert.equal(pack.levelUsed, 'L1');
   assert.match(pack.markdown, /L1 Context Skeleton/);
-  assert.match(pack.markdown, /moveQueueForward/);
+  assert.match(pack.markdown, /advanceQueue/);
   assert.ok(packBytes <= fullBytes * 0.4);
 });
 
