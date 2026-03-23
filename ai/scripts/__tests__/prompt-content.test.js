@@ -75,14 +75,15 @@ test('proposal prompt requires evidence for concrete claims and labels hypothese
 });
 
 test('all user-facing prompt builders enforce same-language behavior', () => {
-  const proposal = buildProposalContent('пользовательский запрос', 'discussion', 'Developer');
-  const critique = buildCritiqueContentWithProposals('пользовательский запрос', [], 'run-1', 'Reviewer', 'reviewer');
-  const consensus = buildConsensusContent('пользовательский запрос', 'discussion', 'Synthesizer');
-  const review = buildConsensusReviewContent('пользовательский запрос', 'discussion', 'draft', 'Reviewer');
-  const revision = buildConsensusRevisionContent('пользовательский запрос', 'discussion', 'draft', 'notes');
-  const promptEngineer = buildPromptEngineerContent('пользовательский запрос');
-  const tester = buildTesterContent('пользовательский запрос', 'enhanced', 'consensus');
-  const devilsAdvocate = buildDevilsAdvocateContent('пользовательский запрос', 'enhanced', 'consensus', 'discussion');
+  const nonEnglishPrompt = 'solicitud del usuario';
+  const proposal = buildProposalContent(nonEnglishPrompt, 'discussion', 'Developer');
+  const critique = buildCritiqueContentWithProposals(nonEnglishPrompt, [], 'run-1', 'Reviewer', 'reviewer');
+  const consensus = buildConsensusContent(nonEnglishPrompt, 'discussion', 'Synthesizer');
+  const review = buildConsensusReviewContent(nonEnglishPrompt, 'discussion', 'draft', 'Reviewer');
+  const revision = buildConsensusRevisionContent(nonEnglishPrompt, 'discussion', 'draft', 'notes');
+  const promptEngineer = buildPromptEngineerContent(nonEnglishPrompt);
+  const tester = buildTesterContent(nonEnglishPrompt, 'enhanced', 'consensus');
+  const devilsAdvocate = buildDevilsAdvocateContent(nonEnglishPrompt, 'enhanced', 'consensus', 'discussion');
 
   for (const text of [proposal, critique, consensus, review, revision, promptEngineer, tester, devilsAdvocate]) {
     assert.match(text, /The original user prompt above is authoritative for language\./);
@@ -237,7 +238,7 @@ test('parsePromptEngineerResponse parses json and fallback', () => {
 });
 
 test('prompt engineer prompt requests scope-risk assessment without silently broadening hard scope', () => {
-  const prompt = buildPromptEngineerContent('Investigate only ApproverFacadeImpl#approveDocument');
+  const prompt = buildPromptEngineerContent('Investigate only ExampleService#handleRequest');
 
   assert.match(prompt, /Detects scope risk/);
   assert.match(prompt, /Treat explicitly listed files\/methods\/classes as starting seams unless the user clearly says/);

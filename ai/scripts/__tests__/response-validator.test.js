@@ -132,7 +132,7 @@ test('classifyCompletion marks missing marker + non-truncation stopReason as inv
 });
 
 test('validateResponse does not treat analytical "I cannot" phrasing as refusal', () => {
-  const text = `Without reading the initializer path, I cannot point to the exact file, but the queue logic is clearly in ApproverFacadeImpl.\n${END}`;
+  const text = `Without reading the initializer path, I cannot point to the exact file, but the queue logic is clearly in ExampleService.\n${END}`;
   const result = validateResponse(text, { minLength: 20 });
 
   assert.equal(result.valid, true);

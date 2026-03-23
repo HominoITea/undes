@@ -121,7 +121,7 @@ test('validateResponse: low confidence warning', () => {
 });
 
 test('validateResponse: analytical "I cannot" inside valid reasoning is not refusal', () => {
-  const text = 'The queue bug is in ApproverFacadeImpl. Without reading one more initializer, I cannot point to the exact creator method, but the three defects are already visible.\n=== END OF DOCUMENT ===';
+  const text = 'The queue bug is in ExampleService. Without reading one more initializer, I cannot point to the exact creator method, but the three defects are already visible.\n=== END OF DOCUMENT ===';
   const result = validateResponse(text, { minLength: 10 });
   assert.equal(result.valid, true);
   assert.equal(result.errors.length, 0);
