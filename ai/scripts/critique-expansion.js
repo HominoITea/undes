@@ -262,6 +262,91 @@ function normalizeExpandedFetchHint(fetchHint = '', options = {}) {
   return sanitizeTextField(fetchHint, DEFAULT_MAX_FIELD_LENGTH);
 }
 
+function extractStandaloneLineRanges(text = '') {
+  const source = String(text || '');
+  if (!source) return [];
+
+  const ranges = [];
+  const patterns = [
+    /\blines?\s+(\d+)(?:\s*(?:-|to)\s*(\d+))?\b/gi,
+    /\bL(\d+)(?:\s*-\s*L?(\d+))?\b/gi,
+    /\b(\d+)\s*-\s*(\d+)\b/g,
+  ];
+
+  for (const pattern of patterns) {
+    let match;
+    while ((match = pattern.exec(source)) !== null) {
+      const startLine = clampPositiveInt(match[1], 1);
+      const endLine = clampPositiveInt(match[2] || match[1], startLine);
+      ranges.push({
+        startLine,
+        endLine: Math.max(startLine, endLine),
+      });
+    }
+  }
+
+  const deduped = [];
+  const seen = new Set();
+  for (const range of ranges) {
+    const key = `${range.startLine}:${range.endLine}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(range);
+  }
+  return deduped;
+}
+
+function mergeStandaloneLineRanges(ranges = [], options = {}) {
+  const maxSnippetLines = clampPositiveInt(options.maxSnippetLines, DEFAULT_MAX_SNIPPET_LINES);
+  const normalized = Array.isArray(ranges)
+    ? ranges
+      .filter(Boolean)
+      .map((range) => ({
+        startLine: clampPositiveInt(range.startLine, 1),
+        endLine: Math.max(
+          clampPositiveInt(range.startLine, 1),
+          clampPositiveInt(range.endLine || range.startLine, clampPositiveInt(range.startLine, 1)),
+        ),
+      }))
+      .sort((a, b) => a.startLine - b.startLine)
+    : [];
+
+  if (normalized.length === 0) return null;
+
+  let merged = { ...normalized[0] };
+  for (let i = 1; i < normalized.length; i++) {
+    const current = normalized[i];
+    const nextEnd = Math.max(merged.endLine, current.endLine);
+    if (nextEnd - merged.startLine + 1 > maxSnippetLines) break;
+    merged.endLine = nextEnd;
+  }
+  return merged;
+}
+
+function enrichMissingSeamRequestFromApproval(request = {}, approval = {}, options = {}) {
+  const normalized = normalizeMissingSeamRequest(request, options);
+  if (!normalized) return null;
+
+  if (parseLineRange(normalized.fetchHint || '') || parseStandaloneLineRange(normalized.fetchHint || '')) {
+    return normalized;
+  }
+
+  const fileHint = extractRelativeFileHint(normalized.fetchHint || '')
+    || extractRelativeFileHint(normalized.symbolOrSeam || '');
+  if (!fileHint) return normalized;
+
+  const lineRange = mergeStandaloneLineRanges(
+    extractStandaloneLineRanges(approval?.notes || ''),
+    options,
+  );
+  if (!lineRange) return normalized;
+
+  return {
+    ...normalized,
+    fetchHint: `${fileHint}#L${lineRange.startLine}-L${lineRange.endLine}`,
+  };
+}
+
 function extractMethodHintsFromReason(text = '') {
   const source = sanitizeTextField(text, DEFAULT_MAX_FIELD_LENGTH);
   if (!source) return [];
@@ -399,7 +484,13 @@ function normalizeMissingSeams(value, options = {}) {
 function collectMissingSeamsFromApprovalOutputs(outputs, options = {}) {
   const collected = [];
   for (const output of Array.isArray(outputs) ? outputs : []) {
-    const seams = normalizeMissingSeams(output?.approval?.missingSeams, options);
+    const baseSeams = Array.isArray(output?.approval?.missingSeams) ? output.approval.missingSeams : [];
+    const seams = normalizeMissingSeams(
+      baseSeams
+        .map((request) => enrichMissingSeamRequestFromApproval(request, output?.approval, options))
+        .filter(Boolean),
+      options,
+    );
     if (seams.length > 0) collected.push(...seams);
   }
   return normalizeMissingSeams(collected, options);

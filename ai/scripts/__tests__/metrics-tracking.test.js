@@ -13,6 +13,7 @@ test('buildMetricsReport includes per-phase and per-model token breakdowns', () 
   trackAgentCall(metrics, 'architect', 'proposal', 1200, {
     inputTokens: 120,
     outputTokens: 30,
+    cacheReadInputTokens: 45,
     provider: 'anthropic',
     model: 'claude-sonnet-4-6',
   });
@@ -33,22 +34,28 @@ test('buildMetricsReport includes per-phase and per-model token breakdowns', () 
 
   assert.equal(report.totalInputTokens, 430);
   assert.equal(report.totalOutputTokens, 130);
+  assert.equal(report.totalCacheReadInputTokens, 45);
   assert.equal(report.totalTokens, 560);
 
   assert.equal(report.stageBreakdown.proposal.calls, 2);
   assert.equal(report.stageBreakdown.proposal.inputTokens, 210);
   assert.equal(report.stageBreakdown.proposal.outputTokens, 50);
+  assert.equal(report.stageBreakdown.proposal.cacheReadInputTokens, 45);
   assert.equal(report.stageBreakdown.proposal.totalTimeMs, 2000);
   assert.equal(report.stageBreakdown.proposal.models['anthropic/claude-sonnet-4-6'].calls, 1);
   assert.equal(report.stageBreakdown.proposal.models['anthropic/claude-sonnet-4-6'].totalTimeMs, 1200);
+  assert.equal(report.stageBreakdown.proposal.models['anthropic/claude-sonnet-4-6'].cacheReadInputTokens, 45);
   assert.equal(report.stageBreakdown.proposal.models['google/gemini-2.5-pro'].inputTokens, 90);
 
   assert.equal(report.modelBreakdown['openai/gpt-5.4'].calls, 1);
   assert.equal(report.modelBreakdown['openai/gpt-5.4'].stages.consensus.outputTokens, 80);
   assert.equal(report.modelBreakdown['openai/gpt-5.4'].totalTimeMs, 1400);
+  assert.equal(report.modelBreakdown['anthropic/claude-sonnet-4-6'].cacheReadInputTokens, 45);
 
   assert.equal(report.agents.architect.callDetails[0].provider, 'anthropic');
   assert.equal(report.agents.architect.callDetails[0].model, 'claude-sonnet-4-6');
+  assert.equal(report.agents.architect.callDetails[0].cacheReadInputTokens, 45);
+  assert.equal(report.agents.architect.cacheReadInputTokens, 45);
   assert.equal(report.agents.architect.stageBreakdown.proposal.totalTokens, 150);
   assert.equal(report.agents.reviewer.modelBreakdown['google/gemini-2.5-pro'].inputTokens, 90);
 });

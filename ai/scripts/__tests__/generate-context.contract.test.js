@@ -22,6 +22,9 @@ const {
   buildPromptScopeWarningFileContent,
   buildResultFileContent,
   buildPatchSafeResultContent,
+  buildApprovalHandoffSummary,
+  buildSeamExpansionDeltaDiscussion,
+  buildLatePhaseDiscussionSummary,
   parseRuntimeOverridesDocument,
   loadReusablePreprocessResult,
   getMaxOutputTokens,
@@ -37,6 +40,7 @@ const {
   computeAverageApprovalScore,
   shouldSkipRevisionRound,
   shouldSkipDevilsAdvocate,
+  shouldDowngradeDevilsAdvocateError,
   resolveTesterMode,
   resolveTesterGate,
   recordPreflightWaitSignal,
@@ -109,6 +113,26 @@ test('callAgent returns structured metadata instead of plain text', async () => 
   } finally {
     global.fetch = originalFetch;
   }
+});
+
+test('buildLatePhaseDiscussionSummary compacts long discussion logs for approval/revision handoff', () => {
+  const discussion = [
+    '## architect (Architect) [proposal]',
+    'A'.repeat(900),
+    '',
+    '## reviewer (Reviewer) [critique]',
+    'B'.repeat(900),
+    '',
+    '## developer (Developer) [approval-1]',
+    'C'.repeat(900),
+  ].join('\n');
+
+  const compact = buildLatePhaseDiscussionSummary(discussion);
+
+  assert.match(compact, /## reviewer \(Reviewer\) \[critique\]/);
+  assert.match(compact, /## developer \(Developer\) \[approval-1\]/);
+  assert.ok(Buffer.byteLength(compact, 'utf8') <= 9000);
+  assert.ok(compact.length < discussion.length);
 });
 
 test('callAgent auto-raises max tokens for heavy critique turns', async () => {
@@ -651,27 +675,32 @@ Evidence: src/main/java/example/MtfOrderController.java:10
   assert.match(analysis.contractWarnings.join('\n'), /without concrete code blocks or diff snippets/);
 });
 
-test('extractEvidenceAnchors normalizes file anchors from grounded section', () => {
+test('extractEvidenceAnchors keeps only the primary file anchor from each evidence line', () => {
   const anchors = extractEvidenceAnchors(`
 - Keep turn validation on current step only.
 Evidence: src/main/java/example/ApproverFacadeImpl.java:10, src/main/java/example/ApprovalInstance.java:44
 `);
 
-  assert.deepEqual(anchors, [
-    'src/main/java/example/ApproverFacadeImpl.java',
-    'src/main/java/example/ApprovalInstance.java',
-  ]);
+  assert.deepEqual(anchors, ['src/main/java/example/ApproverFacadeImpl.java']);
 });
 
-test('extractEvidenceAnchors normalizes markdown-styled evidence labels', () => {
+test('extractEvidenceAnchors keeps only the primary markdown-styled file anchor', () => {
   const anchors = extractEvidenceAnchors(`
 - Keep turn validation on current step only.
 **Evidence:** \`src/main/java/example/ApproverFacadeImpl.java:10\`, \`src/main/java/example/ApprovalInstance.java:44\`
 `);
 
+  assert.deepEqual(anchors, ['src/main/java/example/ApproverFacadeImpl.java']);
+});
+
+test('extractEvidenceAnchors ignores parenthetical code expressions after valid anchors', () => {
+  const anchors = extractEvidenceAnchors(`
+- Keep orthogonality guard local.
+Evidence: \`app/board/[boardId]/_components/canvas/canvas.tsx:520-526\` (before \`const hit = segments.some(...)\`)
+`);
+
   assert.deepEqual(anchors, [
-    'src/main/java/example/ApproverFacadeImpl.java',
-    'src/main/java/example/ApprovalInstance.java',
+    'app/board/[boardId]/_components/canvas/canvas.tsx',
   ]);
 });
 
@@ -739,7 +768,7 @@ authService.getCurrentUserId();
   assert.equal(validation.patchSafeEligible, false);
 });
 
-test('buildEvidenceGroundingValidation ignores message keys that look like dotted constants, not files', () => {
+test('buildEvidenceGroundingValidation ignores dotted constants that are not file anchors', () => {
   const validation = buildEvidenceGroundingValidation(`
 ## Grounded Fixes
 - Reuse existing exception keys only.
@@ -760,17 +789,77 @@ Evidence: src/main/java/example/ApproverFacadeImpl.java:10, error.template.not.f
     },
   });
 
-  assert.deepEqual(validation.evidenceAnchors, [
-    'src/main/java/example/ApproverFacadeImpl.java',
-    'error.template.not.found',
-    'error.document.org.not.found',
-  ]);
+  assert.deepEqual(validation.evidenceAnchors, ['src/main/java/example/ApproverFacadeImpl.java']);
   assert.equal(
     validation.validationWarnings.some((warning) => warning.includes('error.template.not.found')),
     false,
   );
   assert.equal(
     validation.validationWarnings.some((warning) => warning.includes('error.document.org.not.found')),
+    false,
+  );
+});
+
+test('buildEvidenceGroundingValidation ignores code-like parenthetical annotations after valid evidence anchors', () => {
+  const validation = buildEvidenceGroundingValidation(`
+## Grounded Fixes
+- Keep the guard local to the confirmed branch.
+Evidence: \`app/board/[boardId]/_components/canvas/canvas.tsx:520-526\` (before \`const hit = segments.some(...)\`)
+\`\`\`ts
+const lostOrthogonality = allPts.some(Boolean);
+\`\`\`
+
+## Assumptions / Unverified Seams
+- None.
+
+## Deferred Checks
+- Re-run the locked Manhattan drag scenario.
+`, {
+    observedFiles: ['app/board/[boardId]/_components/canvas/canvas.tsx'],
+    codeIndex: {
+      byFile: {
+        'app/board/[boardId]/_components/canvas/canvas.tsx': { symbols: [] },
+      },
+      symbols: [],
+    },
+  });
+
+  assert.deepEqual(validation.evidenceAnchors, [
+    'app/board/[boardId]/_components/canvas/canvas.tsx',
+  ]);
+  assert.equal(
+    validation.validationWarnings.some((warning) => warning.includes('segments.some')),
+    false,
+  );
+});
+
+test('buildEvidenceGroundingValidation ignores bare dotted expressions after a valid anchor', () => {
+  const validation = buildEvidenceGroundingValidation(`
+## Grounded Fixes
+- Keep the branch-local guard where the hit is computed.
+Evidence: canvas.tsx:520-526, segments.some, hit
+\`\`\`ts
+const hit = segments.some((segment) => segment.length > 0);
+\`\`\`
+
+## Assumptions / Unverified Seams
+- None.
+
+## Deferred Checks
+- Re-run the locked Manhattan drag scenario.
+`, {
+    observedFiles: ['canvas.tsx'],
+    codeIndex: {
+      byFile: {
+        'canvas.tsx': { symbols: [] },
+      },
+      symbols: [],
+    },
+  });
+
+  assert.deepEqual(validation.evidenceAnchors, ['canvas.tsx']);
+  assert.equal(
+    validation.validationWarnings.some((warning) => warning.includes('segments.some')),
     false,
   );
 });
@@ -874,6 +963,38 @@ test('buildFinalTrustSignal summarizes trust gaps into structured telemetry', ()
   assert.equal(signal.hasSubstantiveAssumptions, true);
   assert.equal(signal.primaryFailureClass, 'anchor-coverage-failure');
   assert.deepEqual(signal.failureClasses, ['anchor-coverage-failure', 'seam-confirmation-failure', 'role-evidence-divergence']);
+});
+
+test('buildFinalTrustSignal ignores approval-derived divergence when approval snapshot is stale', () => {
+  const signal = buildFinalTrustSignal({
+    resultMode: 'DIAGNOSTIC',
+    warningRequired: true,
+    groundedAnalysis: {
+      contractWarnings: [],
+    },
+    groundingValidation: {
+      patchSafeEligible: false,
+      validationWarnings: [
+        '`## Assumptions / Unverified Seams` contains substantive items; patch-safe mode denied.',
+      ],
+      evidenceAnchors: ['app/file.ts:10'],
+      observedFiles: ['app/file.ts'],
+      candidateSeams: [],
+      hasSubstantiveAssumptions: true,
+    },
+  }, {
+    allAgreed: false,
+    approvalOutputs: [
+      { approval: { agreed: true, score: 8 } },
+      { approval: { agreed: false, score: 4 } },
+    ],
+    approvalSnapshotFresh: false,
+    operationalSignals: {},
+  });
+
+  assert.equal(signal.approvalSnapshotFresh, false);
+  assert.equal(signal.primaryFailureClass, 'other');
+  assert.deepEqual(signal.failureClasses, []);
 });
 
 test('parseRuntimeOverridesDocument accepts safe live overrides', () => {
@@ -1643,6 +1764,7 @@ test('operational signal helpers accumulate bounded post-run telemetry', () => {
     resultMode: 'DIAGNOSTIC',
     copyPasteReady: false,
     allAgreed: false,
+    approvalSnapshotFresh: true,
     warningRequired: true,
     patchSafeEligible: false,
     contractGapCount: 1,
@@ -1797,6 +1919,75 @@ test('buildEffectiveRuntimeSummaryLines prints effective limits and per-agent bu
   assert.ok(lines.some((line) => line.includes('context pack: on')));
   assert.ok(lines.some((line) => line.includes('checkpoint: resume from proposals')));
   assert.ok(lines.some((line) => line.includes('agent reviewer: contextBudget=28000, maxOutputTokens=12000')));
+});
+
+test('shouldDowngradeDevilsAdvocateError only downgrades provider timeouts', () => {
+  assert.equal(shouldDowngradeDevilsAdvocateError({
+    requestTimedOut: true,
+    code: 'PROVIDER_REQUEST_TIMEOUT',
+  }), true);
+  assert.equal(shouldDowngradeDevilsAdvocateError({
+    code: 'PROVIDER_REQUEST_TIMEOUT',
+  }), true);
+  assert.equal(shouldDowngradeDevilsAdvocateError({
+    code: 'AI_INCOMPLETE_TEXT_OUTPUT',
+  }), false);
+  assert.equal(shouldDowngradeDevilsAdvocateError(new Error('generic failure')), false);
+});
+
+test('buildApprovalHandoffSummary renders compact approval status lines', () => {
+  const lines = buildApprovalHandoffSummary([
+    {
+      name: 'reviewer',
+      role: 'Reviewer',
+      approval: {
+        score: 8,
+        agreed: true,
+        notes: 'Grounded patch is acceptable, but one fallback path remains deferred.',
+      },
+    },
+  ]);
+
+  assert.equal(lines.length, 1);
+  assert.match(lines[0], /reviewer \(Reviewer\): score=8, agreed=yes/);
+  assert.match(lines[0], /Grounded patch is acceptable/);
+});
+
+test('buildSeamExpansionDeltaDiscussion keeps compact baseline and only new outputs', () => {
+  const discussion = buildSeamExpansionDeltaDiscussion({
+    currentDiscussion: 'Long earlier discussion about root cause and several rejected hypotheses.',
+    previousConsensusText: 'Grounded fix touches the main route branch and defers one fallback path.',
+    approvalOutputs: [
+      {
+        name: 'developer',
+        role: 'Developer',
+        approval: { score: 4, agreed: false, notes: 'Need one more seam for fallback branch.' },
+      },
+    ],
+    phaseOutputs: [
+      {
+        name: 'architect',
+        role: 'Architect',
+        stage: 'proposal-lever3-1',
+        text: 'New proposal based on fetched seam.',
+      },
+    ],
+    expansionResult: {
+      requestedSeams: [{}, {}],
+      fetchedSeams: [{}],
+    },
+    appendixPath: '/tmp/critique-expansion-1.md',
+  });
+
+  assert.match(discussion, /# SEAM EXPANSION HANDOFF/);
+  assert.match(discussion, /Pre-expansion consensus summary:/);
+  assert.match(discussion, /Earlier discussion summary:/);
+  assert.match(discussion, /Pre-expansion approval summary:/);
+  assert.match(discussion, /score=4, agreed=no/);
+  assert.match(discussion, /Seam expansion fetched 1 of 2 requested seams/);
+  assert.match(discussion, /Appendix artifact:/);
+  assert.match(discussion, /## architect \(Architect\) \[proposal-lever3-1\]/);
+  assert.doesNotMatch(discussion, /rejected hypotheses\.\nLong earlier discussion/);
 });
 
 test('buildTreeTruncationWarningLines names packed tree cap as active limiter', () => {

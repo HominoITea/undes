@@ -14,6 +14,23 @@ const EVIDENCE_NONE_PATTERNS = [
   /^(?:-?\s*)?(?:none identified|none required)\.?$/i,
   /^(?:-?\s*)?(?:no grounded patch content(?: available)?|no grounded code(?: available)?|grounded code not available)\.?$/i,
 ];
+const KNOWN_EXTENSIONLESS_EVIDENCE_FILES = new Set([
+  'Dockerfile',
+  'Makefile',
+  'Gemfile',
+  'Podfile',
+  'Procfile',
+  'Jenkinsfile',
+  'Vagrantfile',
+  'Brewfile',
+  'Justfile',
+  'Tiltfile',
+]);
+const KNOWN_EVIDENCE_FILE_EXTENSIONS = new Set([
+  'c', 'cc', 'cpp', 'cs', 'css', 'cxx', 'go', 'h', 'hpp', 'html', 'java', 'js', 'json', 'jsx',
+  'kt', 'kts', 'mjs', 'md', 'php', 'prisma', 'py', 'rb', 'rs', 'scala', 'scss', 'sql', 'swift',
+  'ts', 'tsx', 'txt', 'vue', 'xml', 'yaml', 'yml',
+]);
 const LIKELY_PROJECT_RECEIVER_SUFFIXES = [
   'service',
   'repository',
@@ -155,6 +172,7 @@ function classifyOperatorFailure(signal = {}, options = {}) {
     ? signal.groundingGapCategories
     : [];
   const approvalStats = summarizeApprovalScores(options.approvalOutputs);
+  const approvalSnapshotFresh = options.approvalSnapshotFresh !== false;
 
   if (contractGapCategories.includes('missing-evidence-anchor')
     || groundingGapCategories.includes('missing-file-anchor')
@@ -167,8 +185,13 @@ function classifyOperatorFailure(signal = {}, options = {}) {
     failureClasses.add('seam-confirmation-failure');
   }
 
-  if ((approvalStats.agreedCount > 0 && approvalStats.disagreedCount > 0)
-    || (Number.isFinite(approvalStats.spread) && approvalStats.spread >= 4)) {
+  if (
+    approvalSnapshotFresh
+    && (
+      (approvalStats.agreedCount > 0 && approvalStats.disagreedCount > 0)
+      || (Number.isFinite(approvalStats.spread) && approvalStats.spread >= 4)
+    )
+  ) {
     failureClasses.add('role-evidence-divergence');
   }
 
@@ -242,6 +265,7 @@ function buildFinalTrustSignal(trust = {}, options = {}) {
   const classification = classifyOperatorFailure(signal, options);
   return {
     ...signal,
+    approvalSnapshotFresh: options.approvalSnapshotFresh !== false,
     primaryFailureClass: classification.primaryFailureClass,
     failureClasses: classification.failureClasses,
     failureSummary: classification.failureSummary,
@@ -309,17 +333,61 @@ function hasSubstantiveEvidenceSection(body = '') {
   return !EVIDENCE_NONE_PATTERNS.some((pattern) => pattern.test(normalized));
 }
 
+function stripEvidenceLineSuffix(candidate = '') {
+  return String(candidate || '').trim().replace(/:\d+(?:-\d+)?$/, '');
+}
+
+function looksLikeEvidenceFileAnchor(candidate = '') {
+  const normalized = stripEvidenceLineSuffix(candidate)
+    .replace(/\\/g, '/')
+    .replace(/^\.\/+/, '')
+    .trim();
+  if (!normalized) return false;
+  if (/\s/.test(normalized)) return false;
+  if (normalized.includes('(') || normalized.includes(')')) return false;
+  if (normalized.startsWith('..')) return false;
+
+  const baseName = path.posix.basename(normalized);
+  if (!baseName) return false;
+  if (KNOWN_EXTENSIONLESS_EVIDENCE_FILES.has(baseName)) return true;
+  if (normalized.includes('/')) return true;
+
+  const extension = path.posix.extname(baseName).replace(/^\./, '').toLowerCase();
+  if (!extension) return false;
+  return KNOWN_EVIDENCE_FILE_EXTENSIONS.has(extension);
+}
+
+function extractPrimaryEvidenceCandidates(line = '') {
+  const source = String(line || '');
+  const candidates = [];
+  const backtickPattern = /`([^`]+)`/g;
+  let backtickMatch = backtickPattern.exec(source);
+  while (backtickMatch) {
+    const candidate = String(backtickMatch[1] || '').trim();
+    if (looksLikeEvidenceFileAnchor(candidate)) candidates.push(candidate);
+    backtickMatch = backtickPattern.exec(source);
+  }
+
+  const plainSource = source
+    .replace(/`[^`]*`/g, ' ')
+    .replace(/\([^)]*\)/g, ' ');
+  const plainCandidates = plainSource.match(/[A-Za-z0-9_./\\\-[\]]+\.[A-Za-z0-9_]+(?::\d+(?:-\d+)?)?/g) || [];
+  candidates.push(...plainCandidates.filter((candidate) => looksLikeEvidenceFileAnchor(candidate)));
+
+  return Array.from(new Set(candidates.filter(Boolean)));
+}
+
 function extractEvidenceAnchors(groundedBody = '', options = {}) {
   const projectRoot = options.projectRoot || process.cwd();
   const anchors = [];
   const matches = String(groundedBody || '').matchAll(/^\s*(?:[-*]\s*)?(?:\*\*)?Evidence:(?:\*\*)?\s*(.+)$/gim);
   for (const match of matches) {
     const line = String(match[1] || '').trim();
-    const candidates = line.match(/[A-Za-z0-9_./\\-]+\.[A-Za-z0-9_]+(?::\d+)?/g) || [];
-    for (const candidate of candidates) {
-      const fileRef = normalizeProjectRelativeFilePath(candidate.replace(/:\d+$/, ''), projectRoot);
-      if (fileRef) anchors.push(fileRef);
-    }
+    const candidates = extractPrimaryEvidenceCandidates(line);
+    const primaryCandidate = candidates[0];
+    if (!primaryCandidate) continue;
+    const fileRef = normalizeProjectRelativeFilePath(stripEvidenceLineSuffix(primaryCandidate), projectRoot);
+    if (fileRef) anchors.push(fileRef);
   }
   return Array.from(new Set(anchors));
 }

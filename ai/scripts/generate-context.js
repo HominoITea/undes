@@ -56,7 +56,7 @@ const {
   getRuntimeOverrideMaxOutputTokens: getRuntimeOverrideMaxOutputTokensBase,
   applyRuntimeOverridesForPhase: applyRuntimeOverridesForPhaseBase,
 } = require('./runtime-overrides');
-const { buildDiscussionLog } = require('./domain/discussion-log');
+const { buildDiscussionLog, buildCompactDiscussionLogText } = require('./domain/discussion-log');
 const {
   STAGE_BASE_OUTPUT_RECOMMENDATIONS,
   FORECAST_CONTEXT_PRESSURE_THRESHOLDS,
@@ -535,6 +535,65 @@ function persistOperationalSignals(layout, overrides = {}) {
 
 function trackAgentCall(agentName, stage, duration, usage = 0, outputTokens = 0) {
   trackAgentCallBase(metrics, agentName, stage, duration, usage, outputTokens);
+}
+
+function shouldDowngradeDevilsAdvocateError(error) {
+  return error?.requestTimedOut === true || error?.code === 'PROVIDER_REQUEST_TIMEOUT';
+}
+
+function buildApprovalHandoffSummary(approvalOutputs = []) {
+  if (!Array.isArray(approvalOutputs) || approvalOutputs.length === 0) {
+    return ['- No approval outputs recorded.'];
+  }
+  return approvalOutputs.map((entry) => {
+    const approval = entry?.approval || {};
+    const score = Number.isFinite(approval.score) ? approval.score : 'n/a';
+    const agreed = approval.agreed === true ? 'yes' : approval.agreed === false ? 'no' : 'unknown';
+    const notes = summarizeText(approval.notes || '', 180);
+    return `- ${entry.name || 'agent'}${entry.role ? ` (${entry.role})` : ''}: score=${score}, agreed=${agreed}, notes=${notes}`;
+  });
+}
+
+function buildSeamExpansionDeltaDiscussion({
+  currentDiscussion = '',
+  previousConsensusText = '',
+  approvalOutputs = [],
+  phaseOutputs = [],
+  expansionResult = null,
+  appendixPath = '',
+} = {}) {
+  const baselineLines = [
+    '# SEAM EXPANSION HANDOFF',
+    'Use this compact baseline plus the new outputs below instead of reconstructing the full prior debate.',
+    '',
+    `Pre-expansion consensus summary: ${summarizeText(previousConsensusText, 600)}`,
+    `Earlier discussion summary: ${summarizeText(currentDiscussion, 900)}`,
+    '',
+    'Pre-expansion approval summary:',
+    ...buildApprovalHandoffSummary(approvalOutputs),
+  ];
+
+  if (expansionResult) {
+    baselineLines.push(
+      '',
+      `Seam expansion fetched ${Number(expansionResult.fetchedSeams?.length || 0)} of ${Number(expansionResult.requestedSeams?.length || 0)} requested seams.`,
+    );
+  }
+  if (appendixPath) {
+    baselineLines.push(`Appendix artifact: ${toRelativePath(appendixPath)}`);
+  }
+
+  const phaseLog = buildDiscussionLog(phaseOutputs, { maxBytes: 24_000 });
+  if (!phaseLog) return baselineLines.join('\n');
+  return `${baselineLines.join('\n')}\n\n${phaseLog}`;
+}
+
+function buildLatePhaseDiscussionSummary(discussionSoFar = '') {
+  return buildCompactDiscussionLogText(discussionSoFar, {
+    maxEntries: 6,
+    maxEntryChars: 420,
+    maxBytes: 9_000,
+  });
 }
 
 function printMetrics(promptText = '') {
@@ -1495,6 +1554,7 @@ async function callAgent(agent, contextBundle, promptText, stage = 'unknown', ru
   trackAgentCall(agentName, stage, duration, {
     inputTokens: result.meta?.inputTokens,
     outputTokens: result.meta?.outputTokens,
+    cacheReadInputTokens: result.meta?.rawUsage?.cache_read_input_tokens,
     provider: result.meta?.provider,
     model: result.meta?.model,
   });
@@ -2150,7 +2210,6 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
   }
 
   const deltaContextEnabled = (contextConfig.deltaContext || {}).enabled === true;
-  const getPhaseBundle = (phase) => (deltaContextEnabled ? trimContextForPhase(contextBundle, phase) : contextBundle);
   const requestedTaskId = resolveTaskId(promptText);
   const forecastDiagnostics = {
     contextPackActive: Boolean(runtimeDiagnostics.contextPackActive || hasContextPackSection(contextBundle)),
@@ -2298,9 +2357,9 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
   let promptScopeWarningPath = '';
   let promptScopeSuggestedPromptPath = '';
   const getAgentBundle = (agent, phase, contextPrompt = workingPrompt) => {
-    const phaseBundle = getPhaseBundle(phase);
-    const budgetBundle = buildAgentContextBundle(agent, phaseBundle, contextPrompt, codeIndex, indexCfg);
-    return applyProviderProfile(budgetBundle, agent);
+    const budgetBundle = buildAgentContextBundle(agent, contextBundle, contextPrompt, codeIndex, indexCfg);
+    const phaseBundle = deltaContextEnabled ? trimContextForPhase(budgetBundle, phase) : budgetBundle;
+    return applyProviderProfile(phaseBundle, agent);
   };
 
   function getActivePhaseAgents(stage, agents, checkpointPhase = '') {
@@ -2386,7 +2445,7 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
 
   function buildSeamExpandedPrompt(basePrompt, appendix) {
     if (!appendix) return basePrompt;
-    return `${String(basePrompt || '').trim()}\n\n---\n\n${appendix}`;
+    return `${String(basePrompt || '').trim()}\n\n---\n\n# SEAM EXPANSION DELTA\nUse the fetched seam evidence below as new context. Preserve the original task and prior grounded conclusions unless the new seams directly change them.\n\n${appendix}`;
   }
 
   async function runSeamExpansionRound({ trustSignal, approvalOutputs, currentDiscussion }) {
@@ -2469,6 +2528,15 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
     console.log(`📎 Expansion appendix: ${appendixPath}`);
     console.log(`📎 Requested seams: ${expansionResult.requestedSeams.length}, fetched: ${expansionResult.fetchedSeams.length}, skipped: ${expansionResult.skippedSeams.length}`);
 
+    let expansionDiscussionSoFar = buildSeamExpansionDeltaDiscussion({
+      currentDiscussion,
+      previousConsensusText: finalConsensusText,
+      approvalOutputs,
+      phaseOutputs,
+      expansionResult,
+      appendixPath,
+    });
+
     await applyRuntimeOverridesForPhase(PROJECT_LAYOUT, 'proposal');
     logPhaseRiskForecast({
       phaseLabel: 'Seam Expansion Proposals',
@@ -2476,7 +2544,7 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
       agents: filterByDebatePhase(debateAgents, 'proposal'),
       buildContent: (agent) => buildProposalContent(
         expandedPrompt,
-        currentDiscussion,
+        expansionDiscussionSoFar,
         agent.role || agent.name || 'agent',
       ),
       contextPrompt: expandedPrompt,
@@ -2486,7 +2554,7 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
       const response = await callAgentWithValidation(
         agent,
         getAgentBundle(agent, 'proposal', expandedPrompt),
-        buildProposalContent(expandedPrompt, currentDiscussion, agent.role || agent.name || 'agent'),
+        buildProposalContent(expandedPrompt, expansionDiscussionSoFar, agent.role || agent.name || 'agent'),
         'proposal',
       );
       return {
@@ -2603,7 +2671,14 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
       throw createIncompleteTextOutputError(incompleteExpansionCritiqueResults[0], critiqueStage);
     }
 
-    let expansionDiscussionSoFar = buildDiscussionLog([...agentsOutputs, ...phaseOutputs]);
+    expansionDiscussionSoFar = buildSeamExpansionDeltaDiscussion({
+      currentDiscussion,
+      previousConsensusText: finalConsensusText,
+      approvalOutputs,
+      phaseOutputs,
+      expansionResult,
+      appendixPath,
+    });
     const expandedConsensusContent = buildConsensusContent(
       expandedPrompt,
       expansionDiscussionSoFar,
@@ -2649,7 +2724,7 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
       const approvalResults = await runAgentsWithProviderLimit(approvalAgents, async (agent) => runLoggedAgentStep(agent, `approval-${expansionSuffix}-${roundNumber}`, async () => {
         const reviewContent = buildConsensusReviewContent(
           expandedPrompt,
-          expansionDiscussionSoFar,
+          buildLatePhaseDiscussionSummary(expansionDiscussionSoFar),
           expandedConsensusText,
           agent.role || agent.name || 'agent',
         );
@@ -2719,7 +2794,14 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
         stage: result.stage,
         approval: result.approval,
       }));
-      expansionDiscussionSoFar = buildDiscussionLog([...agentsOutputs, ...phaseOutputs]);
+      expansionDiscussionSoFar = buildSeamExpansionDeltaDiscussion({
+        currentDiscussion,
+        previousConsensusText: finalConsensusText,
+        approvalOutputs,
+        phaseOutputs,
+        expansionResult,
+        appendixPath,
+      });
 
       if (incompleteApprovalResults.length > 0) {
         throw createIncompleteStructuredOutputError(incompleteApprovalResults[0], `approval-${expansionSuffix}-${roundNumber}`);
@@ -2734,7 +2816,7 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
         getAgentBundle(consensusAgent, 'revision', expandedPrompt),
         buildConsensusRevisionContent(
           expandedPrompt,
-          expansionDiscussionSoFar,
+          buildLatePhaseDiscussionSummary(expansionDiscussionSoFar),
           expandedConsensusText,
           revisionNotes.join('\n'),
         ),
@@ -3446,7 +3528,7 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
             const roleLabel = agent.role || agent.name || 'agent';
             const reviewContent = buildConsensusReviewContent(
               workingPrompt,
-              discussionSoFar,
+              buildLatePhaseDiscussionSummary(discussionSoFar),
               finalConsensusText,
               roleLabel,
             );
@@ -3740,7 +3822,7 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
       approvalRound += 1;
       const revisionPrompt = buildConsensusRevisionContent(
         workingPrompt,
-        discussionSoFar,
+        buildLatePhaseDiscussionSummary(discussionSoFar),
         finalConsensusText,
         revisionNotes.join('\n'),
       );
@@ -3844,13 +3926,13 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
       ];
       triggerSeamExpansion = false;
 
-      // Checkpoint post-expansion consensus so resume doesn't lose seam expansion work
-      const postExpansionPath = path.join(RUN_ARCHIVE_DIR, `${consensusAgent.name || 'consensus'}-post-expansion-${seamExpansionRounds}.txt`);
-      fs.writeFileSync(postExpansionPath, finalConsensusText + '\n');
+      // Persist the latest post-expansion consensus through the primary consensus artifact
+      // so resume keeps the newest draft without creating a duplicate text artifact.
+      fs.writeFileSync(consensusOutputPath, finalConsensusText + '\n');
       checkpoint.updatePhase(PROJECT_LAYOUT, 'consensus', {
         status: 'done',
         finishedAt: new Date().toISOString(),
-        outputFile: postExpansionPath,
+        outputFile: consensusOutputPath,
         outputFormat: 'text',
         agent: consensusAgent.name || 'consensus',
         seamExpansionRound: seamExpansionRounds,
@@ -3976,7 +4058,7 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
           originalPrompt,
           workingPrompt,
           finalConsensusText,
-          discussionSoFar,
+          buildLatePhaseDiscussionSummary(discussionSoFar),
         ),
       });
       for (const agent of devilsAdvocateAgents) {
@@ -3985,15 +4067,36 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
           originalPrompt,
           workingPrompt,
           finalConsensusText,
-          discussionSoFar
+          buildLatePhaseDiscussionSummary(discussionSoFar)
         );
-        const response = await runLoggedAgentStep(agent, 'devil-advocate', () => callAgentWithValidation(
-          agent,
-          getAgentBundle(agent, 'devil-advocate', workingPrompt),
-          daContent,
-          'devil-advocate',
-          { responseFormat: 'json', enableRepair: false },
-        ));
+        let response;
+        try {
+          response = await runLoggedAgentStep(agent, 'devil-advocate', () => callAgentWithValidation(
+            agent,
+            getAgentBundle(agent, 'devil-advocate', workingPrompt),
+            daContent,
+            'devil-advocate',
+            { responseFormat: 'json', enableRepair: false },
+          ));
+        } catch (error) {
+          if (shouldDowngradeDevilsAdvocateError(error)) {
+            console.warn(`⚠️ Devil's Advocate timed out (${error.timeoutMs || 'provider timeout'}ms). Keeping pre-DA consensus result.`);
+            recordCallGatingSignal(operationalSignals, {
+              phase: 'devils-advocate',
+              action: 'fallback-skip',
+              reason: 'provider-timeout',
+            });
+            checkpoint.updatePhase(PROJECT_LAYOUT, 'devils-advocate', {
+              status: 'done',
+              finishedAt: new Date().toISOString(),
+              agent: agent.name,
+              fallbackReason: 'provider-timeout',
+            });
+            devilsAdvocateResult = null;
+            break;
+          }
+          throw error;
+        }
         const responseText = response.text;
 
         const outputPath = path.join(RUN_ARCHIVE_DIR, `${agent.name}-devils-advocate.json`);
@@ -4081,7 +4184,9 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
       }
 
       // Check if we need an additional revision based on confidence + devil's advocate
-      const revisionCheck = shouldTriggerRevision(avgConfidence, devilsAdvocateResult);
+      const revisionCheck = devilsAdvocateResult
+        ? shouldTriggerRevision(avgConfidence, devilsAdvocateResult)
+        : { trigger: false, reason: 'devils-advocate-skipped' };
       if (revisionCheck.trigger) {
         console.log(`\n🔄 Triggering additional revision: ${revisionCheck.reason}`);
         const preDAConsensusText = finalConsensusText;
@@ -4101,7 +4206,7 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
 
         const revisionPrompt = buildConsensusRevisionContent(
           workingPrompt,
-          discussionSoFar,
+          buildLatePhaseDiscussionSummary(discussionSoFar),
           finalConsensusText,
           daFeedback
         );
@@ -4152,6 +4257,7 @@ async function runAgents(contextBundle, promptText = '', codeIndex = null, runti
         recordFinalTrustSignal(operationalSignals, revisedResultTrust, {
           allAgreed: approvalConsensusAllAgreed,
           approvalOutputs: latestApprovalOutputs,
+          approvalSnapshotFresh: false,
           operationalSignals,
         });
         const revisedWarningPath = revisedResultTrust.warningRequired ? toRelativePath(RESULT_WARNING_PATH) : '';
@@ -4845,6 +4951,10 @@ module.exports = {
   buildPromptScopeWarningFileContent,
   buildResultFileContent,
   buildPatchSafeResultContent,
+  buildApprovalHandoffSummary,
+  buildSeamExpansionDeltaDiscussion,
+  buildLatePhaseDiscussionSummary,
+  shouldDowngradeDevilsAdvocateError,
   createOperationalSignalsState,
   loadReusablePreprocessResult,
   hasStructuredFetchHint,

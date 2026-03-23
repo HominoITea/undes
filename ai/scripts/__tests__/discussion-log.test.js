@@ -1,7 +1,12 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { buildDiscussionLog, formatDiscussionEntry, DEFAULT_MAX_DISCUSSION_LOG_BYTES } = require('../domain/discussion-log');
+const {
+  buildDiscussionLog,
+  buildCompactDiscussionLogText,
+  formatDiscussionEntry,
+  DEFAULT_MAX_DISCUSSION_LOG_BYTES,
+} = require('../domain/discussion-log');
 
 test('buildDiscussionLog formats role/stage blocks', () => {
   const text = buildDiscussionLog([
@@ -55,4 +60,29 @@ test('buildDiscussionLog always keeps at least the last entry', () => {
 test('DEFAULT_MAX_DISCUSSION_LOG_BYTES is a reasonable default', () => {
   assert.equal(typeof DEFAULT_MAX_DISCUSSION_LOG_BYTES, 'number');
   assert.ok(DEFAULT_MAX_DISCUSSION_LOG_BYTES >= 50_000);
+});
+
+test('buildCompactDiscussionLogText keeps only latest entries with summarized bodies', () => {
+  const full = buildDiscussionLog([
+    { name: 'architect', role: 'Architect', stage: 'proposal', text: 'A'.repeat(600) },
+    { name: 'reviewer', role: 'Reviewer', stage: 'critique', text: 'B'.repeat(600) },
+    { name: 'developer', role: 'Developer', stage: 'approval-1', text: 'C'.repeat(600) },
+  ]);
+
+  const compact = buildCompactDiscussionLogText(full, {
+    maxEntries: 2,
+    maxEntryChars: 80,
+    maxBytes: 500,
+  });
+
+  assert.match(compact, /earlier discussion/);
+  assert.doesNotMatch(compact, /## architect/);
+  assert.match(compact, /## reviewer \(Reviewer\) \[critique\]/);
+  assert.match(compact, /## developer \(Developer\) \[approval-1\]/);
+  assert.ok(Buffer.byteLength(compact, 'utf8') <= 500);
+});
+
+test('buildCompactDiscussionLogText returns original text when discussion is empty/plain', () => {
+  assert.equal(buildCompactDiscussionLogText(''), '');
+  assert.equal(buildCompactDiscussionLogText('Plain text without headings'), 'Plain text without headings');
 });

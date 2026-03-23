@@ -309,14 +309,11 @@ function createProviderClients(options = {}) {
       dirSection ? `${dirSection}\n` : '',
     ].join('\n').trim();
 
-    const finalMessages = [
-      {
-        role: 'user',
-        content: [
-          { type: 'text', text: cachedContext, cache_control: { type: 'ephemeral' } },
-        ],
-      },
+    const systemBlocks = [
+      { type: 'text', text: cachedContext, cache_control: { type: 'ephemeral' } },
     ];
+
+    const finalMessages = [];
 
     if (dynamicBlock) {
       finalMessages.push({ role: 'user', content: dynamicBlock });
@@ -337,6 +334,7 @@ function createProviderClients(options = {}) {
         body: JSON.stringify({
           model: agent.model,
           max_tokens: maxTokens(agent),
+          system: systemBlocks,
           messages: finalMessages,
         }),
       }, requestTimeoutMs(agent));
