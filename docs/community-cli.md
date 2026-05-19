@@ -43,6 +43,23 @@ Run Undes on a small repository or focused task first:
 undes run --project-path=/path/to/project --prompt="Implement a small validated change and explain the remaining risks"
 ```
 
+Prompt input options:
+
+```bash
+# Inline prompt
+undes run --project-path=/path/to/project --prompt="Review this migration risk."
+
+# Prompt from a file
+undes run --project-path=/path/to/project --prompt-file=./task.txt
+
+# Default project prompt
+# edit .ai/prompts/prompt.txt first
+undes run --project-path=/path/to/project
+```
+
+The `.ai/prompts/prompt.txt` file is created by `undes init`. Replace the
+starter template before using it; the starter example is ignored until edited.
+
 For first runs, prefer a prompt that can be checked in one sitting:
 
 ```text

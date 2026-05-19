@@ -54,11 +54,29 @@ stay on your machine and are used to call the model providers you configure.
 
 ## 3. Run A Focused Task
 
-Start with a small, reviewable prompt:
+Start with a small, reviewable prompt. You can provide the task in three ways.
+
+Inline prompt:
 
 ```bash
 undes run --project-path=/path/to/project --prompt="Find why this validator accepts invalid input and propose a minimal fix."
 ```
+
+Prompt from a file:
+
+```bash
+undes run --project-path=/path/to/project --prompt-file=./task.txt
+```
+
+Default project prompt:
+
+```bash
+# edit .ai/prompts/prompt.txt first
+undes run --project-path=/path/to/project
+```
+
+If you use `.ai/prompts/prompt.txt`, replace the starter template created by
+`undes init`; the starter example is ignored until you edit it.
 
 Good first prompts are narrow:
 

@@ -49,6 +49,23 @@ GEMINI_API_KEY=...
 
 Keep `.ai.env` out of git.
 
+Run a task with one of the supported prompt input styles:
+
+```bash
+# Inline prompt
+undes run --prompt="Find why this validator accepts invalid input and propose a minimal fix."
+
+# Prompt from a file
+undes run --prompt-file=./task.txt
+
+# Default project prompt
+# edit .ai/prompts/prompt.txt, then run:
+undes run
+```
+
+If you use `.ai/prompts/prompt.txt`, replace the starter template created by
+`undes init`; the starter example is ignored until you edit it.
+
 ## What You Get
 
 A typical Undes run produces a generated-and-verified engineering artifact:
