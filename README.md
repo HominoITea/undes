@@ -21,7 +21,7 @@ Undes exists to make that trust layer explicit.
 Community is distributed as an npm package. This repository contains documentation, examples, and issue templates.
 
 ```bash
-npm install -g @undes/cli
+npm install -g @undes.ai/cli
 undes --help
 ```
 
