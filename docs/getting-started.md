@@ -13,6 +13,8 @@ undes --help
 
 Community is distributed through npm. This repository contains documentation, examples, and issue templates.
 
+Community is intended for individual evaluation and limited individual use on your own initiative. See [Community License Scope](community-license-scope.md).
+
 ## 2. Configure Model Keys
 
 Undes is BYOK: bring your own model keys.

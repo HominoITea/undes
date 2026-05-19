@@ -38,11 +38,20 @@ A typical Undes run produces a generated-and-verified engineering artifact:
 
 The goal is not to fight coding assistants. The goal is to make AI-generated engineering answers more useful and trustworthy.
 
+## Community License Scope
+
+Community is free for personal learning, individual evaluation, research, experimentation, prototypes, and limited individual use on your own initiative.
+
+You may use it individually even while working on a commercial product, provided Undes is not adopted as part of a team, company, client, CI/CD, or managed development process.
+
+Regular team/company use, client delivery, CI/CD, production workflow use, and organization-managed workflows require a separate paid license.
+
 ## Documentation
 
 - [Getting Started](docs/getting-started.md)
 - [How Undes Works](docs/how-it-works.md)
 - [Community CLI](docs/community-cli.md)
+- [Community License Scope](docs/community-license-scope.md)
 - [Use Cases](docs/use-cases.md)
 - [Artifacts](docs/artifacts.md)
 - [Example Artifact](examples/generated-and-verified-artifact.md)

@@ -32,9 +32,12 @@ Community provides the core product workflow:
 - generated-and-verified engineering artifacts;
 - basic trust diagnostics.
 
+Community is free for individual evaluation and limited individual use on your own initiative. Managed team/company/client/CI/CD use requires a separate paid license.
+
 ## Related Docs
 
 - [Getting Started](getting-started.md)
+- [Community License Scope](community-license-scope.md)
 - [Artifacts](artifacts.md)
 - [Use Cases](use-cases.md)
 - [FAQ](faq.md)

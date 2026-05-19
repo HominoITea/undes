@@ -22,6 +22,12 @@ Community is local-first BYOK tooling.
 
 Model calls still go to the model providers you configure. Undes does not need to host your code to run the Community workflow.
 
+## Can I use Community while working on a commercial product?
+
+Yes, for limited individual use on your own initiative.
+
+Community is not licensed for regular team/company use, client delivery, CI/CD, production workflow use, or organization-managed development processes. Those uses require a separate paid license.
+
 ## What is "patch-safe"?
 
 Patch-safe means the workflow has enough evidence to present a change as a grounded candidate.
