@@ -27,27 +27,20 @@ workflow, collaboration, deployment, and support.
 
 | Edition | For | What it provides | Status |
 |---|---|---|---|
-| **Community** | Individual developers evaluating Undes or using it independently. | Local-first CLI, BYOK model access, one prompt -> one verified answer, operator-facing artifacts, and the core generate-and-verify workflow. | In preparation |
-| **Pro** | Professionals and teams that want Undes in regular engineering work. | Licensed team use, workflow integrations, configurable policies, engineering memory, run history, and team-oriented reporting. | Not publicly available |
-| **Enterprise** | Organizations with governance, security, and deployment requirements. | Enterprise deployment options, governance, RBAC, audit/retention controls, centralized policy, and support. | Not publicly available |
-
-## Community License Scope
-
-Community is intended for personal learning, individual evaluation, research,
-experimentation, prototypes, and limited individual use on your own initiative.
-
-You may use Community individually even while working on a commercial product,
-provided Undes is not adopted as part of a team, company, client, CI/CD, or
-managed development process.
-
-Regular team/company use, client delivery, CI/CD, production workflow use, and
-organization-managed workflows require a separate paid license.
+| **Community** | Individual developers evaluating Undes or using it independently. | Local-first CLI, BYOK model access, one prompt -> one verified answer, and operator-facing artifacts. | In preparation |
+| **Pro** | Professionals and teams that want Undes in regular engineering work. | Licensed workflow features for regular professional/team use. | Not publicly available |
+| **Enterprise** | Organizations with governance, security, and deployment requirements. | Organization deployment, governance, audit, and support options. | Not publicly available |
 
 ## Versions
 
-- **Community** — public documentation is available in the [`community`](https://github.com/HominoITea/undes/tree/community) branch. The npm package is being prepared for release.
-- **Pro** — paid edition for regular professional/team use; not publicly available.
-- **Enterprise** — paid edition for governed organization deployment; not publicly available.
+- **Community** — public documentation, installation notes, examples, and
+  license scope are maintained in the
+  [`community`](https://github.com/HominoITea/undes/tree/community) branch. The
+  npm package is being prepared for release.
+- **Pro** — paid edition for regular professional/team use; not publicly
+  available.
+- **Enterprise** — paid edition for governed organization deployment; not
+  publicly available.
 
 ## What a run produces
 
