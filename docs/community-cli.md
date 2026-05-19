@@ -5,9 +5,35 @@ Community is the command-line package for Undes.
 ## Install
 
 ```bash
-npm install -g @undes/cli
+npm install -g @undes.ai/cli
 undes --help
 ```
+
+## Model Keys
+
+Undes Community is BYOK. Run `undes init` inside your project first:
+
+```bash
+undes init
+```
+
+It creates `.ai.env.example`. Copy it to `.ai.env` and replace the placeholders
+with your own provider keys:
+
+```bash
+cp .ai.env.example .ai.env
+# edit .ai.env
+```
+
+Use only the providers you choose to run:
+
+```bash
+OPENAI_API_KEY=...
+CLAUDE_API_KEY=...
+GEMINI_API_KEY=...
+```
+
+Load `.ai.env` before running Undes and do not commit that file.
 
 ## Expected Use
 

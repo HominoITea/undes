@@ -59,9 +59,8 @@ Those tools made generation useful. Undes focuses on the trust layer around gene
 Community is distributed as an npm package:
 
 ```bash
-npm install -g @undes/cli
+npm install -g @undes.ai/cli
 undes --help
 ```
 
 Try it on a small repository and inspect the generated-and-verified artifact. If the artifact is missing a signal your team would need before merge, open an issue and describe that missing trust signal.
-

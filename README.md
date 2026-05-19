@@ -25,6 +25,30 @@ npm install -g @undes.ai/cli
 undes --help
 ```
 
+Initialize Undes inside your project:
+
+```bash
+undes init
+```
+
+`undes init` creates `.ai.env.example`. Copy it to `.ai.env` and replace the
+placeholders with your own provider keys:
+
+```bash
+cp .ai.env.example .ai.env
+# edit .ai.env
+```
+
+Use only the providers you choose to run:
+
+```bash
+OPENAI_API_KEY=...
+CLAUDE_API_KEY=...
+GEMINI_API_KEY=...
+```
+
+Keep `.ai.env` out of git.
+
 ## What You Get
 
 A typical Undes run produces a generated-and-verified engineering artifact:

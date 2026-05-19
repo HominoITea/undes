@@ -7,7 +7,7 @@ It is designed for focused tasks where you want an AI-generated answer, but also
 ## 1. Install
 
 ```bash
-npm install -g @undes/cli
+npm install -g @undes.ai/cli
 undes --help
 ```
 
@@ -15,19 +15,42 @@ Community is distributed through npm. This repository contains documentation, ex
 
 Community is intended for individual evaluation and limited individual use on your own initiative. See [Community License Scope](community-license-scope.md).
 
-## 2. Configure Model Keys
+## 2. Initialize And Configure Model Keys
 
 Undes is BYOK: bring your own model keys.
 
-Configure the model providers you want to use. A typical setup looks like:
+Run `undes init` in your project first:
 
 ```bash
-export OPENAI_API_KEY=...
-export ANTHROPIC_API_KEY=...
-export GOOGLE_API_KEY=...
+undes init
 ```
 
-You only need the providers you choose to use.
+This creates `.ai.env.example` with provider key placeholders. Copy it to
+`.ai.env` and replace the placeholders with your own keys:
+
+```bash
+cp .ai.env.example .ai.env
+# edit .ai.env
+```
+
+You only need the providers you choose to use:
+
+```bash
+OPENAI_API_KEY=...
+CLAUDE_API_KEY=...
+GEMINI_API_KEY=...
+```
+
+Then load `.ai.env` before a run:
+
+```bash
+set -a
+source .ai.env
+set +a
+```
+
+Keep `.ai.env` out of git. Undes is local-first and BYOK: your provider keys
+stay on your machine and are used to call the model providers you configure.
 
 ## 3. Run A Focused Task
 
