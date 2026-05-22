@@ -9,6 +9,19 @@ npm install -g @undes.ai/cli
 undes --help
 ```
 
+Current recommended release:
+
+```bash
+npm install -g @undes.ai/cli@latest
+undes --version
+```
+
+Expected version:
+
+```text
+0.1.2
+```
+
 ## Model Keys
 
 Undes Community is BYOK. Run `undes init` inside your project first:
@@ -59,6 +72,16 @@ undes run --project-path=/path/to/project
 
 The `.ai/prompts/prompt.txt` file is created by `undes init`. Replace the
 starter template before using it; the starter example is ignored until edited.
+
+Progress output:
+
+```bash
+undes run --project-path=/path/to/project --progress --prompt="Review this migration risk."
+```
+
+`--progress` shows high-level run progress without internal pipeline details.
+The old `--verbose` flag is recognised for compatibility and downgraded to the
+same safe progress view in Community.
 
 For first runs, prefer a prompt that can be checked in one sitting:
 

@@ -25,6 +25,17 @@ npm install -g @undes.ai/cli
 undes --help
 ```
 
+Current recommended release: `@undes.ai/cli@0.1.2`.
+
+If you installed an earlier release:
+
+```bash
+npm install -g @undes.ai/cli@latest
+undes --version
+```
+
+See [Changelog](CHANGELOG.md) for what changed since `0.1.0`.
+
 Initialize Undes inside your project:
 
 ```bash
@@ -98,6 +109,7 @@ Regular team/company use, client delivery, CI/CD, production workflow use, and o
 - [Example Artifact](examples/generated-and-verified-artifact.md)
 - [FAQ](docs/faq.md)
 - [Security And Privacy](docs/security-and-privacy.md)
+- [Changelog](CHANGELOG.md)
 - [Articles](articles/README.md)
 
 ## Repository Contents

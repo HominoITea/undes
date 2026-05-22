@@ -15,6 +15,19 @@ Community is distributed through npm. This repository contains documentation, ex
 
 Community is intended for individual evaluation and limited individual use on your own initiative. See [Community License Scope](community-license-scope.md).
 
+Current recommended release:
+
+```bash
+npm install -g @undes.ai/cli@latest
+undes --version
+```
+
+Expected version:
+
+```text
+0.1.2
+```
+
 ## 2. Initialize And Configure Model Keys
 
 Undes is BYOK: bring your own model keys.
@@ -98,6 +111,15 @@ Look for:
 - **Rejected Hypotheses**: ideas the workflow considered but did not trust;
 - **Open Questions / Risks**: checks that remain unresolved;
 - **Trust status**: whether the result is patch-safe or diagnostic.
+
+For high-level progress during a run, use:
+
+```bash
+undes run --progress --project-path=/path/to/project --prompt="Review this focused change."
+```
+
+Community does not expose full internal verbose output. The older `--verbose`
+flag is recognised for compatibility and downgraded to the safe progress view.
 
 ## 5. Use The Result
 
