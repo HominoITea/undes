@@ -23,24 +23,31 @@ Undes makes that trust layer explicit.
 
 Undes editions share the same core idea: AI generates an engineering answer, and
 Undes verifies the answer before you rely on it. The editions differ by
-workflow, collaboration, deployment, and support.
+workflow, packaging, and support.
 
 | Edition | For | What it provides | Status |
 |---|---|---|---|
-| **Community** | Individual developers evaluating Undes or using it independently. | Local-first CLI, BYOK model access, one prompt -> one verified answer, and operator-facing artifacts. | In preparation |
-| **Pro** | Professionals and teams that want Undes in regular engineering work. | Licensed workflow features for regular professional/team use. | Not publicly available |
-| **Enterprise** | Organizations with governance, security, and deployment requirements. | Organization deployment, governance, audit, and support options. | Not publicly available |
+| **Community** | Individual developers evaluating Undes or using it independently. | Local-first CLI, BYOK model access, one prompt -> one verified answer, and operator-facing artifacts. | Available as `@undes.ai/cli` |
+| **Pro** | Professionals using the paid local workflow. | License-gated local CLI, Pro terminal UI, local history, and native verification package. | Early access as `@undes.ai/cli-pro@pro-beta` |
+| **Team / Enterprise** | Organizations that need a broader commercial arrangement. | Handled through direct discussion. No public package, install path, hosted workflow, or deployment promise is committed in these docs. | Not self-service |
 
-## Versions
+## Repository Structure
 
-- **Community** — public documentation, installation notes, examples, and
-  license scope are maintained in the
-  [`community`](https://github.com/HominoITea/undes/tree/community) branch. The
-  npm package is being prepared for release.
-- **Pro** — paid edition for regular professional/team use; not publicly
-  available.
-- **Enterprise** — paid edition for governed organization deployment; not
-  publicly available.
+- [`community/`](community/README.md) — Community install notes, command
+  reference, license scope, security notes, and release changelog.
+- [`pro/`](pro/README.md) — Pro command reference and public setup notes.
+- [`docs/`](docs/community-vs-pro.md) — shared product documentation for the
+  core Undes workflow.
+- [`articles/`](articles/README.md) — public articles and long-form product
+  explanation.
+- [`examples/`](examples/README.md) — sanitized examples of generated and
+  verified artifacts.
+
+Start with:
+
+- [Community README](community/README.md)
+- [Pro README](pro/README.md)
+- [Community vs Pro](docs/community-vs-pro.md)
 
 ## What a run produces
 
