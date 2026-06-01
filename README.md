@@ -28,7 +28,7 @@ workflow, packaging, and support.
 | Edition | For | What it provides | Status |
 |---|---|---|---|
 | **Community** | Individual developers evaluating Undes or using it independently. | Local-first CLI, BYOK model access, one prompt -> one verified answer, and operator-facing artifacts. | Available as `@undes.ai/cli` |
-| **Pro** | Professionals using the paid local workflow. | License-gated local CLI, Pro terminal UI, local history, and native verification package. | Early access as `@undes.ai/cli-pro@pro-beta` |
+| **Pro** | Professionals using the paid local workflow. | License-gated local CLI, Pro terminal UI, local history, and native verification package. | See [undes.app/pricing](https://undes.app/pricing) |
 | **Team / Enterprise** | Organizations that need a broader commercial arrangement. | Handled through direct discussion. No public package, install path, hosted workflow, or deployment promise is committed in these docs. | Not self-service |
 
 ## Repository Structure
