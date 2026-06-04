@@ -3,6 +3,9 @@
 Undes Pro is the paid local CLI for users who need the Pro terminal UI, local
 run history, and license-gated execution.
 
+Pro access and license purchase details are handled at
+[undes.app/pricing](https://undes.app/pricing).
+
 Install:
 
 ```bash
@@ -19,6 +22,7 @@ closed.
 
 - [Pro CLI](cli.md)
 - [Community vs Pro](../docs/community-vs-pro.md)
+- [Pricing and license access](https://undes.app/pricing)
 
 Team and Enterprise usage is handled through direct discussion for now. These
 docs do not commit to a public Team package, Enterprise install path, hosted

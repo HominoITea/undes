@@ -24,10 +24,13 @@ A separate paid license is required for:
 - use in paid client delivery, consulting, outsourcing, or agency work where Undes is part of the delivery process;
 - project-wide, department-wide, or organization-wide deployment.
 
+Paid Pro access starts at [undes.app/pricing](https://undes.app/pricing).
+
 ## Practical Rule
 
 If one specialist tries Undes independently, Community is intended for that.
 
 If an organization starts relying on Undes as part of how engineering work is done, that requires a paid license.
+See [undes.app/pricing](https://undes.app/pricing) for the current Pro access path.
 
 This page is a plain-language summary. The distributed package license notice controls the actual license terms.

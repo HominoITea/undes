@@ -98,7 +98,7 @@ Community provides the core product workflow:
 - generated-and-verified engineering artifacts;
 - basic trust diagnostics.
 
-Community is free for individual evaluation and limited individual use on your own initiative. Managed team/company/client/CI/CD use requires a separate paid license.
+Community is free for individual evaluation and limited individual use on your own initiative. Managed team/company/client/CI/CD use requires a separate paid license; see [undes.app/pricing](https://undes.app/pricing).
 
 ## Related Docs
 

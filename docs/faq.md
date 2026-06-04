@@ -28,6 +28,8 @@ Yes, for limited individual use on your own initiative.
 
 Community is not licensed for regular team/company use, client delivery, CI/CD, production workflow use, or organization-managed development processes. Those uses require a separate paid license.
 
+For Pro access and current licensing entry points, see [undes.app/pricing](https://undes.app/pricing).
+
 ## What is "patch-safe"?
 
 Patch-safe means the workflow has enough evidence to present a change as a grounded candidate.

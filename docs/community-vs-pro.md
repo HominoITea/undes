@@ -40,6 +40,7 @@ verbose output is not part of the Community package.
 Community is free for personal learning, individual evaluation, research,
 experimentation, prototypes, and limited individual use on your own initiative.
 Managed team/company/client/CI/CD use requires a separate paid license.
+See [undes.app/pricing](https://undes.app/pricing) for Pro access.
 
 ## Pro
 
@@ -59,6 +60,8 @@ Pro adds the paid local surfaces that are implemented in the Pro package:
 - terminal UI for interactive local runs;
 - local run history;
 - the same generated-and-verified answer discipline as Community.
+
+Buy or manage Pro access from [undes.app/pricing](https://undes.app/pricing).
 
 Pro does not turn raw prompts, raw model responses, or internal pipeline
 artifacts into public command output. The public surface stays outcome-level:
@@ -80,3 +83,4 @@ local tasks.
 
 Use Pro if you have a Pro license and want the paid local CLI surfaces:
 license-gated execution, terminal UI, and local history.
+Pro access starts at [undes.app/pricing](https://undes.app/pricing).

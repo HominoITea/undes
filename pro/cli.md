@@ -3,6 +3,8 @@
 Undes Pro is the paid local CLI for users who need the Pro terminal UI, local
 run history, and license-gated execution.
 
+Buy or manage Pro access from [undes.app/pricing](https://undes.app/pricing).
+
 Pro is distributed as a separate npm package from Community:
 
 ```bash
@@ -38,6 +40,9 @@ undes-pro license deactivate
 `license status` reads the local license state. `license refresh` performs an
 explicit heartbeat with the license service. `license deactivate` releases the
 local activation.
+
+Purchase keys are issued through [undes.app/pricing](https://undes.app/pricing)
+and the account license page.
 
 ## Run
 
