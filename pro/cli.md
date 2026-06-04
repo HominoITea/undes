@@ -8,7 +8,7 @@ Buy or manage Pro access from [undes.app/pricing](https://undes.app/pricing).
 Pro is distributed as a separate npm package from Community:
 
 ```bash
-npm install -g @undes.ai/cli-pro@pro-beta
+npm install -g @undes.ai/cli-pro
 undes-pro --help
 ```
 

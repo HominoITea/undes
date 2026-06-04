@@ -176,3 +176,8 @@ including a cloud fallback — before the request is made. Only local agents run
 
 The point is not just "more providers." It is more providers without losing the
 trust posture that makes a multi-agent answer worth more than a single guess.
+
+---
+
+Additional providers are an Undes Pro capability. Get Pro at
+[undes.app/pricing](https://undes.app/pricing).

@@ -47,7 +47,7 @@ See [undes.app/pricing](https://undes.app/pricing) for Pro access.
 Pro is the paid local CLI:
 
 ```bash
-npm install -g @undes.ai/cli-pro@pro-beta
+npm install -g @undes.ai/cli-pro
 undes-pro license activate <purchase-key>
 undes-pro run --prompt="Review this focused change."
 undes-pro history

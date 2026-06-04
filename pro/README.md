@@ -9,7 +9,7 @@ Pro access and license purchase details are handled at
 Install:
 
 ```bash
-npm install -g @undes.ai/cli-pro@pro-beta
+npm install -g @undes.ai/cli-pro
 undes-pro --help
 ```
 
