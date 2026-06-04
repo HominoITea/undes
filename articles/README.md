@@ -6,6 +6,8 @@ Public articles for Undes Community.
 
 - [AI can generate code. Can your team trust the generated answer?](ai-can-generate-code-can-your-team-trust-it.md)
 - [Generated Code Needs A Trust Layer](generated-code-needs-a-trust-layer.md)
+- [Connecting Pro to OpenRouter, NVIDIA NIM, and Local Models](connect-pro-to-openrouter-nvidia-and-local-models.md)
+- [Single-Model Mode: What It Gives, and What It Costs](single-model-mode-what-it-gives-and-what-it-costs.md)
 
 ## Core Message
 

@@ -416,6 +416,32 @@ Keep earlier phases cheaper, then spend budget on the final artifact:
 }
 ```
 
+## Additional Providers (Pro)
+
+Community runs on the first-party cloud providers (OpenAI, Anthropic, Google).
+Pro also routes agents to OpenAI-compatible providers via two extra fields on an
+agent: `provider: "openai-compatible"` and a `providerFlavor`.
+
+| Flavor | Endpoint | Notes |
+|---|---|---|
+| `openrouter` | `https://openrouter.ai/api/v1/chat/completions` | Aggregator; `headers` can carry `HTTP-Referer` / `X-Title`. |
+| `nvidia-nim` | `https://integrate.api.nvidia.com/v1/chat/completions` | Hosted (cloud); a self-hosted NIM can set `"local": true`. |
+| `ollama` / `lmstudio` / `llamacpp` | local `http://localhost:...` | Local model servers; treated as on-machine. |
+| `generic` | any OpenAI-compatible URL | Set `"local": true` if it runs on your machine. |
+
+Models reached through an aggregator or a local server default to **unqualified**,
+so they are kept off trust-critical phases (consensus / revision / devil's
+advocate) until you clear them in `.ai/model-capabilities.json`. The model guard
+is `runtimePolicy.modelGuard` (`warn` default / `strict` / `off`). `undes-pro
+doctor` shows each agent's data flow and trust status, and `UNDES_NO_NETWORK=1`
+refuses any agent whose prompts would leave the machine.
+
+Configuring an `openai-compatible` agent in Community is refused before any
+network call with a "requires Pro" message.
+
+Full guide:
+[Connecting Pro to OpenRouter, NVIDIA NIM, and Local Models](../articles/connect-pro-to-openrouter-nvidia-and-local-models.md).
+
 ## Guardrails
 
 - Keep provider API keys in `.ai.env`, not in `ai/agents.json`.
