@@ -425,16 +425,17 @@ agent: `provider: "openai-compatible"` and a `providerFlavor`.
 | Flavor | Endpoint | Notes |
 |---|---|---|
 | `openrouter` | `https://openrouter.ai/api/v1/chat/completions` | Aggregator; `headers` can carry `HTTP-Referer` / `X-Title`. |
-| `nvidia-nim` | `https://integrate.api.nvidia.com/v1/chat/completions` | Hosted (cloud); a self-hosted NIM can set `"local": true`. |
-| `ollama` / `lmstudio` / `llamacpp` | local `http://localhost:...` | Local model servers; treated as on-machine. |
-| `generic` | any OpenAI-compatible URL | Set `"local": true` if it runs on your machine. |
+| `nvidia-nim` | `https://integrate.api.nvidia.com/v1/chat/completions` | Hosted (cloud); a NIM on a loopback host (`localhost`) is treated as local. |
+| `ollama` / `lmstudio` / `llamacpp` | local `http://localhost:...` | Local model servers; on-machine when the URL is a loopback host. |
+| `generic` | any OpenAI-compatible URL | On-machine only when the URL is a loopback host (`localhost` / `127.0.0.1`). |
 
 Models reached through an aggregator or a local server default to **unqualified**,
 so they are kept off trust-critical phases (consensus / revision / devil's
 advocate) until you clear them in `.ai/model-capabilities.json`. The model guard
 is `runtimePolicy.modelGuard` (`warn` default / `strict` / `off`). `undes-pro
 doctor` shows each agent's data flow and trust status, and `UNDES_NO_NETWORK=1`
-refuses any agent whose prompts would leave the machine.
+refuses any agent whose prompts would leave the machine — only a loopback endpoint
+counts as on-machine, never an arbitrary URL with a `local` flag.
 
 Configuring an `openai-compatible` agent in Community is refused before any
 network call with a "requires Pro" message.

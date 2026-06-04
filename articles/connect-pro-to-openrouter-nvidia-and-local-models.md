@@ -73,8 +73,10 @@ NVIDIA's hosted API is OpenAI-compatible:
 }
 ```
 
-The hosted endpoint is cloud traffic. If you run a NIM container yourself, point
-`apiUrl` at it and add `"local": true` so Undes treats it as on-machine.
+The hosted endpoint is cloud traffic. If you run a NIM container on the same
+machine, point `apiUrl` at its loopback address (`http://localhost:PORT/...`) and
+Undes treats it as on-machine. Only a loopback host counts as local — a NIM on
+another box on your network still leaves this machine.
 
 ## Local models: Ollama, LM Studio, llama.cpp
 
@@ -101,7 +103,9 @@ in the schema. Point it at any environment variable (it is sent in the auth
 header and ignored by the server).
 
 For an endpoint that is OpenAI-compatible but not on this list, use
-`"providerFlavor": "generic"` and set `"local": true` if it runs on your machine.
+`"providerFlavor": "generic"`. It counts as on-machine only when its `apiUrl` is a
+loopback host (`localhost` / `127.0.0.1`); any other URL is treated as leaving the
+machine, regardless of configuration.
 
 ## The part most tools skip: is the model fit for the job?
 
