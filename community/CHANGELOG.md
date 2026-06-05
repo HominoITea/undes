@@ -1,5 +1,33 @@
 # Changelog
 
+## v0.1.4 — 2026-06-05
+
+Community v0.1.4 adds single-model runs and stronger secret handling.
+
+### What Changed
+
+- Single-model mode: run every step on one model with `--model` (and
+  `--provider` when the model id is ambiguous) — for a single API key, a local
+  model, or cost-sensitive runs.
+- Secret files (`.env`, key and credential files) are kept out of run context by
+  default, and each run reports how many it excluded. An optional strict mode
+  stops a run if a secret file is still tracked.
+- `undes doctor` now shows where each configured provider's data would go and
+  what stays on your machine.
+
+### Upgrade
+
+```bash
+npm install -g @undes.ai/cli@latest
+undes --version
+```
+
+Expected version:
+
+```text
+0.1.4
+```
+
 ## v0.1.3 — 2026-06-01
 
 Community v0.1.3 is the current recommended npm release.
