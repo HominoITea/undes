@@ -13,7 +13,7 @@ undes --version
 Expected current release:
 
 ```text
-0.1.3
+0.1.4
 ```
 
 Community is local-first and BYOK: model calls go to the model providers you

@@ -30,7 +30,7 @@ Expected version:
 
 ## v0.1.3 — 2026-06-01
 
-Community v0.1.3 is the current recommended npm release.
+Community v0.1.3 is superseded by v0.1.4.
 
 ### What Changed
 
@@ -54,7 +54,7 @@ Expected version:
 
 ## v0.1.2 — 2026-05-22
 
-Community v0.1.2 is superseded by v0.1.3.
+Community v0.1.2 is superseded by v0.1.4.
 
 ### What Changed Since v0.1.0
 
