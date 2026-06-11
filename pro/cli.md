@@ -1,7 +1,7 @@
 # Pro CLI
 
 Undes Pro is the paid local CLI for users who need the Pro terminal UI, local
-run history, and license-gated execution.
+run history, Engineering Memory, expanded provider routing, and license-gated execution.
 
 Buy or manage Pro access from [undes.app/pricing](https://undes.app/pricing).
 
@@ -22,7 +22,7 @@ undes-pro --version
 Expected version:
 
 ```text
-0.1.9
+0.1.11
 ```
 
 Pro requires a valid Undes Pro license and the platform native verification
@@ -77,7 +77,7 @@ undes-pro run --tui --prompt="Review this change."
 ```
 
 The generated answer remains outcome-level: final result, evidence, risks, open
-checks, and trust status. Pro does not expose raw prompts, raw model responses,
+checks, and trust verdict. Pro does not expose raw prompts, raw model responses,
 or internal pipeline artifacts as public command output.
 
 ## History
@@ -124,4 +124,4 @@ Community and Pro are separate npm packages:
 For the current edition comparison, see [Community vs Pro](../docs/community-vs-pro.md).
 
 For release notes, see [Pro Changelog](CHANGELOG.md) or GitHub Releases:
-<https://github.com/HominoITea/undes/releases/tag/v0.1.9>.
+<https://github.com/HominoITea/undes/releases/tag/v0.1.11>.

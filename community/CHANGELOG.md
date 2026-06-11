@@ -1,8 +1,38 @@
 # Changelog
 
+## v0.1.7 — 2026-06-11
+
+Community v0.1.7 refreshes the installed-package experience and keeps public
+copy aligned with the trust-layer positioning.
+
+### What Changed
+
+- Fixed structural search package lookup in installed npm packages: optional
+  `@ast-grep/cli` can be resolved from the npm layout, and fallback messages no
+  longer ask users to install ast-grep when it was already detected.
+- Improved first-run setup stability from the v0.1.5/v0.1.6 line: published
+  packages embed the edition manifest and no longer try to read source-tree
+  manifest files from their `bin/` directory.
+- Public docs now describe output as an evidence-backed candidate with trust
+  boundaries, not as a blanket correctness guarantee.
+
+### Upgrade
+
+```bash
+npm install -g @undes.ai/cli@latest
+undes --version
+```
+
+Expected version:
+
+```text
+0.1.7
+```
+
 ## v0.1.4 — 2026-06-05
 
-Community v0.1.4 adds single-model runs and stronger secret handling.
+Community v0.1.4 is superseded by v0.1.7. It added single-model runs and
+stronger secret handling.
 
 ### What Changed
 
@@ -54,12 +84,12 @@ Expected version:
 
 ## v0.1.2 — 2026-05-22
 
-Community v0.1.2 is superseded by v0.1.4.
+Community v0.1.2 is superseded by v0.1.7.
 
 ### What Changed Since v0.1.0
 
-- More reliable generated-and-verified answers: important generated material is
-  preserved more consistently through the final verification result.
+- More reliable evidence-backed answers: important generated material is
+  preserved more consistently through the final trust artifact.
 - Better output for feature implementation tasks: supported evidence,
   assumptions, open checks, and generated implementation content are separated
   more clearly.

@@ -1,8 +1,8 @@
 # Getting Started
 
-Undes Community is a CLI package for generated-and-verified AI engineering work.
+Undes Community is a CLI package for evidence-backed AI engineering work.
 
-It is designed for focused tasks where you want an AI-generated answer, but also need to know what supports it, what remains uncertain, and what should not be merged yet.
+It is designed for focused tasks where you want an AI-generated candidate, but also need to know what supports it, what remains uncertain, and what should not be merged yet.
 
 ## 1. Install
 
@@ -25,7 +25,7 @@ undes --version
 Expected version:
 
 ```text
-0.1.4
+0.1.7
 ```
 
 ## 2. Initialize And Configure Model Keys
@@ -101,7 +101,7 @@ Good first prompts are narrow:
 
 ## 4. Read The Output
 
-Undes produces an engineering artifact, not just a chat answer.
+Undes produces a trust artifact, not just a chat answer.
 
 Look for:
 
@@ -110,7 +110,7 @@ Look for:
 - **Assumed Implementation**: generated code or changes that still need review;
 - **Rejected Hypotheses**: ideas the workflow considered but did not trust;
 - **Open Questions / Risks**: checks that remain unresolved;
-- **Trust status**: whether the result is patch-safe or diagnostic.
+- **Trust verdict**: whether the result is safe to apply, needs review, or diagnostic.
 
 For high-level progress during a run, use:
 
@@ -126,7 +126,7 @@ flag is recognised for compatibility and downgraded to the safe progress view.
 The intended workflow is:
 
 1. Generate a candidate answer.
-2. Review the trust signals.
+2. Review the trust signals and open checks.
 3. Merge only what is supported.
 4. Defer or manually check unresolved items.
 

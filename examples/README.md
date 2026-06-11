@@ -6,7 +6,7 @@ They show the shape of Undes output without exposing sensitive project details.
 
 ## Available Examples
 
-- [Generated And Verified Artifact](generated-and-verified-artifact.md)
+- [Evidence-Backed Trust Artifact](generated-and-verified-artifact.md)
 
 ## What To Look For
 
@@ -17,6 +17,6 @@ When reading an example, focus on the separation between:
 - assumptions;
 - rejected hypotheses;
 - open checks;
-- trust status.
+- trust verdict.
 
 That separation is the core Undes workflow.

@@ -1,12 +1,12 @@
 # Undes
 
-Undes is a local-first AI engineering tool. It does not just generate an
-answer — it generates one and then verifies it: the supporting evidence
-from your codebase, the assumptions made, the hypotheses rejected, the
-risks still open, and a final trust verdict.
+Undes is a local-first trust layer for AI engineering answers. It does not just
+generate an answer — it generates a candidate and shows how far you can trust it:
+the supporting evidence from your codebase, the assumptions made, what could not
+be proven, the risks still open, and a final trust verdict.
 
-**One prompt → one verified answer.** AI generates; Undes verifies it
-before your team trusts it.
+**One prompt -> one evidence-backed candidate with trust boundaries.** AI can
+generate the answer; Undes shows how far you can trust it.
 
 ## Why
 
@@ -22,12 +22,12 @@ Undes makes that trust layer explicit.
 ## Editions
 
 Undes editions share the same core idea: AI generates an engineering answer, and
-Undes verifies the answer before you rely on it. The editions differ by
+Undes makes the trust boundary explicit before you rely on it. The editions differ by
 workflow, packaging, and support.
 
 | Edition | For | What it provides | Status |
 |---|---|---|---|
-| **Community** | Individual developers evaluating Undes or using it independently. | Local-first CLI, BYOK model access, one prompt -> one verified answer, and operator-facing artifacts. | Available as `@undes.ai/cli` |
+| **Community** | Individual developers evaluating Undes or using it independently. | Local-first CLI, BYOK model access, one prompt -> one evidence-backed trust artifact, and operator-facing output. | Available as `@undes.ai/cli` |
 | **Pro** | Professionals using the paid local workflow. | License-gated local CLI, Pro terminal UI, local history, and native verification package. | See [undes.app/pricing](https://undes.app/pricing) |
 | **Team / Enterprise** | Organizations that need a broader commercial arrangement. | Handled through direct discussion. No public package, install path, hosted workflow, or deployment promise is committed in these docs. | Not self-service |
 
@@ -41,7 +41,7 @@ workflow, packaging, and support.
 - [`articles/`](articles/README.md) — public articles and long-form product
   explanation.
 - [`examples/`](examples/README.md) — sanitized examples of generated and
-  verified artifacts.
+  trust artifacts.
 
 Start with:
 
@@ -51,14 +51,14 @@ Start with:
 
 ## What a run produces
 
-A generated-and-verified engineering artifact:
+An evidence-backed engineering artifact:
 
 - the proposed implementation or diagnostic answer;
 - the codebase evidence supporting it;
 - assumptions and open checks;
 - rejected hypotheses;
 - risk notes;
-- a trust / patch-safety verdict.
+- a trust verdict.
 
 ## About this repository
 

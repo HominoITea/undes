@@ -2,9 +2,9 @@
 
 ## Is Undes another coding assistant?
 
-No. Undes is a verification-oriented engineering workflow around AI-generated answers.
+No. Undes is a trust-layer workflow around AI-generated engineering answers.
 
-The point is not only to generate code. The point is to make the generated answer easier to trust, reject, or narrow.
+The point is not only to generate code. The point is to make the generated candidate easier to trust, reject, or narrow.
 
 ## Does Undes replace code review?
 
@@ -14,7 +14,7 @@ No. It gives reviewers a better artifact:
 - what evidence supports it;
 - what assumptions remain;
 - what the workflow rejected;
-- why the result is patch-safe or diagnostic.
+- whether the result is safe to apply, needs review, or has insufficient evidence.
 
 ## Does Community send my code to Undes servers?
 

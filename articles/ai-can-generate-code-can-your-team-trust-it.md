@@ -6,7 +6,7 @@ The hard part moved somewhere else: deciding whether the generated answer is sup
 
 That is the gap Undes is built for.
 
-Undes is a local-first CLI that generates an engineering answer through multiple AI roles, then verifies the result with critique, evidence checks, risk review and open checks before telling the team how much to trust it.
+Undes is a local-first CLI that generates an engineering answer through multiple AI roles, then exposes the trust boundary with critique, evidence checks, risk review and open checks before telling the team how much to trust it.
 
 ## The Problem Is Not Generation
 
@@ -18,7 +18,7 @@ The harder questions come after generation:
 - What did the model assume without evidence?
 - Which hypotheses were considered and rejected?
 - What still needs to be checked before this can be merged?
-- Is this answer patch-safe or only diagnostic?
+- Is this answer safe to apply, in need of review, or only diagnostic?
 
 A confident AI answer without this context can become a review burden instead of a productivity gain.
 
@@ -31,7 +31,7 @@ A useful AI engineering answer should not be only prose or only code. It should 
 - risks and assumptions;
 - rejected hypotheses;
 - open checks;
-- a trust status.
+- a trust verdict.
 
 That is the shape Undes is designed to produce.
 
@@ -63,4 +63,4 @@ npm install -g @undes.ai/cli
 undes --help
 ```
 
-Try it on a small repository and inspect the generated-and-verified artifact. If the artifact is missing a signal your team would need before merge, open an issue and describe that missing trust signal.
+Try it on a small repository and inspect the evidence-backed trust artifact. If the artifact is missing a signal your team would need before merge, open an issue and describe that missing trust signal.

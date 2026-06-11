@@ -15,7 +15,7 @@ Team or Enterprise functionality.
 | primary use | individual evaluation, learning, research, prototypes, limited individual initiative use | paid professional local workflow |
 | license | Community license scope | Pro license required |
 | model keys | BYOK | BYOK |
-| core workflow | generated-and-verified answer | generated-and-verified answer with Pro UI/history surfaces |
+| core workflow | evidence-backed trust artifact | evidence-backed trust artifact with Pro UI/history surfaces |
 | terminal UI | no Pro TUI | Pro terminal UI on TTY |
 | history | `inspect latest` only | local run history command |
 | native verifier | optional where included by the package | required for license-gated Pro commands |
@@ -59,13 +59,13 @@ Pro adds the paid local surfaces that are implemented in the Pro package:
 - required native verification package for Pro commands;
 - terminal UI for interactive local runs;
 - local run history;
-- the same generated-and-verified answer discipline as Community.
+- the same evidence-backed trust-artifact discipline as Community.
 
 Buy or manage Pro access from [undes.app/pricing](https://undes.app/pricing).
 
 Pro does not turn raw prompts, raw model responses, or internal pipeline
 artifacts into public command output. The public surface stays outcome-level:
-answer, evidence, risks, open checks, and trust status.
+answer, evidence, risks, open checks, and trust verdict.
 
 ## Team And Enterprise
 
@@ -78,7 +78,7 @@ and architecture decision before they become public commitments.
 
 ## Which One Should I Use?
 
-Use Community if you want to evaluate the verification workflow on focused
+Use Community if you want to evaluate the trust-layer workflow on focused
 local tasks.
 
 Use Pro if you have a Pro license and want the paid local CLI surfaces:

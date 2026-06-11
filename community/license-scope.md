@@ -12,7 +12,7 @@ Undes Community is free for:
 
 You may use Community individually even while working on a commercial product, provided Undes is not adopted as part of a team, company, client, CI/CD, or managed development process.
 
-This covers a developer trying Undes on their own initiative to understand whether a generated-and-verified workflow is useful.
+This covers a developer trying Undes on their own initiative to understand whether an evidence-backed trust workflow is useful.
 
 ## Paid License Required
 

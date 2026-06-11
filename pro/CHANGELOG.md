@@ -1,8 +1,41 @@
 # Pro Changelog
 
+## v0.1.11 — 2026-06-11
+
+Undes Pro v0.1.11 is the current Pro npm package release.
+
+### What Changed
+
+- Fixed published `undes-pro run` startup and bundled edition-manifest lookup.
+- Stabilized first-run setup so a newly initialized project does not immediately
+  report scaffold drift on the first run.
+- Fixed structural search package lookup in installed npm packages.
+- Added the Pro session shell, where each turn is still a normal evidence-backed
+  run and prior context is attached through the explicit `--attach` path.
+- Added Engineering Memory v1 as project-scoped JSONL with pure-JS token search.
+- Added model qualification tooling and clearer provider trust posture in doctor.
+- Kept the public output outcome-level: answer, evidence, risks, open checks and
+  trust verdict.
+
+### Install
+
+```bash
+npm install -g @undes.ai/cli-pro@latest
+undes-pro --version
+```
+
+Expected version:
+
+```text
+0.1.11
+```
+
+Pro requires a valid license. Buy or manage Pro access from
+[undes.app/pricing](https://undes.app/pricing).
+
 ## v0.1.9 — 2026-06-05
 
-Undes Pro v0.1.9 is the current Pro npm package release.
+Undes Pro v0.1.9 is superseded by v0.1.11.
 
 ### What Changed
 

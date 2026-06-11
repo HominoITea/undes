@@ -19,7 +19,7 @@ undes --version
 Expected version:
 
 ```text
-0.1.4
+0.1.7
 ```
 
 ## Model Keys
@@ -95,7 +95,7 @@ Community provides the core product workflow:
 
 - local-first execution;
 - bring your own model keys;
-- generated-and-verified engineering artifacts;
+- evidence-backed trust artifacts;
 - basic trust diagnostics.
 
 Community is free for individual evaluation and limited individual use on your own initiative. Managed team/company/client/CI/CD use requires a separate paid license; see [undes.app/pricing](https://undes.app/pricing).

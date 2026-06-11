@@ -25,7 +25,7 @@ The workflow is simple in principle:
 3. Check evidence against the codebase.
 4. Preserve material payload like generated code.
 5. Separate supported claims from assumptions.
-6. Produce a final result with warnings and trust status.
+6. Produce a final result with warnings and a trust verdict.
 
 The output should help a developer decide what to merge, what to inspect manually, and what to reject.
 
@@ -41,6 +41,6 @@ Undes exists because AI-generated engineering work becomes more useful when the 
 
 Undes Community is local-first and BYOK.
 
-It lets developers try a generated-and-verified workflow from the command line.
+It lets developers try an evidence-backed trust workflow from the command line.
 
 The goal is not to automate trust away. The goal is to make trust review concrete.

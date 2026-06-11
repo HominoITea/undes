@@ -1,7 +1,7 @@
 # Undes Pro
 
 Undes Pro is the paid local CLI for users who need the Pro terminal UI, local
-run history, and license-gated execution.
+run history, Engineering Memory, expanded provider routing, and license-gated execution.
 
 Pro access and license purchase details are handled at
 [undes.app/pricing](https://undes.app/pricing).
@@ -16,7 +16,7 @@ undes-pro --help
 Expected current release:
 
 ```text
-0.1.9
+0.1.11
 ```
 
 Pro requires a valid Undes Pro license and the platform native verification

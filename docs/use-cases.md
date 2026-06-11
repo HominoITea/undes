@@ -1,6 +1,6 @@
 # Use Cases
 
-Undes is useful when an AI answer must be checked before it becomes engineering work.
+Undes is useful when an AI answer needs an explicit trust boundary before it becomes engineering work.
 
 ## Feature Implementation
 
@@ -58,7 +58,7 @@ Expected output:
 
 ## Research And Planning
 
-Use Undes to turn a broad engineering question into a verified plan.
+Use Undes to turn a broad engineering question into an evidence-backed plan with open assumptions.
 
 Example:
 

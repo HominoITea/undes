@@ -6,7 +6,7 @@ The exact artifact set depends on the command and task shape. The concepts below
 
 ## result.txt
 
-The main generated-and-verified answer.
+The main evidence-backed answer candidate.
 
 It should be readable by a developer who did not watch the run.
 
@@ -25,7 +25,7 @@ Typical warnings:
 
 Structured state behind the final result.
 
-This is useful for tools and for understanding why a result was diagnostic rather than patch-safe.
+This is useful for tools and for understanding why a result was safe to apply, needed review, or stayed diagnostic.
 
 ## prompt-scope.json
 

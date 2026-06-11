@@ -7,4 +7,4 @@ Use issues to describe:
 - unclear documentation;
 - missing install steps;
 - confusing trust output;
-- real workflows where generated-and-verified artifacts would help.
+- real workflows where evidence-backed trust artifacts would help.

@@ -142,7 +142,7 @@ it off final synthesis. This file is your explicit decision; Undes honors it.
 ## See what is configured before you run
 
 `undes-pro doctor` prints a "Provider data flow" section that lists every agent,
-where its prompts go, whether they leave the machine, and its trust status:
+where its prompts go, whether they leave the machine, and its trust posture:
 
 ```
 Provider data flow:
@@ -171,7 +171,7 @@ including a cloud fallback — before the request is made. Only local agents run
   `ai/agents.json` to use OpenRouter, NVIDIA NIM, or a local server.
 - Aggregator and local models start **unqualified** and stay off trust-critical
   phases until you clear them in `.ai/model-capabilities.json`.
-- `undes-pro doctor` shows data flow and trust at a glance.
+- `undes-pro doctor` shows data flow and trust posture at a glance.
 - `UNDES_NO_NETWORK=1` is a hard local-only guarantee.
 
 The point is not just "more providers." It is more providers without losing the

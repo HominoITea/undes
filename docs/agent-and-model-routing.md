@@ -35,7 +35,7 @@ Typical fields:
     "patch-validation"
   ],
   "contextBudget": 28000,
-  "maxOutputTokens": 4096,
+  "maxOutputTokens": 12000,
   "disableTimeout": true
 }
 ```
@@ -433,7 +433,7 @@ Models reached through an aggregator or a local server default to **unqualified*
 so they are kept off trust-critical phases (consensus / revision / devil's
 advocate) until you clear them in `.ai/model-capabilities.json`. The model guard
 is `runtimePolicy.modelGuard` (`warn` default / `strict` / `off`). `undes-pro
-doctor` shows each agent's data flow and trust status, and `UNDES_NO_NETWORK=1`
+doctor` shows each agent's data flow and trust posture, and `UNDES_NO_NETWORK=1`
 refuses any agent whose prompts would leave the machine — only a loopback endpoint
 counts as on-machine, never an arbitrary URL with a `local` flag.
 

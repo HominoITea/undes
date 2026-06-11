@@ -1,4 +1,4 @@
-# Example: Generated-And-Verified Artifact
+# Example: Evidence-Backed Trust Artifact
 
 This is a simplified, sanitized example of the kind of output Undes is designed to produce.
 
@@ -31,7 +31,7 @@ Implement a small validation change and report whether the result is safe to app
 - Confirm whether downstream callers rely on the previous permissive behavior.
 - Run the full test suite before merge.
 
-## Trust Status
+## Trust Verdict
 
 Diagnostic until the downstream caller behavior is checked.
 
