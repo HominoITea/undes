@@ -10,10 +10,10 @@ npm install -g @undes.ai/cli@latest
 undes --version
 ```
 
-Expected current release:
+Check the currently published Community version:
 
-```text
-0.1.7
+```bash
+npm view @undes.ai/cli version
 ```
 
 Community is local-first and BYOK: model calls go to the model providers you

@@ -4,32 +4,38 @@ This is a simplified, sanitized example of the kind of output Undes is designed 
 
 ## Task
 
-Implement a small validation change and report whether the result is safe to apply.
+Review an authentication validation change and report whether the result is safe
+to merge.
 
 ## Proposed Change
 
-- Add validation for a missing configuration field.
-- Add a focused unit test for the invalid input case.
+- Add audience validation before accepting a token.
+- Add a focused unit test for cross-tenant token rejection.
 
 ## Evidence
 
-- The validator currently checks required fields before parsing runtime options.
-- Existing tests already cover valid configuration and missing file behavior.
+- The verifier already checks signature and expiry before accepting a token.
+- Existing tests cover expired and malformed tokens.
+- No existing test proves that a token for one tenant is rejected for another
+  tenant.
 
 ## Rejected Hypotheses
 
-- The issue is not caused by the parser entry point.
-- The issue is not caused by environment variable loading.
+- The issue is not caused by clock skew; expiry handling is already covered by
+  deterministic tests.
+- The issue is not caused by token parsing; malformed-token behavior is already
+  tested.
 
 ## Assumptions
 
-- The new validation should fail fast before downstream parsing.
+- Audience validation should fail before downstream authorization logic runs.
 - The existing test style should be preserved.
 
 ## Open Checks
 
-- Confirm whether downstream callers rely on the previous permissive behavior.
-- Run the full test suite before merge.
+- Confirm whether existing clients rely on the previous permissive audience
+  behavior.
+- Run the authentication test suite before merge.
 
 ## Trust Verdict
 

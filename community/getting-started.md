@@ -1,6 +1,6 @@
 # Getting Started
 
-Undes Community is a CLI package for evidence-backed AI engineering work.
+Undes Community is a CLI package for evidence-backed AI-generated engineering work.
 
 It is designed for focused tasks where you want an AI-generated candidate, but also need to know what supports it, what remains uncertain, and what should not be merged yet.
 
@@ -22,10 +22,10 @@ npm install -g @undes.ai/cli@latest
 undes --version
 ```
 
-Expected version:
+Check the currently published version:
 
-```text
-0.1.7
+```bash
+npm view @undes.ai/cli version
 ```
 
 ## 2. Initialize And Configure Model Keys
@@ -110,7 +110,7 @@ Look for:
 - **Assumed Implementation**: generated code or changes that still need review;
 - **Rejected Hypotheses**: ideas the workflow considered but did not trust;
 - **Open Questions / Risks**: checks that remain unresolved;
-- **Trust verdict**: whether the result is safe to apply, needs review, or diagnostic.
+- **Trust verdict**: whether the result is ready to proceed, needs review, or diagnostic.
 
 For high-level progress during a run, use:
 

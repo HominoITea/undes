@@ -1,6 +1,6 @@
 # How Undes Works
 
-Undes is built around one principle: AI-generated engineering work should expose its trust boundary before it is trusted.
+Undes is built around one principle: AI-generated engineering work should expose its trust boundary before merge.
 
 ## The Workflow
 
@@ -28,7 +28,7 @@ configuration surface.
 
 ## What Makes It Different
 
-Undes is not only a post-fact checker. It generates the candidate answer and exposes its trust boundary in one workflow.
+Undes is not only a post-fact checker. It proposes a solution or code candidate and exposes its trust boundary in one workflow.
 
 The final result should answer:
 
@@ -36,7 +36,7 @@ The final result should answer:
 - why it is supported;
 - what was rejected;
 - what is still risky;
-- whether the result is safe to apply, needs review, or has insufficient evidence.
+- whether the result is ready to proceed, needs review, or has insufficient evidence.
 
 ## Trust Status
 

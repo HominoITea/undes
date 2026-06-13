@@ -65,7 +65,7 @@ Buy or manage Pro access from [undes.app/pricing](https://undes.app/pricing).
 
 Pro does not turn raw prompts, raw model responses, or internal pipeline
 artifacts into public command output. The public surface stays outcome-level:
-answer, evidence, risks, open checks, and trust verdict.
+candidate answer, evidence, files checked, risks, open checks, and trust verdict.
 
 ## Team And Enterprise
 

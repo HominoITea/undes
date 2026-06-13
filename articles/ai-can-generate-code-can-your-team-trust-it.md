@@ -6,7 +6,7 @@ The hard part moved somewhere else: deciding whether the generated answer is sup
 
 That is the gap Undes is built for.
 
-Undes is a local-first CLI that generates an engineering answer through multiple AI roles, then exposes the trust boundary with critique, evidence checks, risk review and open checks before telling the team how much to trust it.
+Undes is a local-first CLI that proposes an engineering answer through multiple AI roles, then exposes the trust boundary with critique, evidence checks, files checked, risk review and open checks before telling the team how much to trust it.
 
 ## The Problem Is Not Generation
 
@@ -18,7 +18,7 @@ The harder questions come after generation:
 - What did the model assume without evidence?
 - Which hypotheses were considered and rejected?
 - What still needs to be checked before this can be merged?
-- Is this answer safe to apply, in need of review, or only diagnostic?
+- Is this answer ready to proceed, in need of review, or only diagnostic?
 
 A confident AI answer without this context can become a review burden instead of a productivity gain.
 

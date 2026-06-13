@@ -13,10 +13,10 @@ npm install -g @undes.ai/cli-pro
 undes-pro --help
 ```
 
-Expected current release:
+Check the currently published Pro version:
 
-```text
-0.1.11
+```bash
+npm view @undes.ai/cli-pro version
 ```
 
 Pro requires a valid Undes Pro license and the platform native verification

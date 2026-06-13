@@ -1,9 +1,39 @@
 # Undes
 
-Undes is a local-first trust layer for AI engineering answers. It does not just
-generate an answer — it generates a candidate and shows how far you can trust it:
-the supporting evidence from your codebase, the assumptions made, what could not
-be proven, the risks still open, and a final trust verdict.
+[![npm](https://img.shields.io/npm/v/@undes.ai/cli?label=community)](https://www.npmjs.com/package/@undes.ai/cli)
+[![Local-first](https://img.shields.io/badge/local--first-yes-brightgreen)](community/security-and-privacy.md)
+[![BYOK](https://img.shields.io/badge/BYOK-yes-brightgreen)](community/getting-started.md)
+[![Pro](https://img.shields.io/badge/Pro-undes.app%2Fpricing-blue)](https://undes.app/pricing)
+
+Ündes shows how far AI-generated engineering work can be trusted before merge.
+
+It proposes a solution or code candidate, then produces a reviewable trust
+artifact: evidence used, files checked, assumptions, what could not be proven,
+critique, open risks, and a final trust verdict.
+
+```bash
+npm install -g @undes.ai/cli
+cd your-project
+undes init
+undes run --prompt="Review this change for risky assumptions, missing tests, and unsafe architectural drift."
+```
+
+What you get is not just a chat answer. Undes separates the candidate from the
+trust boundary around it.
+
+```text
+Verdict: Needs review
+
+Evidence:
+- The validator rejects expired tokens but does not prove audience validation.
+- Existing tests cover malformed tokens, but not cross-tenant tokens.
+
+Rejected hypothesis:
+- This is not explained by clock skew; expiry checks are already deterministic.
+
+Open checks:
+- Add an audience/tenant test before treating the change as safe to merge.
+```
 
 **One prompt -> one evidence-backed candidate with trust boundaries.** AI can
 generate the answer; Undes shows how far you can trust it.
@@ -31,6 +61,18 @@ workflow, packaging, and support.
 | **Pro** | Professionals using the paid local workflow. | License-gated local CLI, Pro terminal UI, local history, and native verification package. | See [undes.app/pricing](https://undes.app/pricing) |
 | **Team / Enterprise** | Organizations that need a broader commercial arrangement. | Handled through direct discussion. No public package, install path, hosted workflow, or deployment promise is committed in these docs. | Not self-service |
 
+## When Undes Helps
+
+Use Undes when a plain AI answer is not enough and you need a reviewable
+decision trail:
+
+- code review where the risk is hidden in assumptions, not syntax;
+- bug investigation where several hypotheses look plausible;
+- architecture or migration decisions that need explicit open checks;
+- validation, auth, billing, or data-flow changes where a confident answer is
+  not sufficient;
+- local BYOK workflows where repository content should not go to Undes servers.
+
 ## Repository Structure
 
 - [`community/`](community/README.md) — Community install notes, command
@@ -48,6 +90,8 @@ Start with:
 - [Community README](community/README.md)
 - [Pro README](pro/README.md)
 - [Community vs Pro](docs/community-vs-pro.md)
+- [One-minute demo](docs/demo.md)
+- [Examples](examples/README.md)
 
 ## What a run produces
 
@@ -59,6 +103,10 @@ An evidence-backed engineering artifact:
 - rejected hypotheses;
 - risk notes;
 - a trust verdict.
+
+See [the demo walkthrough](docs/demo.md) and the
+[sanitized artifact example](examples/generated-and-verified-artifact.md) for
+the shape of the output.
 
 ## About this repository
 

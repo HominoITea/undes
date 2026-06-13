@@ -1,6 +1,6 @@
 # Use Cases
 
-Undes is useful when an AI answer needs an explicit trust boundary before it becomes engineering work.
+Undes is useful when AI-generated engineering work needs an explicit trust boundary before merge, release, or a risky implementation decision.
 
 ## Feature Implementation
 
@@ -41,7 +41,7 @@ Expected output:
 
 ## Code Review
 
-Use Undes for review tasks where the important question is not "what can be improved?" but "what is actually risky?"
+Use Undes for review tasks where the important question is not "what can be improved?" but "what is actually risky before merge?"
 
 Example:
 

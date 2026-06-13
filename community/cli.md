@@ -16,10 +16,10 @@ npm install -g @undes.ai/cli@latest
 undes --version
 ```
 
-Expected version:
+Check the currently published version:
 
-```text
-0.1.7
+```bash
+npm view @undes.ai/cli version
 ```
 
 ## Model Keys

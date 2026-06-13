@@ -2,7 +2,7 @@
 
 AI coding tools made it easy to generate code.
 
-That changed the bottleneck. The hard part is no longer getting a model to produce something plausible. The hard part is deciding whether the answer is supported enough to use.
+That changed the bottleneck. The hard part is no longer getting a model to produce something plausible. The hard part is deciding whether the answer is supported enough to use before merge.
 
 Developers now ask a different set of questions:
 
@@ -27,7 +27,7 @@ The workflow is simple in principle:
 5. Separate supported claims from assumptions.
 6. Produce a final result with warnings and a trust verdict.
 
-The output should help a developer decide what to merge, what to inspect manually, and what to reject.
+The output should help a developer decide what to merge, what to inspect manually, and what to reject or defer.
 
 ## Not A War With Coding Assistants
 
@@ -35,7 +35,7 @@ This is not about claiming that AI coding tools are bad.
 
 They are useful. They are also incomplete when their output is treated as self-validating.
 
-Undes exists because AI-generated engineering work becomes more useful when the answer explains what supports it.
+Undes exists because AI-generated engineering work becomes more useful when the answer explains what supports it and what still cannot be proven.
 
 ## Try It
 

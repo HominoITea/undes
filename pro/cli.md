@@ -19,10 +19,10 @@ npm install -g @undes.ai/cli-pro@latest
 undes-pro --version
 ```
 
-Expected version:
+Check the currently published version:
 
-```text
-0.1.11
+```bash
+npm view @undes.ai/cli-pro version
 ```
 
 Pro requires a valid Undes Pro license and the platform native verification
@@ -123,5 +123,5 @@ Community and Pro are separate npm packages:
 
 For the current edition comparison, see [Community vs Pro](../docs/community-vs-pro.md).
 
-For release notes, see [Pro Changelog](CHANGELOG.md) or GitHub Releases:
-<https://github.com/HominoITea/undes/releases/tag/v0.1.11>.
+For release notes, see [Pro Changelog](CHANGELOG.md) or
+[GitHub Releases](https://github.com/HominoITea/undes/releases).

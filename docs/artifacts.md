@@ -1,12 +1,12 @@
 # Artifacts
 
-Undes produces files that help operators inspect how much of an AI answer is supported.
+Undes produces files that help operators inspect how much of an AI-generated engineering candidate is supported before merge.
 
 The exact artifact set depends on the command and task shape. The concepts below are stable.
 
 ## result.txt
 
-The main evidence-backed answer candidate.
+The main evidence-backed answer or code candidate.
 
 It should be readable by a developer who did not watch the run.
 
@@ -25,7 +25,7 @@ Typical warnings:
 
 Structured state behind the final result.
 
-This is useful for tools and for understanding why a result was safe to apply, needed review, or stayed diagnostic.
+This is useful for tools and for understanding why a result was ready to proceed, needed review, or stayed diagnostic.
 
 ## prompt-scope.json
 
