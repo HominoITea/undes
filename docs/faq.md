@@ -2,7 +2,7 @@
 
 ## Is Undes another coding assistant?
 
-No. Undes is a trust-layer workflow around AI-generated engineering work.
+No. Undes is an evidence-checking workflow around AI-generated engineering work.
 
 The point is not only to generate code. The point is to make the generated candidate easier to trust, reject, or narrow before merge.
 

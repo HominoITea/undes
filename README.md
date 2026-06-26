@@ -5,11 +5,14 @@
 [![BYOK](https://img.shields.io/badge/BYOK-yes-brightgreen)](community/getting-started.md)
 [![Pro](https://img.shields.io/badge/Pro-undes.app%2Fpricing-blue)](https://undes.app/pricing)
 
-Ündes shows how far AI-generated engineering work can be trusted before merge.
+## Evidence-Checked AI Code
 
-It proposes a solution or code candidate, then produces a reviewable trust
-artifact: evidence used, files checked, assumptions, what could not be proven,
-critique, open risks, and a final trust verdict.
+Ündes helps developers know what is safe to merge before trusting AI-generated
+code, patches, refactors, or architecture decisions.
+
+It proposes a solution or code candidate, then checks it against visible
+evidence, files inspected, assumptions, what could not be proven, critique, open
+risks, and a conservative trust verdict.
 
 ```bash
 npm install -g @undes.ai/cli
@@ -18,8 +21,8 @@ undes init
 undes run --prompt="Review this change for risky assumptions, missing tests, and unsafe architectural drift."
 ```
 
-What you get is not just a chat answer. Undes separates the candidate from the
-trust boundary around it.
+What you get is not just a chat answer. Undes separates the candidate answer
+from the evidence and trust boundary around it.
 
 ```text
 Verdict: Needs review
@@ -35,8 +38,8 @@ Open checks:
 - Add an audience/tenant test before treating the change as safe to merge.
 ```
 
-**One prompt -> one evidence-backed candidate with trust boundaries.** AI can
-generate the answer; Undes shows how far you can trust it.
+**One prompt -> one evidence-checked candidate with trust boundaries.** AI can
+generate the answer; Undes helps you decide whether it is safe to merge.
 
 ## Why
 
@@ -57,7 +60,7 @@ workflow, packaging, and support.
 
 | Edition | For | What it provides | Status |
 |---|---|---|---|
-| **Community** | Individual developers evaluating Undes or using it independently. | Local-first CLI, BYOK model access, one prompt -> one evidence-backed trust artifact, and operator-facing output. | Available as `@undes.ai/cli` |
+| **Community** | Individual developers evaluating Undes or using it independently. | Local-first CLI, BYOK model access, one prompt -> one evidence-checked candidate with trust boundaries, and operator-facing output. | Available as `@undes.ai/cli` |
 | **Pro** | Professionals using the paid local workflow. | License-gated local CLI, Pro terminal UI, local history, and native verification package. | See [undes.app/pricing](https://undes.app/pricing) |
 | **Team / Enterprise** | Organizations that need a broader commercial arrangement. | Handled through direct discussion. No public package, install path, hosted workflow, or deployment promise is committed in these docs. | Not self-service |
 
@@ -95,7 +98,7 @@ Start with:
 
 ## What a run produces
 
-An evidence-backed engineering artifact:
+An evidence-checked engineering artifact:
 
 - the proposed implementation or diagnostic answer;
 - the codebase evidence supporting it;

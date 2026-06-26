@@ -1,6 +1,6 @@
 # How Undes Works
 
-Undes is built around one principle: AI-generated engineering work should expose its trust boundary before merge.
+Undes is built around one principle: AI-generated engineering work should be evidence-checked and expose its trust boundary before merge.
 
 ## The Workflow
 

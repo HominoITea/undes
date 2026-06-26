@@ -1,6 +1,6 @@
 # Getting Started
 
-Undes Community is a CLI package for evidence-backed AI-generated engineering work.
+Undes Community is a CLI package for evidence-checked AI-generated engineering work.
 
 It is designed for focused tasks where you want an AI-generated candidate, but also need to know what supports it, what remains uncertain, and what should not be merged yet.
 
@@ -101,7 +101,7 @@ Good first prompts are narrow:
 
 ## 4. Read The Output
 
-Undes produces a trust artifact, not just a chat answer.
+Undes produces an evidence-checked engineering artifact, not just a chat answer.
 
 Look for:
 

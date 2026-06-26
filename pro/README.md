@@ -1,7 +1,11 @@
 # Undes Pro
 
-Undes Pro is the paid local CLI for users who need the Pro terminal UI, local
-run history, Engineering Memory, expanded provider routing, and license-gated execution.
+Undes Pro is the paid local CLI for evidence-checked AI engineering work: run
+AI-generated code, patches, refactors, and architecture decisions through
+evidence, critique, risk, and trust-verdict checks before merge.
+
+It also adds the Pro terminal UI, local run history, Engineering Memory,
+expanded provider routing, and license-gated execution.
 
 Pro access and license purchase details are handled at
 [undes.app/pricing](https://undes.app/pricing).

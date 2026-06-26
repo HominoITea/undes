@@ -15,7 +15,7 @@ Team or Enterprise functionality.
 | primary use | individual evaluation, learning, research, prototypes, limited individual initiative use | paid professional local workflow |
 | license | Community license scope | Pro license required |
 | model keys | BYOK | BYOK |
-| core workflow | evidence-backed trust artifact | evidence-backed trust artifact with Pro UI/history surfaces |
+| core workflow | evidence-checked candidate with trust boundaries | evidence-checked candidate with Pro UI/history surfaces |
 | terminal UI | no Pro TUI | Pro terminal UI on TTY |
 | history | `inspect latest` only | local run history command |
 | native verifier | optional where included by the package | required for license-gated Pro commands |
@@ -53,13 +53,13 @@ undes-pro run --prompt="Review this focused change."
 undes-pro history
 ```
 
-Pro adds the paid local surfaces that are implemented in the Pro package:
+Pro adds the paid local surfaces around the same evidence-checked workflow:
 
 - license-gated execution;
 - required native verification package for Pro commands;
 - terminal UI for interactive local runs;
 - local run history;
-- the same evidence-backed trust-artifact discipline as Community.
+- the same evidence-checked trust-boundary discipline as Community.
 
 Buy or manage Pro access from [undes.app/pricing](https://undes.app/pricing).
 
