@@ -280,6 +280,12 @@ Supported routing keys:
 | `maxOutputTokens` | Output token override. |
 | `disableTimeout` | Boolean timeout override. |
 | `requestTimeoutMultiplier` | Positive timeout multiplier. |
+| `provider` | Pro-only provider override, including `external-cli`. |
+| `providerFlavor` | Pro-only provider flavor, for example `claude-code` or `codex-cli`. |
+| `command` | Pro-only external CLI binary override. |
+| `args` | Pro-only external CLI argument override. |
+| `authSource` | Pro-only external CLI auth label, usually `installed-cli-session`. |
+| `timeoutMs` | Pro-only external CLI wall-clock timeout. |
 
 Supported `phaseModelRouting` stage keys:
 
@@ -305,6 +311,40 @@ seamExpansionRevision
 `phaseModelRouting` changes the model settings for an already-selected agent.
 It does not by itself add that agent to a phase. Use `pipelinePolicy` for
 participation and `phaseModelRouting` for per-phase model/provider overrides.
+
+### Pro: Route A Phase Through An Installed CLI
+
+Undes Pro can route selected agents through a locally installed Claude Code or
+Codex CLI session with the `external-cli` provider. This is useful when a
+developer already uses those vendor CLIs locally and wants the result inside the
+same evidence, critique, open-check, and trust-verdict workflow.
+
+Example: route only the review phase to Claude Code CLI.
+
+```json
+{
+  "phaseModelRouting": {
+    "critique": {
+      "reviewer": {
+        "provider": "external-cli",
+        "providerFlavor": "claude-code",
+        "command": "claude",
+        "args": ["-p"],
+        "model": "claude-code-default",
+        "authSource": "installed-cli-session",
+        "timeoutMs": 180000
+      }
+    }
+  }
+}
+```
+
+The CLI must already be installed, logged in, and reachable on `PATH`. Undes
+does not read or copy the CLI credential store; it runs the official local
+binary as a bounded subprocess and records redacted receipts for the run.
+
+See the full Pro setup guide: [Run Undes Pro through Claude Code and Codex
+CLI](../pro/external-cli-setup.md).
 
 ## Sequential And Parallel Execution
 

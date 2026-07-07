@@ -80,7 +80,8 @@ decision trail:
 
 - [`community/`](community/README.md) — Community install notes, command
   reference, license scope, security notes, and release changelog.
-- [`pro/`](pro/README.md) — Pro command reference and public setup notes.
+- [`pro/`](pro/README.md) — Pro command reference, external CLI setup,
+  and public setup notes.
 - [`docs/`](docs/community-vs-pro.md) — shared product documentation for the
   core Undes workflow.
 - [`articles/`](articles/README.md) — public articles and long-form product
@@ -92,6 +93,7 @@ Start with:
 
 - [Community README](community/README.md)
 - [Pro README](pro/README.md)
+- [Run Pro through Claude Code and Codex CLI](pro/external-cli-setup.md)
 - [Community vs Pro](docs/community-vs-pro.md)
 - [One-minute demo](docs/demo.md)
 - [Examples](examples/README.md)

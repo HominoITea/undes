@@ -32,6 +32,7 @@ closed.
 
 - [Pro CLI](cli.md)
 - [Pro Changelog](CHANGELOG.md)
+- [Run Pro through Claude Code and Codex CLI](external-cli-setup.md)
 - [Community vs Pro](../docs/community-vs-pro.md)
 - [Pricing and license access](https://undes.app/pricing)
 
